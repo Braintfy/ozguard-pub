@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <span class="logo">🛡 OZGuard</span>
+    <span id="proBadge" class="pro-badge hidden">PRO</span>
+    <span id="freeBadge" class="free-badge">FREE</span>
+    <div class="header-right">
+      <a id="btnBuyPro" class="buy-pro-btn" href="https://codefic.ru/#pricing" target="_blank">Купить PRO</a>
+      <button id="btnHelp" class="btn-help" title="Инструкция">?</button>
+      <span class="version">v5.8.0</span>
+    </div>
+  </header>
+
+  <!-- Модальное окно инструкции -->
+  <div id="helpModal" class="help-modal hidden">
+    <div class="help-modal-content">
+      <div class="help-modal-header">
+        <span class="help-modal-title">📖 Инструкция OZGuard</span>
+        <button id="helpModalClose" class="btn-close">&times;</button>
+      </div>
+      <div class="help-modal-body">
+
+        <div class="help-section">
+          <div class="help-section-title">Что такое OZGuard?</div>
+          <p>OZGuard находит всех конкурентов, которые продают те же товары что и вы на <a href="https://www.ozon.ru" target="_blank" class="link-ozon">OZON</a>. Вы вводите SKU своих товаров — расширение открывает каждый товар, собирает список всех продавцов и показывает их цены. После этого можно одним кликом отправить нарушителей на проверку через жалобы.</p>
+          <p style="margin-top:6px">Сайт: <a href="https://codefic.ru" target="_blank" class="link-ozon">codefic.ru</a></p>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">🔍 Сканирование</div>
+          <div class="help-step"><span class="help-num">1</span><div><b>Введите SKU</b> своих товаров в поле (по одному на строку). SKU — это числовой артикул товара на OZON, его видно в адресной строке карточки товара или в личном кабинете продавца.</div></div>
+          <div class="help-step"><span class="help-num">2</span><div>Нажмите <b>«Найти конкурентов»</b>. Расширение откроет отдельное окно OZON и автоматически проверит каждый товар.</div></div>
+          <div class="help-step"><span class="help-num">3</span><div>В <b>Результатах</b> вы увидите по каждому товару: название, количество конкурентов, их SKU и цены. Кнопка <b>⎘</b> рядом с вашим SKU копирует его. Ссылка <b>«открыть на OZON»</b> ведёт на карточку. Кнопка <b>⎘</b> рядом с «N конк.» копирует сразу все SKU конкурентов по этому товару.</div></div>
+          <div class="help-tip">⏸ Пауза и ⏹ Стоп работают прямо во время сбора — даже если popup закрыт, через плавающую панель на странице OZON.</div>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">📦 Пакетный импорт XLSX <span class="help-badge-pro">PRO</span></div>
+          <div class="help-step"><span class="help-num">1</span><div>В <a href="https://seller.ozon.ru" target="_blank" class="link-ozon">личном кабинете OZON</a> перейдите: <b>Товары → Цены товаров → Скачать шаблон</b>.</div></div>
+          <div class="help-step"><span class="help-num">2</span><div>Перетащите скачанный <b>.xlsx</b> файл в зону «Загрузите XLSX шаблон» или нажмите на неё.</div></div>
+          <div class="help-step"><span class="help-num">3</span><div>Выберите нужные статусы товаров — «Продается», «Готов к продаже», «Не продается» — и нажмите <b>«Применить»</b>. SKU попадут в поле ввода.</div></div>
+          <div class="help-tip">По умолчанию отмечен только «Продается» — чтобы не тратить время на снятые товары.</div>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">💾 Экспорт результатов</div>
+          <p>После сбора доступны кнопки над списком результатов:</p>
+          <ul class="help-list">
+            <li><b>📋 Скопировать</b> — полный текст со всеми продавцами и ценами</li>
+            <li><b>📋 Только SKU</b> — только уникальные SKU конкурентов, удобно для последующей обработки</li>
+            <li><b>📥 Excel</b> — скачивает CSV-файл, который открывается в Excel: Мой SKU, Название, SKU конкурента, Продавец, Цена, Ссылка</li>
+            <li><b>📨 В жалобы</b> — мгновенно передаёт все SKU конкурентов в таб Жалобы</li>
+            <li><b>🗑</b> — очищает текущую сессию</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">📜 История</div>
+          <p>Хранит последние 10 сессий сканирования. На каждой карточке:</p>
+          <ul class="help-list">
+            <li><b>📥 Excel</b> — скачать результаты этой сессии</li>
+            <li><b>👁 Детали</b> — открыть таблицу с конкурентами и ценами</li>
+            <li><b>📨 Жалобы</b> — сразу отправить SKU конкурентов из этой сессии в таб Жалобы</li>
+            <li><b>✕</b> — удалить запись</li>
+          </ul>
+          <div class="help-tip">В деталях сессии можно переключиться на «📝 Логи» и увидеть весь процесс сбора.</div>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">⚙️ Настройки</div>
+          <ul class="help-list">
+            <li><b>Лицензия PRO</b> — введите код в формате OZG-XXXXX-XXXXX-XXXXX. Купить: <a href="https://codefic.ru/#pricing" target="_blank" class="link-ozon">codefic.ru/#pricing</a></li>
+            <li><b>Исключения при сборе</b> — названия своих магазинов, которые не попадут в результаты. По одному на строку, частичное совпадение. Например, напишите «Restoremind» — и все ваши магазины с этим словом будут скрыты.</li>
+            <li><b>Задержка</b> — пауза между запросами к OZON (мс). Рекомендация: 2000–3000 при 5–20 SKU, 4000–5000 при 50+ SKU.</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">📨 Жалобы <span class="help-badge-pro">PRO</span></div>
+          <div class="help-step"><span class="help-num">1</span><div>Введите SKU конкурентов вручную, нажмите <b>«В жалобы»</b> из Сканирования, или загрузите Excel-файл кнопкой <b>«Импорт из Excel»</b>.</div></div>
+          <div class="help-step"><span class="help-num">2</span><div>Откройте <a href="https://seller.ozon.ru/app/messenger/?group=support_v2" target="_blank" class="link-ozon">seller.ozon.ru → Поддержка</a> в браузере (вкладка должна быть открыта).</div></div>
+          <div class="help-step"><span class="help-num">3</span><div>Выберите тип жалобы и нажмите <b>«📨 Начать»</b>. Бот сам откроет чат поддержки, введёт каждый артикул и прикрепит файлы-доказательства (если загружены).</div></div>
+          <div class="help-tip">💡 Режим «Тестовый» — пробный запуск без реальных действий, чтобы убедиться что всё работает правильно.</div>
+          <div class="help-tip">📎 Доказательства — прикрепите файлы перед запуском, бот автоматически прикрепит их к каждому обращению. Подойдут: скриншоты карточек конкурентов, фото упаковки ваших исходных товаров, свидетельство о регистрации товарного знака, договор с правообладателем или любые другие документы, подтверждающие ваши права.</div>
+        </div>
+
+        <div class="help-section">
+          <div class="help-section-title">❓ Частые вопросы</div>
+          <ul class="help-list">
+            <li><b>«SKU не совпал — OZON перенаправил»</b> — OZON иногда показывает другой товар при поиске по SKU снятых с продажи товаров. Это нормально — расширение пропускает такие SKU.</li>
+            <li><b>Бот завис?</b> — нажмите ⏹ Стоп. Если popup закрыт — используйте плавающую панель на странице OZON.</li>
+            <li><b>Не запускаются жалобы?</b> — убедитесь что вкладка seller.ozon.ru открыта в браузере.</li>
+            <li><b>Нужна помощь?</b> — <a href="https://codefic.ru" target="_blank" class="link-ozon">codefic.ru</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="scan">Сканирование</button>
+    <button class="tab" data-tab="history">История</button>
+    <button class="tab" data-tab="settings">Настройки</button>
+    <button class="tab" data-tab="complaints">Жалобы</button>
+  </nav>
+
+  <!-- Таб: Сканирование -->
+  <main id="tabScan" class="tab-content active">
+    <label for="skuInput">SKU (по одному на строку):</label>
+    <textarea id="skuInput" rows="4" placeholder="1234567890&#10;9876543210&#10;5555555555"></textarea>
+
+    <div class="actions">
+      <button id="btnStart" class="btn btn-primary">🔍 Найти конкурентов</button>
+      <button id="btnPause" class="btn btn-secondary" disabled>⏸</button>
+      <button id="btnStop" class="btn btn-danger" disabled>⏹</button>
+    </div>
+
+    <div id="progressWrap" class="hidden">
+      <div class="progress-text">
+        <span id="progressCurrent">0</span>/<span id="progressTotal">0</span> SKU
+        <span id="progressPercent" class="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+    </div>
+
+    <section id="resultsSection" class="hidden">
+      <div class="results-top">
+        <div class="section-header">
+          <h2>Результаты</h2>
+          <span id="totalSellers" class="badge">0</span>
+        </div>
+        <div class="export-actions">
+          <button id="btnCopy" class="btn btn-small">📋 Скопировать</button>
+          <button id="btnCopySku" class="btn btn-small">📋 Только SKU</button>
+          <button id="btnExcel" class="btn btn-small">📥 Excel</button>
+          <button id="btnSendToComplaints" class="btn btn-small btn-pro">📨 В жалобы</button>
+          <button id="btnClearSession" class="btn btn-small btn-danger-sm">🗑</button>
+        </div>
+      </div>
+      <div id="resultsContainer"></div>
+    </section>
+
+    <div class="batch-section" id="batchDrop">
+      <div class="batch-icon">📂</div>
+      <div class="batch-text">Загрузите XLSX шаблон <b>«Цены товаров»</b> из OZON<br>для пакетного сбора конкурентов</div>
+      <div id="batchFilename" class="batch-filename hidden"></div>
+      <div id="batchInfo" class="batch-info hidden"></div>
+      <div id="batchWarning" class="batch-warning hidden"></div>
+      <input type="file" id="batchFileInput" accept=".xlsx,.xls">
+    </div>
+
+    <div id="logSection">
+      <div class="log-header" id="logToggle">
+        <span class="log-arrow">&#9660;</span> Лог <span id="logCount" class="badge-sm">0</span>
+      </div>
+      <div id="logContainer"></div>
+    </div>
+  </main>
+
+  <!-- Таб: История -->
+  <main id="tabHistory" class="tab-content">
+    <div class="section-header">
+      <h2>Последние сессии</h2>
+      <button id="btnClearHistory" class="btn btn-small btn-danger-sm">Очистить</button>
+    </div>
+    <div id="historyContainer">
+      <div class="empty-state">Нет сохранённых сессий</div>
+    </div>
+  </main>
+
+  <!-- Таб: Настройки -->
+  <main id="tabSettings" class="tab-content">
+    <div class="settings-group">
+      <h2 class="settings-title">Лицензия PRO</h2>
+      <div id="licenseStatusBlock">
+        <div class="license-status" id="licenseStatus">
+          <span class="license-dot" id="licenseDot"></span>
+          <span id="licenseStatusText">FREE-версия</span>
+        </div>
+      </div>
+      <div id="licenseInputBlock">
+        <button id="btnActivateTrial" class="btn-trial hidden">⚡ Попробовать PRO бесплатно — 3 дня</button>
+        <div id="trialExpiredBlock" class="trial-expired-block hidden">
+          <p>Пробный период закончился. Понравился OZGuard PRO?</p>
+          <a class="buy-pro-settings" href="https://codefic.ru/#pricing" target="_blank">🛒 Купить PRO — от 2 990 ₽/мес</a>
+        </div>
+        <a id="btnBuyProSettings" class="buy-pro-settings" href="https://codefic.ru/#pricing" target="_blank">🛒 Купить PRO — от 2 990 ₽/мес</a>
+        <p class="settings-desc">Введите код активации для доступа к PRO-функциям: множественная проверка SKU, пакетный импорт XLSX, автоматические жалобы.</p>
+        <div class="settings-row">
+          <input type="text" id="licenseCodeInput" placeholder="OZG-XXXXX-XXXXX-XXXXX" class="input-license" maxlength="21">
+          <button id="btnActivateLicense" class="btn btn-small btn-pro">Активировать</button>
+        </div>
+        <div id="licenseError" class="license-error hidden"></div>
+      </div>
+      <div id="licenseActiveBlock" class="hidden">
+        <p class="settings-desc license-active-text">PRO-версия активирована. Все функции доступны.</p>
+        <div id="licenseTypeInfo" class="license-type-info hidden">
+          <span id="licenseTypeBadge" class="license-type-badge"></span>
+          <span id="licenseDaysLeft" class="license-days-left"></span>
+        </div>
+        <div class="settings-row">
+          <span id="licenseCodeDisplay" class="license-code-display"></span>
+          <button id="btnDeactivateLicense" class="btn btn-small btn-danger-sm">Деактивировать</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h2 class="settings-title">Исключения при сборе</h2>
+      <p class="settings-desc">Продавцы из этого списка будут исключены из результатов сканирования. По одному на строку (точное или частичное совпадение названия).</p>
+      <textarea id="excludeSellersInput" rows="3" placeholder="Мой магазин&#10;ООО Рога и Копыта&#10;BrandName"></textarea>
+      <div class="settings-row" style="margin-top: 6px;">
+        <button id="btnSaveExclusions" class="btn btn-small">Сохранить</button>
+        <span id="exclusionsSavedHint" class="saved-hint hidden">Сохранено</span>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h2 class="settings-title">Задержка между запросами</h2>
+      <p class="settings-desc">Интервал между SKU (мс). Рекомендация: 2000-3000 для 5-20 SKU, 4000-5000 для 50+.</p>
+      <div class="settings-row">
+        <input type="number" id="delayMs" min="500" max="10000" step="100" value="2000" class="input-number">
+        <span class="settings-unit">мс</span>
+        <button id="btnSaveDelay" class="btn btn-small">Сохранить</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Таб: Жалобы (PRO) -->
+  <main id="tabComplaints" class="tab-content">
+    <div class="settings-group info-block">
+      <h2 class="settings-title">Автоматизация жалоб</h2>
+      <div class="info-text">
+        <p>Автоматическая подача жалоб через чат поддержки. Откройте <a href="https://seller.ozon.ru/app/messenger/?group=support_v2" target="_blank" class="link-ozon">seller.ozon.ru</a> — бот сам перейдёт в чат и отправит все артикулы.</p>
+        <p><b>Режимы:</b></p>
+        <ul>
+          <li><b>Автоматический</b> — бот навигирует по дереву чата, отправляет артикулы, прикрепляет файлы-доказательства и ждёт результат. Полная автономия.</li>
+          <li><b>Тестовый</b> — только лог без реальных действий. Используйте для проверки перед запуском.</li>
+        </ul>
+        <p><b>Совет:</b> прикрепите скриншоты-доказательства перед запуском — бот отправит их автоматически.</p>
+      </div>
+    </div>
+
+    <label for="complaintSkuInput">Артикулы для жалоб (по одному на строку):</label>
+    <textarea id="complaintSkuInput" rows="4" placeholder="1234567890&#10;9876543210"></textarea>
+    <div class="complaint-import-row">
+      <button id="btnImportCsv" class="btn btn-small">📥 Импорт из Excel</button>
+      <span id="importCsvHint" class="saved-hint hidden"></span>
+      <input type="file" id="importCsvInput" accept=".csv" style="display:none;">
+    </div>
+    <div id="complaintSkuWarning" class="batch-warning hidden"></div>
+
+    <div class="complaint-options">
+      <div class="settings-row">
+        <label class="inline-label">Режим:</label>
+        <select id="complaintMode" class="input-select">
+          <option value="auto">Автоматический</option>
+          <option value="dry">Тестовый (dry run)</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <label class="inline-label">Тип жалобы:</label>
+        <select id="complaintType" class="input-select">
+          <option value="seller">Нарушение правил продавцом</option>
+          <option value="brand">Жалоба от бренда</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="complaint-files">
+      <label class="inline-label">Доказательства (скриншоты):</label>
+      <div class="file-drop-zone" id="complaintFileDrop">
+        <span class="file-drop-text">Перетащите файлы или нажмите</span>
+        <input type="file" id="complaintFileInput" multiple accept="image/*,.pdf,.doc,.docx">
+      </div>
+      <div id="complaintFileList" class="file-list hidden"></div>
+    </div>
+
+    <div class="actions" style="margin-top: 8px;">
+      <button id="btnComplaintStart" class="btn btn-primary">📨 Начать</button>
+      <button id="btnComplaintPause" class="btn btn-secondary" disabled>⏸</button>
+      <button id="btnComplaintStop" class="btn btn-danger" disabled>⏹</button>
+      <button id="btnComplaintClear" class="btn btn-secondary" title="Очистить сессию">🗑 Очистить</button>
+    </div>
+
+    <div id="complaintStatus" class="complaint-status hidden">
+      <div class="complaint-status-header">
+        <span id="complaintStatusIcon" class="status-icon">⏳</span>
+        <span id="complaintStatusText">Ожидание</span>
+      </div>
+      <div id="complaintHint" class="complaint-hint hidden"></div>
+    </div>
+
+    <div id="complaintProgressWrap" class="hidden">
+      <div class="progress-text">
+        <span id="complaintProgressCurrent">0</span>/<span id="complaintProgressTotal">0</span> жалоб
+        <span id="complaintProgressPercent" class="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div id="complaintProgressFill" class="progress-fill"></div>
+      </div>
+    </div>
+
+    <div id="complaintQueue" class="complaint-queue hidden"></div>
+
+    <div id="complaintLogSection">
+      <div class="log-header" id="complaintLogToggle">
+        <span class="log-arrow">&#9660;</span> Лог <span id="complaintLogCount" class="badge-sm">0</span>
+      </div>
+      <div id="complaintLogContainer"></div>
+    </div>
+  </main>
+
+  <!-- Модальное окно -->
+  <div id="sessionModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Сессия</h3>
+        <button id="modalClose" class="btn-close">&times;</button>
+      </div>
+      <div id="modalBody"></div>
+      <div class="modal-footer">
+        <button id="modalDownload" class="btn btn-small">📥 Excel</button>
+        <button id="modalCopy" class="btn btn-small">📋 Копировать</button>
+        <button id="modalLogs" class="btn btn-small">📝 Логи</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
