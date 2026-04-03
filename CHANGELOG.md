@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.8.1] - 2026-04-03
+### Fixed (CRITICAL)
+- **Жалобы: чат покупателя вместо поддержки** — `findSellerTab()` выбирал любую вкладку seller.ozon.ru, включая `group=customers_v2`. Теперь строгий приоритет: `group=support_v2` → messenger без group= → любая вкладка (с последующим redirect)
+- **Жалобы: `ensureSellerChatPage` не перенаправлял** — URL с `/app/messenger?group=customers_v2` проходил проверку `includes('/app/messenger')`. Теперь проверяется именно `group=support_v2`
+- **Жалобы: параллельная вкладка с покупателем** — добавлена проверка URL перед каждым шагом `supportProcessStep()`: если URL содержит `group=customers`, бот автоматически перенаправляет на `support_v2`
+- **CPU freeze / зависание браузера** — рекурсивные вызовы `supportProcessStep()` (~30 мест) заменены на итеративный цикл `supportProcessLoop()` с `MAX_STEP_ITERATIONS=200`, `await delay(50)` между шагами для yield к event loop, аварийная остановка при превышении лимита
+- **Зацикливание `in_progress`** — бот отправлял артикул в чат покупателя (не в поддержку), получал `in_progress` бесконечно. Исправлено валидацией URL + strict tab selection
+
 ## [5.8.0] - 2026-04-02
 ### Added
 - **Пробный период PRO (3 дня)** — кнопка «Попробовать PRO бесплатно — 3 дня» в Настройках. Серверная привязка к fingerprint: один триал на устройство навсегда
