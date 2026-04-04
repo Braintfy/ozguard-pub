@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OZGuard",
-  "version": "5.8.2",
+  "version": "5.9.1",
   "description": "Поиск конкурентов (других продавцов) на карточках товаров OZON",
   "default_locale": "ru",
   "permissions": ["storage", "scripting", "tabs", "alarms"],
@@ -20,7 +20,7 @@
   ],
   "action": {
     "default_popup": "popup/popup.html",
-    "default_icon": { "16": "assets/icon-16.png", "48": "assets/icon-48.png", "128": "assets/icon-128.png" }
+    "default_icon": { "16": "assets/icon-16.png", "48": "assets/icon-48.png", "64": "assets/icon-64.png", "128": "assets/icon-128.png" }
   },
-  "icons": { "16": "assets/icon-16.png", "48": "assets/icon-48.png", "128": "assets/icon-128.png" }
+  "icons": { "16": "assets/icon-16.png", "48": "assets/icon-48.png", "64": "assets/icon-64.png", "128": "assets/icon-128.png" }
 }

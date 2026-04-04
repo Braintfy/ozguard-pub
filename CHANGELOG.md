@@ -1,5 +1,26 @@
 # Changelog
 
+## [5.9.1] - 2026-04-04
+### Changed
+- **Жалобы: полный редизайн UI** — компактные подсказки (VPN + инструкция) вместо громоздкого info-блока, настройки в 2-колоночной сетке, кнопки управления в одну строку с корзиной-иконкой, файлы компактнее (`popup/popup.html`, `popup/popup.css`)
+- **Подсказки: persistent dismiss** — закрытие подсказок сохраняется в `chrome.storage.local` (переживает перезапуск расширения, сбрасывается при переустановке). Кнопка «💡 Показать подсказки» возвращает все скрытые (`popup/popup.js`)
+- **Кнопка «Визуальный» → «🐢 Медленный»** — tooltip: «безопаснее для сессии, не нагружает антибот» (`popup/popup.html`)
+### Added
+- **tariff-migration-guide.md** — инструкция для ИИ по миграции тарифа «Навсегда» → «Годовая подписка»: серверный API, ЮКасса, сайт, email-шаблоны, админка, backward compatibility
+
+## [5.9.0] - 2026-04-04
+### Added
+- **Быстрый режим сканирования (⚡)** — прямые API-запросы к Ozon без открытия окна браузера. В 5-10 раз быстрее визуального режима. Использует скрытый таб (или существующую вкладку www.ozon.ru) для выполнения authenticated fetch к `/api/entrypoint-api.bx` и `/api/composer-api.bx` (`background/service-worker.js`)
+- **`fetchProductDataDirect()`** — запрос данных товара напрямую по SKU через API без навигации по страницам. Пробует product page API → search API → поиск товара в результатах → запрос найденного товара (`background/service-worker.js`)
+- **`fetchSellersListDirect()`** — запрос списка продавцов через modal API без навигации (`background/service-worker.js`)
+- **`scanSkuFast()`** — оркестратор быстрого сканирования одного SKU: прямой API → парсинг продавцов → modal → фильтрация (`background/service-worker.js`)
+- **`parseSellersFromModalData()`** — общий парсер продавцов из modal data, используется и быстрым и визуальным режимом (`background/service-worker.js`)
+- **Переключатель режима сканирования** — UI-кнопки «⚡ Быстрый» / «🖥 Визуальный» в табе Сканирование. Режим сохраняется в `chrome.storage.local` (`popup/popup.html`, `popup/popup.js`, `popup/popup.css`)
+### Changed
+- **Автоматический fallback** — если быстрый режим не получает данные 3 раза подряд, автоматически переключается на визуальный (открывает окно) для оставшихся SKU (`background/service-worker.js`)
+- **Оптимизированные задержки** — в быстром режиме задержка между SKU 600мс (vs 2000мс в визуальном), антибот-паузы 3-8 сек каждые 20 SKU (vs 10-20 сек) (`background/service-worker.js`)
+- **Рефакторинг `fetchSellersList()`** — дублированный парсинг продавцов вынесен в общий `parseSellersFromModalData()` (`background/service-worker.js`)
+
 ## [5.8.2] - 2026-04-04
 ### Changed
 - **Жалобы: авто-открытие вкладки** — `findSellerTab()` автоматически создаёт новую вкладку `seller.ozon.ru/app/messenger/?group=support_v2` если ни одной вкладки seller не найдено (`background/service-worker.js`)

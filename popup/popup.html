@@ -12,7 +12,7 @@
     <div class="header-right">
       <a id="btnBuyPro" class="buy-pro-btn" href="https://codefic.ru/#pricing" target="_blank">Купить PRO</a>
       <button id="btnHelp" class="btn-help" title="Инструкция">?</button>
-      <span class="version">v5.8.2</span>
+      <span class="version">v5.9.1</span>
     </div>
   </header>
 
@@ -34,7 +34,7 @@
         <div class="help-section">
           <div class="help-section-title">🔍 Сканирование</div>
           <div class="help-step"><span class="help-num">1</span><div><b>Введите SKU</b> своих товаров в поле (по одному на строку). SKU — это числовой артикул товара на OZON, его видно в адресной строке карточки товара или в личном кабинете продавца.</div></div>
-          <div class="help-step"><span class="help-num">2</span><div>Нажмите <b>«Найти конкурентов»</b>. Расширение откроет отдельное окно OZON и автоматически проверит каждый товар.</div></div>
+          <div class="help-step"><span class="help-num">2</span><div>Выберите <b>режим сканирования</b>: <b>⚡ Быстрый</b> — прямые API-запросы без открытия окна (в 5-10 раз быстрее); <b>🐢 Медленный</b> — открывает окно OZON и имитирует поведение пользователя (медленнее, но безопаснее для сессии). Нажмите <b>«Найти конкурентов»</b>.</div></div>
           <div class="help-step"><span class="help-num">3</span><div>В <b>Результатах</b> вы увидите по каждому товару: название, количество конкурентов, их SKU и цены. Кнопка <b>⎘</b> рядом с вашим SKU копирует его. Ссылка <b>«открыть на OZON»</b> ведёт на карточку. Кнопка <b>⎘</b> рядом с «N конк.» копирует сразу все SKU конкурентов по этому товару.</div></div>
           <div class="help-tip">⏸ Пауза и ⏹ Стоп работают прямо во время сбора — даже если popup закрыт, через плавающую панель на странице OZON.</div>
         </div>
@@ -115,10 +115,18 @@
     <label for="skuInput">SKU (по одному на строку):</label>
     <textarea id="skuInput" rows="4" placeholder="1234567890&#10;9876543210&#10;5555555555"></textarea>
 
-    <div class="actions">
-      <button id="btnStart" class="btn btn-primary">🔍 Найти конкурентов</button>
-      <button id="btnPause" class="btn btn-secondary" disabled>⏸</button>
-      <button id="btnStop" class="btn btn-danger" disabled>⏹</button>
+    <div class="scan-controls">
+      <div class="scan-controls-top">
+        <button id="btnStart" class="btn btn-primary btn-start">🔍 Найти конкурентов</button>
+        <button id="btnPause" class="btn btn-icon btn-secondary" disabled title="Пауза">⏸</button>
+        <button id="btnStop" class="btn btn-icon btn-danger" disabled title="Стоп">⏹</button>
+      </div>
+      <div class="scan-mode-row">
+        <div class="scan-mode-toggle">
+          <button id="scanModeFast" class="scan-mode-btn active" data-mode="fast" title="Прямые API-запросы, без открытия окон. Быстрее в 5-10 раз.">⚡ Быстрый</button>
+          <button id="scanModeVisual" class="scan-mode-btn" data-mode="visual" title="Открывает окно OZON и имитирует поведение пользователя. Медленнее, но безопаснее для сессии — не нагружает антибот и не требует очистки кэша.">🐢 Медленный</button>
+        </div>
+      </div>
     </div>
 
     <div id="progressWrap" class="hidden">
@@ -133,16 +141,18 @@
 
     <section id="resultsSection" class="hidden">
       <div class="results-top">
-        <div class="section-header">
-          <h2>Результаты</h2>
-          <span id="totalSellers" class="badge">0</span>
+        <div class="results-header-row">
+          <div class="results-title">
+            <h2>Результаты</h2>
+            <span id="totalSellers" class="badge">0</span>
+          </div>
+          <button id="btnClearSession" class="btn-icon-clear" title="Очистить результаты">🗑</button>
         </div>
         <div class="export-actions">
-          <button id="btnCopy" class="btn btn-small">📋 Скопировать</button>
-          <button id="btnCopySku" class="btn btn-small">📋 Только SKU</button>
-          <button id="btnExcel" class="btn btn-small">📥 Excel</button>
-          <button id="btnSendToComplaints" class="btn btn-small btn-pro">📨 В жалобы</button>
-          <button id="btnClearSession" class="btn btn-small btn-danger-sm">🗑</button>
+          <button id="btnCopy" class="btn btn-export">📋 Копировать</button>
+          <button id="btnCopySku" class="btn btn-export">📋 SKU</button>
+          <button id="btnExcel" class="btn btn-export">📥 Excel</button>
+          <button id="btnSendToComplaints" class="btn btn-export btn-pro">📨 В жалобы</button>
         </div>
       </div>
       <div id="resultsContainer"></div>
@@ -240,29 +250,28 @@
 
   <!-- Таб: Жалобы (PRO) -->
   <main id="tabComplaints" class="tab-content">
-    <div id="vpnWarning" class="vpn-warning">
-      <div class="vpn-warning-content">
-        <span class="vpn-warning-icon">⚠️</span>
-        <span><b>Рекомендация:</b> отключите VPN перед запуском жалоб. Ozon может блокировать запросы или сбросить сессию при подключении через VPN.</span>
+    <!-- Подсказки (скрываемые, сохраняются в storage) -->
+    <div id="vpnWarning" class="hint-banner hint-warning">
+      <div class="hint-banner-body">
+        <span class="hint-banner-icon">⚠️</span>
+        <span><b>VPN:</b> отключите перед запуском. Ozon может сбросить сессию через VPN.</span>
       </div>
-      <button id="vpnWarningClose" class="vpn-warning-close" title="Закрыть">✕</button>
+      <button class="hint-close" data-hint="vpn" title="Скрыть">✕</button>
     </div>
 
-    <div class="settings-group info-block">
-      <h2 class="settings-title">Автоматизация жалоб</h2>
-      <div class="info-text">
-        <p>Автоматическая подача жалоб через чат поддержки. Откройте <a href="https://seller.ozon.ru/app/messenger/?group=support_v2" target="_blank" class="link-ozon">seller.ozon.ru</a> — бот сам перейдёт в чат и отправит все артикулы.</p>
-        <p><b>Режимы:</b></p>
-        <ul>
-          <li><b>Автоматический</b> — бот навигирует по дереву чата, отправляет артикулы, прикрепляет файлы-доказательства и ждёт результат. Полная автономия.</li>
-          <li><b>Тестовый</b> — только лог без реальных действий. Используйте для проверки перед запуском.</li>
-        </ul>
-        <p><b>Совет:</b> прикрепите скриншоты-доказательства перед запуском — бот отправит их автоматически.</p>
+    <div id="instructionHint" class="hint-banner hint-info">
+      <div class="hint-banner-body">
+        <span class="hint-banner-icon">💡</span>
+        <span>Бот сам откроет <a href="https://seller.ozon.ru/app/messenger/?group=support_v2" target="_blank" class="link-ozon">чат поддержки</a>, введёт артикулы и прикрепит файлы. Выберите режим и нажмите «Начать».</span>
       </div>
+      <button class="hint-close" data-hint="instruction" title="Скрыть">✕</button>
     </div>
 
-    <label for="complaintSkuInput">Артикулы для жалоб (по одному на строку):</label>
-    <textarea id="complaintSkuInput" rows="4" placeholder="1234567890&#10;9876543210"></textarea>
+    <button id="btnShowHints" class="btn-show-hints hidden">💡 Показать подсказки</button>
+
+    <!-- Ввод артикулов -->
+    <label for="complaintSkuInput">Артикулы (по одному на строку):</label>
+    <textarea id="complaintSkuInput" rows="3" placeholder="1234567890&#10;9876543210"></textarea>
     <div class="complaint-import-row">
       <button id="btnImportCsv" class="btn btn-small">📥 Импорт из Excel</button>
       <span id="importCsvHint" class="saved-hint hidden"></span>
@@ -270,39 +279,42 @@
     </div>
     <div id="complaintSkuWarning" class="batch-warning hidden"></div>
 
-    <div class="complaint-options">
-      <div class="settings-row">
-        <label class="inline-label">Режим:</label>
+    <!-- Настройки: два селекта в ряд -->
+    <div class="complaint-settings-grid">
+      <div class="complaint-setting">
+        <label class="complaint-setting-label">Режим</label>
         <select id="complaintMode" class="input-select">
           <option value="auto">Автоматический</option>
           <option value="dry">Тестовый (dry run)</option>
         </select>
       </div>
-      <div class="settings-row">
-        <label class="inline-label">Тип жалобы:</label>
+      <div class="complaint-setting">
+        <label class="complaint-setting-label">Тип жалобы</label>
         <select id="complaintType" class="input-select">
-          <option value="seller">Нарушение правил продавцом</option>
+          <option value="seller">Нарушение правил</option>
           <option value="brand">Жалоба от бренда</option>
         </select>
       </div>
     </div>
 
+    <!-- Файлы -->
     <div class="complaint-files">
-      <label class="inline-label">Доказательства (скриншоты):</label>
       <div class="file-drop-zone" id="complaintFileDrop">
-        <span class="file-drop-text">Перетащите файлы или нажмите</span>
+        <span class="file-drop-text">📎 Доказательства — перетащите или нажмите</span>
         <input type="file" id="complaintFileInput" multiple accept="image/*,.pdf,.doc,.docx">
       </div>
       <div id="complaintFileList" class="file-list hidden"></div>
     </div>
 
-    <div class="actions" style="margin-top: 8px;">
-      <button id="btnComplaintStart" class="btn btn-primary">📨 Начать</button>
-      <button id="btnComplaintPause" class="btn btn-secondary" disabled>⏸</button>
-      <button id="btnComplaintStop" class="btn btn-danger" disabled>⏹</button>
-      <button id="btnComplaintClear" class="btn btn-secondary" title="Очистить сессию">🗑 Очистить</button>
+    <!-- Управление -->
+    <div class="complaint-controls">
+      <button id="btnComplaintStart" class="btn btn-primary btn-start">📨 Начать</button>
+      <button id="btnComplaintPause" class="btn btn-icon btn-secondary" disabled title="Пауза">⏸</button>
+      <button id="btnComplaintStop" class="btn btn-icon btn-danger" disabled title="Стоп">⏹</button>
+      <button id="btnComplaintClear" class="btn-icon-clear" title="Очистить сессию">🗑</button>
     </div>
 
+    <!-- Статус + прогресс -->
     <div id="complaintStatus" class="complaint-status hidden">
       <div class="complaint-status-header">
         <span id="complaintStatusIcon" class="status-icon">⏳</span>
@@ -321,8 +333,10 @@
       </div>
     </div>
 
+    <!-- Очередь SKU -->
     <div id="complaintQueue" class="complaint-queue hidden"></div>
 
+    <!-- Лог -->
     <div id="complaintLogSection">
       <div class="log-header" id="complaintLogToggle">
         <span class="log-arrow">&#9660;</span> Лог <span id="complaintLogCount" class="badge-sm">0</span>
