@@ -12,7 +12,7 @@
     <div class="header-right">
       <a id="btnBuyPro" class="buy-pro-btn" href="https://codefic.ru/#pricing" target="_blank">Купить PRO</a>
       <button id="btnHelp" class="btn-help" title="Инструкция">?</button>
-      <span class="version">v5.8.1</span>
+      <span class="version">v5.8.2</span>
     </div>
   </header>
 
@@ -186,6 +186,10 @@
           <span id="licenseStatusText">FREE-версия</span>
         </div>
       </div>
+      <div id="trialInfoBlock" class="trial-info-block hidden">
+        <span class="trial-info-icon">⏳</span>
+        <span>Пробный период: осталось <b id="trialDaysLeftText">—</b></span>
+      </div>
       <div id="licenseInputBlock">
         <button id="btnActivateTrial" class="btn-trial hidden">⚡ Попробовать PRO бесплатно — 3 дня</button>
         <div id="trialExpiredBlock" class="trial-expired-block hidden">
@@ -236,6 +240,14 @@
 
   <!-- Таб: Жалобы (PRO) -->
   <main id="tabComplaints" class="tab-content">
+    <div id="vpnWarning" class="vpn-warning">
+      <div class="vpn-warning-content">
+        <span class="vpn-warning-icon">⚠️</span>
+        <span><b>Рекомендация:</b> отключите VPN перед запуском жалоб. Ozon может блокировать запросы или сбросить сессию при подключении через VPN.</span>
+      </div>
+      <button id="vpnWarningClose" class="vpn-warning-close" title="Закрыть">✕</button>
+    </div>
+
     <div class="settings-group info-block">
       <h2 class="settings-title">Автоматизация жалоб</h2>
       <div class="info-text">

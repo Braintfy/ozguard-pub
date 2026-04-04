@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.8.2] - 2026-04-04
+### Changed
+- **Жалобы: авто-открытие вкладки** — `findSellerTab()` автоматически создаёт новую вкладку `seller.ozon.ru/app/messenger/?group=support_v2` если ни одной вкладки seller не найдено (`background/service-worker.js`)
+- **Жалобы: проверка авторизации** — `ensureSellerChatPage()` определяет редирект на логин (`/signin`, `/login`, `passport.ozon.ru`) и выводит предупреждение войти в аккаунт (`background/service-worker.js`)
+- **Жалобы: восстановление закрытой вкладки** — если вкладка закрыта во время работы, `supportProcessStep()` и `ensureSellerChatPage()` автоматически ищут/создают новую вкладку (`background/service-worker.js`)
+- **Жалобы: защита от ухода со страницы** — `supportProcessStep()` проверяет что URL остаётся на `seller.ozon.ru`, при уходе — автовозврат на чат поддержки (`background/service-worker.js`)
+- **Жалобы: информативные сообщения** — все ошибки связи/авторизации теперь содержат конкретные инструкции для пользователя (что открыть, куда перейти)
+### Added
+- **Жалобы: обход FAQ-виджета (двухшаговый)** — новая фаза `faq_page` в `detectPhase()`. На messenger-странице без открытого чата бот: 1) находит и кликает плавающую кнопку «Помощь» (SVG-иконка, триггер tippy), 2) в открывшемся tippy-popup кликает «Не нашли ответ на свой вопрос?» → открывается реальный чат с ботом. Исправлено определение `no_chat` — теперь проверяется `findChatContainer()` напрямую, а не через fallback `findQuickReplyButtons` который ловил nav-табы (Аналитика, Покупатели...) как "кнопки чата" (`content/support-automation.js`, `background/service-worker.js`)
+- **VPN-предупреждение** — в разделе Жалобы блок-рекомендация отключить VPN, закрывается на крестик (запоминается в sessionStorage) (`popup/popup.html`, `popup/popup.js`, `popup/popup.css`)
+- **Отображение остатка триала** — в Настройках при активном триале показывается блок «Пробный период: осталось N дн.» (`popup/popup.html`, `popup/popup.js`, `popup/popup.css`)
+
 ## [5.8.1] - 2026-04-03
 ### Fixed (CRITICAL)
 - **Жалобы: чат покупателя вместо поддержки** — `findSellerTab()` выбирал любую вкладку seller.ozon.ru, включая `group=customers_v2`. Теперь строгий приоритет: `group=support_v2` → messenger без group= → любая вкладка (с последующим redirect)
