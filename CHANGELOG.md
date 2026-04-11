@@ -1,5 +1,20 @@
 # Changelog
 
+## [5.9.3] - 2026-04-12
+### Fixed (CRITICAL — CPU freeze)
+- **Жалобы: рекурсия логирования → CPU freeze** — `supportLog()` обновлял плавающую панель через `sendToSupport(updatePanel)`. При ошибке связи `sendToSupport` логировал «Нет связи — инжектирую…» через `supportLog()`, который снова вызывал `sendToSupport`. `injectSupportScripts` тоже логировал ошибки через `supportLog`. Каждый лог порождал 2 новых → экспоненциальный каскад промисов в одной секунде → CPU freeze, помогало только убить браузер. Теперь:
+  1. `supportLog` → `updatePanel` идёт через прямой `chrome.tabs.sendMessage` без авто-инжекта и без рекурсивного логирования
+  2. `injectSupportScripts` и `sendToSupport` пишут технические ошибки в `console.log`, не в `supportLog`
+  3. Throttle `updatePanel`: не чаще 1 раза в секунду (`PANEL_UPDATE_INTERVAL_MS = 1000`)
+  (`background/service-worker.js`)
+### Added
+- **Circuit breaker для injection** — если `chrome.scripting.executeScript` падает >= 5 раз за 10 секунд, автоматизация останавливается с понятным сообщением «Закройте старые вкладки seller.ozon.ru, откройте новую и нажмите Начать» (`background/service-worker.js`)
+- **Pre-flight проверка вкладок при `supportStart`** — `preflightSellerTabs()` детектирует:
+  - 0 вкладок → создаёт новую автоматически
+  - 2+ вкладки → ошибка `multiple_tabs` с просьбой оставить только одну
+  - 1 вкладка но injection падает → ошибка `stale_tab`: «старая вкладка от предыдущей сессии расширения, откройте новую»
+  Pre-flight ошибки выводятся в popup жёлтым блоком предупреждения (`background/service-worker.js`, `popup/popup.js`)
+
 ## [5.9.2] - 2026-04-05
 ### Fixed
 - **Быстрый скан: товары не в наличии** — OZON возвращает страницу категории вместо товара (44-50 виджетов, title "Витамины - купить на OZON"). Добавлена `isProductPage()`: проверяет наличие `productHeading`, упоминание SKU в widgetStates, маркер категории в title. При обнаружении категории — пропуск с ошибкой «Товар не найден или не в наличии» (`background/service-worker.js`)

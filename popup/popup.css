@@ -351,6 +351,15 @@ textarea:focus, input[type="text"]:focus {
   background: #d0d3da;
 }
 
+/* Когда .btn-small комбинируется с .btn-primary — сохраняем синий стиль */
+.btn-small.btn-primary {
+  background: #005bff;
+  color: #fff;
+}
+.btn-small.btn-primary:hover {
+  background: #0047cc;
+}
+
 .btn-danger-sm {
   background: #fde8e8;
   color: #d32f2f;
