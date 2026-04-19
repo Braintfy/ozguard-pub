@@ -180,7 +180,57 @@ header {
 .version {
   font-size: 11px;
   color: #999;
+  transition: color 0.15s, background 0.15s;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
+.version.has-update {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  animation: updatePulse 2s ease-in-out infinite;
+}
+@keyframes updatePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+}
+
+/* Баннер обновления под хедером */
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, #fff7ed, #ffedd5);
+  border-bottom: 1px solid #f59e0b;
+  font-size: 12px;
+  color: #7c2d12;
+}
+.update-banner-body {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+.update-banner-icon { font-size: 14px; }
+.update-banner a {
+  color: #d97706;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.update-banner a:hover { color: #92400e; }
+.update-banner-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #92400e;
+  opacity: 0.5;
+  font-size: 13px;
+  padding: 2px 4px;
+}
+.update-banner-close:hover { opacity: 1; }
 
 /* Табы */
 .tabs {

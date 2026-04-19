@@ -12,9 +12,18 @@
     <div class="header-right">
       <a id="btnBuyPro" class="buy-pro-btn" href="https://codefic.ru/#pricing" target="_blank">Купить PRO</a>
       <button id="btnHelp" class="btn-help" title="Инструкция">?</button>
-      <span class="version">v5.9.6</span>
+      <span id="versionBadge" class="version" title="Текущая версия">v5.9.7</span>
     </div>
   </header>
+
+  <!-- Баннер обновления — появляется если есть новая версия -->
+  <div id="updateBanner" class="update-banner hidden">
+    <div class="update-banner-body">
+      <span class="update-banner-icon">🎉</span>
+      <span>Доступна новая версия <b id="updateLatestVersion">—</b>. <a id="updateDownloadLink" href="#" target="_blank" rel="noopener">Скачать</a></span>
+    </div>
+    <button id="updateBannerClose" class="update-banner-close" title="Скрыть">✕</button>
+  </div>
 
   <!-- Модальное окно инструкции -->
   <div id="helpModal" class="help-modal hidden">
