@@ -1,5 +1,33 @@
 # Changelog
 
+## [5.9.5] - 2026-04-19
+### Fixed (CRITICAL)
+- **Жалобы: бот писал SKU в закрытый чат после «Отменить обращение»** — после клика «Отменить обращение» чат закрывается, но поле ввода остаётся. Бот видел `input_ready` и начинал писать следующий SKU в завершённое обращение (никуда не отправлялось, но время терялось и логика терялась). Фикс: после успешного клика «Отменить обращение» ВСЕГДА принудительная навигация на `/app/messenger/?group=support_v2` + инжект скриптов. Фаза становится `no_chat`/`faq_page` → бот корректно открывает новый чат через «Помощь» (`background/service-worker.js`)
+- **Жалобы: popup терял логи и очередь когда был закрыт** — `supportState.logs`/`queue` жили только в памяти service worker и в `lastComplaintSession.logs` (DOM popup). Если popup был закрыт во время работы бота, при переоткрытии он видел только то что успел записать сам. Теперь:
+  1. `persistActiveSupportSession()` — debounced (1с) запись полной сессии в `chrome.storage.local.activeSupportSession` при каждом `supportLog` и `supportProgress`/`supportComplete`/`supportNeedAction`
+  2. `supportGetStatus` возвращает состояние **всегда** — если в памяти нет (SW перезапустился), читает из `activeSupportSession`. Добавлено поле `source: 'memory' | 'storage' | 'none'`
+  3. Popup при открытии восстанавливает очередь SKU с бейджами done/failed/pending и полный лог сессии — даже если бот уже завершился
+  4. `supportStart` очищает старый `activeSupportSession`; `btnComplaintClear` тоже
+  (`background/service-worker.js`, `popup/popup.js`)
+
+## [5.9.4] - 2026-04-18
+### Added
+- **Жалобы: детекция эскалации чата (`chat_escalated`)** — новая фаза в `detectPhase()`. Триггеры: текст бота «направил ваше обращение коллегам», «создайте новое обращение», «нажмите Отменить обращение», или кнопка «Отменить обращение» в quick-replies. Обработчик в `supportProcessStep`:
+  - Если текущий SKU не подтверждён (нет «Скрыли товар» + SKU в ответе бота) → возвращает его в pending для повтора
+  - Кликает «Отменить обращение» (fallback: навигация на `/app/messenger/?group=support_v2`)
+  - Сбрасывает `_staleWaitCount`, `lastPhase`, `phaseRepeatCount`
+  - Следующая итерация попадает в фазу `no_chat`/`faq_page` → бот открывает новый чат и повторяет навигацию
+  (`content/support-automation.js`, `background/service-worker.js`)
+- **Жалобы: persistent progress** — `saveSupportSession()` теперь сохраняет `complaintProgress.processedSkus` в `chrome.storage.local` после каждого обработанного SKU. При следующем «Начать»:
+  - Popup проверяет пересечение входящих SKU с `processedSkus`
+  - Показывает `confirm()`: ОК → пропустить обработанные, Отмена → начать заново (`resetProgress: true`)
+  - Service worker помечает обработанные SKU как `done/failed/skipped` в `queue`, стартует с первого `pending`
+  - Если все SKU обработаны → статус `all_done` с подсказкой очистить прогресс
+  - `btnComplaintClear` очищает `complaintProgress` вместе с `lastComplaintSession`
+  - Новые actions: `supportResetProgress`, `supportGetProgress`
+  (`background/service-worker.js`, `popup/popup.js`)
+- **Скоринг кнопки «Отменить обращение»** — добавлен в `findQuickReplyButtons` score +10 для надёжного поиска (`content/support-automation.js`)
+
 ## [5.9.3] - 2026-04-12
 ### Fixed (CRITICAL — CPU freeze)
 - **Жалобы: рекурсия логирования → CPU freeze** — `supportLog()` обновлял плавающую панель через `sendToSupport(updatePanel)`. При ошибке связи `sendToSupport` логировал «Нет связи — инжектирую…» через `supportLog()`, который снова вызывал `sendToSupport`. `injectSupportScripts` тоже логировал ошибки через `supportLog`. Каждый лог порождал 2 новых → экспоненциальный каскад промисов в одной секунде → CPU freeze, помогало только убить браузер. Теперь:
