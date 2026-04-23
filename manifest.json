@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
   "name": "OZGuard",
-  "version": "5.9.9",
+  "version": "5.9.16",
   "description": "Поиск конкурентов (других продавцов) на карточках товаров OZON",
   "default_locale": "ru",
-  "permissions": ["storage", "scripting", "tabs", "alarms"],
+  "permissions": ["storage", "scripting", "tabs", "alarms", "unlimitedStorage"],
   "host_permissions": [
     "https://www.ozon.ru/*",
     "https://seller.ozon.ru/*"

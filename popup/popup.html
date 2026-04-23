@@ -12,7 +12,7 @@
     <div class="header-right">
       <a id="btnBuyPro" class="buy-pro-btn" href="https://codefic.ru/#pricing" target="_blank">Купить PRO</a>
       <button id="btnHelp" class="btn-help" title="Инструкция">?</button>
-      <span id="versionBadge" class="version" title="Текущая версия">v5.9.9</span>
+      <span id="versionBadge" class="version" title="Текущая версия">v5.9.16</span>
     </div>
   </header>
 
@@ -20,7 +20,11 @@
   <div id="updateBanner" class="update-banner hidden">
     <div class="update-banner-body">
       <span class="update-banner-icon">🎉</span>
-      <span>Доступна новая версия <b id="updateLatestVersion">—</b>. <a id="updateDownloadLink" href="#" target="_blank" rel="noopener">Скачать</a></span>
+      <span>Доступна новая версия <b id="updateLatestVersion">—</b>.
+        <a id="updateDownloadLink" href="#" target="_blank" rel="noopener">Скачать</a>
+        <span class="update-banner-sep">·</span>
+        <a id="updateChangelogLink" href="https://codefic.ru/#changelog" target="_blank" rel="noopener">Читать об обновлении</a>
+      </span>
     </div>
     <button id="updateBannerClose" class="update-banner-close" title="Скрыть">✕</button>
   </div>
@@ -45,6 +49,7 @@
           <div class="help-step"><span class="help-num">1</span><div><b>Введите SKU</b> своих товаров в поле (по одному на строку). SKU — это числовой артикул товара на OZON, его видно в адресной строке карточки товара или в личном кабинете продавца.</div></div>
           <div class="help-step"><span class="help-num">2</span><div>Выберите <b>режим сканирования</b>: <b>⚡ Быстрый</b> — прямые API-запросы без открытия окна (в 5-10 раз быстрее); <b>🐢 Медленный</b> — открывает окно OZON и имитирует поведение пользователя (медленнее, но безопаснее для сессии). Нажмите <b>«Найти конкурентов»</b>.</div></div>
           <div class="help-step"><span class="help-num">3</span><div>В <b>Результатах</b> вы увидите по каждому товару: название, количество конкурентов, их SKU и цены. Кнопка <b>⎘</b> рядом с вашим SKU копирует его. Ссылка <b>«открыть на OZON»</b> ведёт на карточку. Кнопка <b>⎘</b> рядом с «N конк.» копирует сразу все SKU конкурентов по этому товару.</div></div>
+          <div class="help-step"><span class="help-num">4</span><div>Кнопка <b>📎 К доказательствам</b> рядом с каждым вашим SKU переносит его в Настройки → блок «Доказательства для отдельных SKU». Если к SKU уже привязаны файлы — кнопка меняется на <b>✓ Доказательства</b> зелёным. Так удобно за один проход по результатам собрать все доказательства.</div></div>
           <div class="help-tip">⏸ Пауза и ⏹ Стоп работают прямо во время сбора — даже если popup закрыт, через плавающую панель на странице OZON.</div>
         </div>
 
@@ -74,7 +79,7 @@
           <ul class="help-list">
             <li><b>📥 Excel</b> — скачать результаты этой сессии</li>
             <li><b>👁 Детали</b> — открыть таблицу с конкурентами и ценами</li>
-            <li><b>📨 Жалобы</b> — сразу отправить SKU конкурентов из этой сессии в таб Жалобы</li>
+            <li><b>📨 Жалобы</b> — сразу отправить SKU конкурентов из этой сессии в таб Жалобы. При этом автоматически сохраняется связь «ваш SKU → конкуренты» — бот будет знать из какого вашего SKU найден каждый нарушитель, чтобы прикрепить правильные per-SKU доказательства.</li>
             <li><b>✕</b> — удалить запись</li>
           </ul>
           <div class="help-tip">В деталях сессии можно переключиться на «📝 Логи» и увидеть весь процесс сбора.</div>
@@ -86,6 +91,9 @@
             <li><b>Лицензия PRO</b> — нужна только для автоматической подачи жалоб. Весь функционал сбора SKU и пакетного импорта XLSX бесплатен. Купить PRO: <a href="https://codefic.ru/#pricing" target="_blank" class="link-ozon">codefic.ru/#pricing</a></li>
             <li><b>Исключения при сборе</b> — названия своих магазинов, которые не попадут в результаты. По одному на строку, частичное совпадение. Например, напишите «Restoremind» — и все ваши магазины с этим словом будут скрыты.</li>
             <li><b>Задержка</b> — пауза между запросами к OZON (мс). Рекомендация: 2000–3000 при 5–20 SKU, 4000–5000 при 50+ SKU.</li>
+            <li><b>Подсказки интерфейса</b> — кнопки «Скрыть все подсказки» / «Показать все подсказки» управляют баннерами во вкладке «Жалобы» (VPN-предупреждение, инструкция).</li>
+            <li><b>Жалобы: защита от каскада обращений</b> — лимит автообращений за сессию (по умолчанию 10) и лимит эскалаций подряд (по умолчанию 5). После лимита бот ставит паузу с кнопкой «Продолжить». <b>0</b> эскалаций = брендовый режим без остановок, с увеличенной паузой между обращениями (для больших каталогов).</li>
+            <li><b>Жалобы: доказательства для отдельных SKU</b> — добавьте свой SKU и файлы (видео до 200 MB, сертификаты, PDF). Бот при подаче жалобы на конкурента узнаёт из какого вашего SKU он был найден и прикрепит именно эти файлы. Если у вас несколько своих SKU указали на одного конкурента — файлы объединяются. Если для SKU нет привязанных файлов — используется <i>общий пул</i> из вкладки «Жалобы». Если и общего нет — SKU помечается failed.</li>
           </ul>
         </div>
 
@@ -93,9 +101,25 @@
           <div class="help-section-title">📨 Жалобы <span class="help-badge-pro">PRO</span></div>
           <div class="help-step"><span class="help-num">1</span><div>Введите SKU конкурентов вручную, нажмите <b>«В жалобы»</b> из Сканирования, или загрузите Excel-файл кнопкой <b>«Импорт из Excel»</b>.</div></div>
           <div class="help-step"><span class="help-num">2</span><div>Откройте <a href="https://seller.ozon.ru/app/messenger/?group=support_v2" target="_blank" class="link-ozon">seller.ozon.ru → Поддержка</a> в браузере (вкладка должна быть открыта).</div></div>
-          <div class="help-step"><span class="help-num">3</span><div>Выберите тип жалобы и нажмите <b>«📨 Начать»</b>. Бот сам откроет чат поддержки, введёт каждый артикул и прикрепит файлы-доказательства (если загружены).</div></div>
+          <div class="help-step"><span class="help-num">3</span><div>Выберите <b>тип жалобы</b> — три варианта:
+            <ul class="help-list" style="margin-top:4px;">
+              <li><b>Плагиат моих карточек</b> — стабильный путь через «Личный кабинет → Кабинет бренда → Жалоба → Плагиат → Использование моих фото/видео/текста». Используется чаще всего.</li>
+              <li><b>Использование моего контента (BETA)</b> — новый путь через «Товары и Цены → Контроль качества → Нарушение правил площадки → Использование моих фото, видео, текста».</li>
+              <li><b>Использование моего бренда (BETA)</b> — тот же путь, но с финальной кнопкой «Использование моего бренда».</li>
+            </ul>
+            ⚠ BETA-режимы: логи с префиксом [BETA], при 5 ошибках подряд бот автоматически остановится и попросит подтверждения. Рекомендуем сначала протестировать на 2-3 SKU.
+          </div></div>
+          <div class="help-step"><span class="help-num">4</span><div>Нажмите <b>«📨 Начать»</b>. Бот сам откроет чат поддержки, пройдёт дерево меню выбранного типа, введёт каждый артикул и прикрепит файлы-доказательства (если загружены).</div></div>
           <div class="help-tip">💡 Режим «Тестовый» — пробный запуск без реальных действий, чтобы убедиться что всё работает правильно.</div>
-          <div class="help-tip">📎 Доказательства — прикрепите файлы перед запуском, бот автоматически прикрепит их к каждому обращению. Подойдут: скриншоты карточек конкурентов, фото упаковки ваших исходных товаров, свидетельство о регистрации товарного знака, договор с правообладателем или любые другие документы, подтверждающие ваши права.</div>
+          <div class="help-tip">📎 <b>Доказательства — два режима:</b><br>
+            <b>Общий пул</b> — файлы из зоны «Доказательства» во вкладке «Жалобы». Прикрепляются ко ВСЕМ жалобам.<br>
+            <b>Per-SKU</b> — файлы из блока «Доказательства для отдельных SKU» в Настройках. Привязываются к конкретному вашему SKU и прикрепляются только к нарушителям, которые были найдены по нему. Приоритет выше общего пула.<br>
+            Видео/сертификаты до 200 MB сохраняются в IndexedDB браузера, переживают закрытие popup и перезагрузку.</div>
+          <div class="help-tip">🛎 <b>Блок «Проблемные SKU»</b> — показывает две категории:<br>
+            <i>Передано оператору</i> — обращение ушло на ручное рассмотрение (не ошибка, Ozon эскалировал);<br>
+            <i>Ошибки</i> — failed по техническим причинам (нет файлов, поле ввода недоступно, зацикливание).<br>
+            Для каждой категории: 📋 Копировать, ↻ В очередь (для повтора), 📥 XLSX, ✕ Очистить.</div>
+          <div class="help-tip">⏸ <b>Гейт лимита</b> — после 10 новых обращений за сессию или 5 эскалаций подряд бот ставит паузу. Жмите <b>Продолжить</b>, чтобы разрешить ещё порцию. Это защищает ваш seller-аккаунт от риска блокировки за массовое создание обращений.</div>
         </div>
 
         <div class="help-section">
@@ -104,6 +128,7 @@
             <li><b>«SKU не совпал — OZON перенаправил»</b> — OZON иногда показывает другой товар при поиске по SKU снятых с продажи товаров. Это нормально — расширение пропускает такие SKU.</li>
             <li><b>Бот завис?</b> — нажмите ⏹ Стоп. Если popup закрыт — используйте плавающую панель на странице OZON.</li>
             <li><b>Не запускаются жалобы?</b> — убедитесь что вкладка seller.ozon.ru открыта в браузере.</li>
+            <li><b>Ложный failed у файла?</b> — если бот показал failed, но файл в чате реально есть и Ozon ответил «Скрыли товар» — это было в старых версиях. С v5.9.11 верификация смотрит и на ответ бота, и на факт прикрепления.</li>
             <li><b>Нужна помощь?</b> — <a href="https://codefic.ru" target="_blank" class="link-ozon">codefic.ru</a></li>
           </ul>
         </div>
@@ -197,6 +222,7 @@
 
   <!-- Таб: Настройки -->
   <main id="tabSettings" class="tab-content">
+    <button id="btnShowSettingsHints" class="btn-show-hints hidden">💡 Показать подсказки</button>
     <div class="settings-group">
       <h2 class="settings-title">Лицензия PRO</h2>
       <div id="licenseStatusBlock">
@@ -238,7 +264,13 @@
 
     <div class="settings-group">
       <h2 class="settings-title">Исключения при сборе</h2>
-      <p class="settings-desc">Продавцы из этого списка будут исключены из результатов сканирования. По одному на строку (точное или частичное совпадение названия).</p>
+      <div class="hint-banner hint-info hint-compact" data-hint-host="exclusions">
+        <div class="hint-banner-body">
+          <span class="hint-banner-icon">💡</span>
+          <span>Продавцы из этого списка будут исключены из результатов сканирования. По одному на строку (точное или частичное совпадение названия).</span>
+        </div>
+        <button class="hint-close" data-hint="exclusions" title="Скрыть">✕</button>
+      </div>
       <textarea id="excludeSellersInput" rows="3" placeholder="Мой магазин&#10;ООО Рога и Копыта&#10;BrandName"></textarea>
       <div class="settings-row" style="margin-top: 6px;">
         <button id="btnSaveExclusions" class="btn btn-small">Сохранить</button>
@@ -248,12 +280,74 @@
 
     <div class="settings-group">
       <h2 class="settings-title">Задержка между запросами</h2>
-      <p class="settings-desc">Интервал между SKU (мс). Рекомендация: 2000-3000 для 5-20 SKU, 4000-5000 для 50+.</p>
+      <div class="hint-banner hint-info hint-compact" data-hint-host="delay">
+        <div class="hint-banner-body">
+          <span class="hint-banner-icon">💡</span>
+          <span>Интервал между SKU (мс). Рекомендация: 2000-3000 для 5-20 SKU, 4000-5000 для 50+.</span>
+        </div>
+        <button class="hint-close" data-hint="delay" title="Скрыть">✕</button>
+      </div>
       <div class="settings-row">
         <input type="number" id="delayMs" min="500" max="10000" step="100" value="2000" class="input-number">
         <span class="settings-unit">мс</span>
         <button id="btnSaveDelay" class="btn btn-small">Сохранить</button>
       </div>
+    </div>
+
+    <div class="settings-group">
+      <h2 class="settings-title">Жалобы: защита от каскада обращений</h2>
+      <div class="hint-banner hint-info" data-hint-host="cascade">
+        <div class="hint-banner-body">
+          <span class="hint-banner-icon">💡</span>
+          <span>Когда Ozon эскалирует чат оператору, бот оставляет обращение открытым и начинает новый чат для следующего SKU. Если эскалаций подряд много, оператор перегружается. Эти настройки ограничивают сколько новых обращений бот создаст без вашего подтверждения.</span>
+        </div>
+        <button class="hint-close" data-hint="cascade" title="Скрыть">✕</button>
+      </div>
+      <div class="settings-row">
+        <label class="complaint-setting-label" for="limitNewChats">Автообращений за сессию</label>
+        <input type="number" id="limitNewChats" min="1" max="500" step="1" value="10" class="input-number">
+        <span class="settings-unit">шт</span>
+      </div>
+      <div class="hint-banner hint-info hint-compact" data-hint-host="cascade_limit">
+        <div class="hint-banner-body">
+          <span class="hint-banner-icon">💡</span>
+          <span>После этого числа новых обращений бот ставит паузу и ждёт кнопку «Продолжить». Нажатие разрешает ещё столько же. Для селлеров с большим брендовым каталогом можно поставить 100-500.</span>
+        </div>
+        <button class="hint-close" data-hint="cascade_limit" title="Скрыть">✕</button>
+      </div>
+      <div class="settings-row" style="margin-top:8px;">
+        <label class="complaint-setting-label" for="limitConsecEsc">Эскалаций подряд</label>
+        <input type="number" id="limitConsecEsc" min="0" max="50" step="1" value="5" class="input-number">
+        <span class="settings-unit">шт</span>
+      </div>
+      <div class="hint-banner hint-info hint-compact" data-hint-host="cascade_consec">
+        <div class="hint-banner-body">
+          <span class="hint-banner-icon">💡</span>
+          <span>Сколько подряд чатов могут эскалироваться до паузы. 0 = не останавливаться (для брендового каталога). При этом между обращениями сохраняется увеличенная пауза.</span>
+        </div>
+        <button class="hint-close" data-hint="cascade_consec" title="Скрыть">✕</button>
+      </div>
+      <div class="settings-row" style="margin-top:6px;">
+        <button id="btnSaveComplaintLimits" class="btn btn-small">Сохранить</button>
+        <span id="complaintLimitsSavedHint" class="saved-hint hidden">Сохранено</span>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <h2 class="settings-title">Жалобы: доказательства для отдельных SKU</h2>
+      <div class="hint-banner hint-info" data-hint-host="sku_files">
+        <div class="hint-banner-body">
+          <span class="hint-banner-icon">💡</span>
+          <span>Если у вас на каждый товар своё доказательство (видео распаковки, сертификат бренда), добавьте здесь: <b>ваш SKU</b> + файлы. Бот при обработке жалобы на конкурента-нарушителя проверит, из какого вашего SKU он был найден, и прикрепит именно эти файлы. Если для SKU нет файлов и нет общего пула — жалоба помечается «failed». Видео до 200 MB хранятся в IndexedDB.</span>
+        </div>
+        <button class="hint-close" data-hint="sku_files" title="Скрыть">✕</button>
+      </div>
+      <div class="settings-row" style="gap:6px;">
+        <input type="text" id="skuFileSkuInput" placeholder="Ваш SKU (11-значный)" class="input-license" style="flex:1;max-width:180px;">
+        <button id="btnAddSkuFile" class="btn btn-small">＋ Добавить</button>
+      </div>
+      <input type="file" id="skuFileInput" multiple accept="image/*,video/*,.pdf,.doc,.docx" style="display:none;">
+      <div id="skuFilesList" class="sku-files-list hidden"></div>
     </div>
   </main>
 
@@ -299,18 +393,34 @@
       </div>
       <div class="complaint-setting">
         <label class="complaint-setting-label">Тип жалобы</label>
-        <select id="complaintType" class="input-select">
-          <option value="seller">Нарушение правил</option>
-          <option value="brand">Жалоба от бренда</option>
+        <select id="complaintType" class="input-select" title="Тип жалобы — выбор навигационного пути в чате поддержки Ozon">
+          <option value="plagiat_legacy" title="Стабильный путь: Личный кабинет → Кабинет бренда → Жалоба → Плагиат">Плагиат моих карточек</option>
+          <option value="content_beta" title="BETA: Товары и Цены → Контроль качества → Нарушение правил площадки → Использование моих фото, видео, текста">Мой контент (BETA)</option>
+          <option value="brand_beta" title="BETA: Товары и Цены → Контроль качества → Нарушение правил площадки → Использование моего бренда">Мой бренд (BETA)</option>
         </select>
+      </div>
+    </div>
+
+    <!-- BETA предупреждение — показывается когда выбран новый путь -->
+    <div id="betaWarning" class="hint-banner hint-warning hint-compact hidden">
+      <div class="hint-banner-body">
+        <span class="hint-banner-icon">🧪</span>
+        <span><b>Режим BETA</b> — новый путь в чате Ozon через «Товары и Цены → Контроль качества». Рекомендуем протестировать на 2-3 SKU прежде чем запускать пакет. Все действия детально логгируются с префиксом [BETA]. При 5 ошибках подряд бот автоматически остановится.</span>
       </div>
     </div>
 
     <!-- Файлы -->
     <div class="complaint-files">
+      <div id="evidenceHint" class="hint-banner hint-info hint-compact" data-hint-host="evidence">
+        <div class="hint-banner-body">
+          <span class="hint-banner-icon">💡</span>
+          <span><b>Общий пул доказательств</b> — прикрепится ко всем SKU, для которых нет <i>персональных</i> файлов в Настройках (блок «Доказательства для отдельных SKU»). Если у вашего SKU есть персональные файлы, бот использует <b>именно их</b>, а общий пул игнорирует. Если нет ни тех ни других — жалоба помечается failed.</span>
+        </div>
+        <button class="hint-close" data-hint="evidence" title="Скрыть">✕</button>
+      </div>
       <div class="file-drop-zone" id="complaintFileDrop">
-        <span class="file-drop-text">📎 Доказательства — перетащите или нажмите</span>
-        <input type="file" id="complaintFileInput" multiple accept="image/*,.pdf,.doc,.docx">
+        <span class="file-drop-text">📎 Общие доказательства (fallback для SKU без персональных файлов) — перетащите или нажмите</span>
+        <input type="file" id="complaintFileInput" multiple accept="image/*,video/*,.pdf,.doc,.docx">
       </div>
       <div id="complaintFileList" class="file-list hidden"></div>
     </div>
@@ -344,6 +454,55 @@
 
     <!-- Очередь SKU -->
     <div id="complaintQueue" class="complaint-queue hidden"></div>
+
+    <!-- Блок проблемных SKU: failed (ошибки) + escalated (в ручной обработке у оператора) -->
+    <div id="problemSkusBlock" class="problem-skus hidden">
+      <div class="problem-skus-header">
+        <span class="problem-skus-title">⚠ Проблемные SKU</span>
+        <button id="btnProblemSkusToggle" class="btn-icon-toggle" title="Свернуть/развернуть">▼</button>
+      </div>
+      <div id="problemSkusBody" class="problem-skus-body">
+        <div id="problemEscalatedWrap" class="problem-cat hidden">
+          <div class="problem-cat-header">
+            <span class="problem-cat-title">🛎 Передано оператору (<span id="problemEscalatedCount">0</span>)</span>
+            <div class="problem-cat-actions">
+              <button class="btn btn-small btn-problem-copy" data-cat="escalated" title="Скопировать SKU в буфер">📋 Копировать</button>
+              <button class="btn btn-small btn-problem-requeue" data-cat="escalated" title="Перенести в текущий ввод для повтора">↻ В очередь</button>
+              <button class="btn btn-small btn-problem-xlsx" data-cat="escalated" title="Скачать XLSX">📥 XLSX</button>
+              <button class="btn btn-small btn-danger-sm btn-problem-clear" data-cat="escalated" title="Очистить">✕</button>
+            </div>
+          </div>
+          <div id="problemEscalatedList" class="problem-list"></div>
+        </div>
+        <div id="problemFailedWrap" class="problem-cat hidden">
+          <div class="problem-cat-header">
+            <span class="problem-cat-title">✗ Ошибки (<span id="problemFailedCount">0</span>)</span>
+            <div class="problem-cat-actions">
+              <button class="btn btn-small btn-problem-copy" data-cat="failed" title="Скопировать SKU в буфер">📋 Копировать</button>
+              <button class="btn btn-small btn-problem-requeue" data-cat="failed" title="Перенести в текущий ввод для повтора">↻ В очередь</button>
+              <button class="btn btn-small btn-problem-xlsx" data-cat="failed" title="Скачать XLSX">📥 XLSX</button>
+              <button class="btn btn-small btn-danger-sm btn-problem-clear" data-cat="failed" title="Очистить">✕</button>
+            </div>
+          </div>
+          <div id="problemFailedList" class="problem-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Блок подтверждения лимита обращений (показывается когда бот упёрся в лимит) -->
+    <div id="complaintLimitGate" class="complaint-limit-gate hidden">
+      <div class="limit-gate-body">
+        <span class="limit-gate-icon">⏸</span>
+        <div class="limit-gate-text">
+          <b id="limitGateTitle">Достигнут лимит обращений</b>
+          <div id="limitGateDetails" class="limit-gate-details"></div>
+        </div>
+      </div>
+      <div class="limit-gate-actions">
+        <button id="btnLimitGateContinue" class="btn btn-small btn-primary">▶ Продолжить (ещё порцию)</button>
+        <button id="btnLimitGateStop" class="btn btn-small btn-danger-sm">⏹ Остановить</button>
+      </div>
+    </div>
 
     <!-- Лог -->
     <div id="complaintLogSection">
