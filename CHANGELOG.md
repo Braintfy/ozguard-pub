@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.9.17] - 2026-04-24
+### Fixed
+- **Критический баг форматтера ввода лицензии** — `popup/popup.js` при каждом `input` стрипал все не-alphanumeric символы и принудительно пересобирал ключ в формат 3-5-5-5, ломая любые ключи с блоками иной длины (например `OZG-TEST1-LIFE-00001` → `OZG-TEST1-LIFE0-0001` → сервер возвращал `License not found`). Фикс: форматтер теперь non-destructive — только `toUpperCase()` и удаление символов кроме `[A-Z0-9-]`; дефисы пользователя сохраняются. `maxlength` на `#licenseCodeInput` поднят с 21 до 32
+- **Расхождение error-контракта клиент ↔ сервер** — `codefic /api/license` шлёт человеческие строки (`License not found`, `Activation limit reached`, `Not activated on this device`, ...), а расширение искало snake_case (`invalid_key`, `max_activations`, ...). Последствия: клиент всегда видел общую «Ошибка активации»; `backgroundVerify` никогда не чистил отозванные ключи, а через 7 дней grace молча флипал в FREE. Фикс: `normalizeLicenseError()` в `background/service-worker.js` маппит обе формы (подстрочный матч + exact snake_case) в общий код
+- **Fingerprint дрейф после реинсталла не восстанавливался** — если клиент распаковал новый ZIP в другую папку → extension ID → новый fingerprint → сервер отвечал `Not activated on this device`. Старый код не знал этой ветки и лицензия через 7 дней grace превращалась в FREE. Фикс: `backgroundVerify` на ошибке `not_activated_here` молча вызывает `activate` со старым ключом и текущим fp — если квота позволяет, лицензия восстанавливается без участия пользователя. Если квота исчерпана (`max_activations`), показывает конкретное сообщение
+### Added
+- **Расширенная диагностика лицензии в Настройках** — новые блоки `#licenseErrorHelp` (под полем ввода) и `#licenseDiagBox` (под активным ключом). Словарь `LICENSE_HELP` в `popup/popup.js` для каждого кода ошибки (`invalid_key`, `revoked`, `expired`, `max_activations`, `not_activated_here`, `verification_needed`, `network_error`, `rate_limited`) выводит: заголовок, сообщение, 2-3 конкретных шага для клиента, ссылки на личный кабинет codefic.ru и поддержку t.me/firadex. CSS-стили `.license-error-help`, `.license-diag` в `popup/popup.css`
+- **`licenseLastError` в storage** — при каждой неудачной активации/верификации расширение сохраняет `{code, message, at}` в `chrome.storage.local`. `getLicenseStatus` пробрасывает это в `status.lastError` для popup. Очищается при успешной активации или deactivate
+### Changed
+- **`activateLicense` теперь возвращает `{success, code, error}`** — поле `code` с нормализованным кодом ошибки, чтобы popup мог показать детальную подсказку без повторного маппинга. Обратно совместимо (старый код `resp.error` остался)
+
 ## [5.9.16] - 2026-04-24
 ### Fixed
 - **Выпадающее меню `#complaintType` выходило за пределы popup** — опции «Использование моего контента (BETA)» / «Использование моего бренда (BETA)» были длиннее чем `0.5fr` grid-колонка. Фикс: (1) `complaint-settings-grid` колонки изменены на `0.45fr / 0.55fr` (тип жалобы шире), (2) `.input-select` внутри grid получил `min-width: 0`, `width: 100%`, `text-overflow: ellipsis` — длинный текст обрезается многоточием вместо overflow, (3) тексты опций укорочены с `title`-атрибутом для полного описания при hover: «Плагиат моих карточек», «Мой контент (BETA)», «Мой бренд (BETA)» (`popup/popup.css`, `popup/popup.html`)

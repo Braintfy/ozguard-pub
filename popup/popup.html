@@ -12,7 +12,7 @@
     <div class="header-right">
       <a id="btnBuyPro" class="buy-pro-btn" href="https://codefic.ru/#pricing" target="_blank">Купить PRO</a>
       <button id="btnHelp" class="btn-help" title="Инструкция">?</button>
-      <span id="versionBadge" class="version" title="Текущая версия">v5.9.16</span>
+      <span id="versionBadge" class="version" title="Текущая версия">v5.9.17</span>
     </div>
   </header>
 
@@ -244,10 +244,11 @@
         <a id="btnBuyProSettings" class="buy-pro-settings" href="https://codefic.ru/#pricing" target="_blank">🛒 Купить PRO — от 2 990 ₽/мес</a>
         <p class="settings-desc">Введите код активации для доступа к автоматической подаче жалоб через чат поддержки OZON. Весь остальной функционал — сбор конкурентов и пакетный импорт XLSX — бесплатен.</p>
         <div class="settings-row">
-          <input type="text" id="licenseCodeInput" placeholder="OZG-XXXXX-XXXXX-XXXXX" class="input-license" maxlength="21">
+          <input type="text" id="licenseCodeInput" placeholder="OZG-XXXXX-XXXXX-XXXXX" class="input-license" maxlength="32" autocapitalize="characters" spellcheck="false">
           <button id="btnActivateLicense" class="btn btn-small btn-pro">Активировать</button>
         </div>
         <div id="licenseError" class="license-error hidden"></div>
+        <div id="licenseErrorHelp" class="license-error-help hidden"></div>
       </div>
       <div id="licenseActiveBlock" class="hidden">
         <p class="settings-desc license-active-text">PRO-версия активирована. Все функции доступны.</p>
@@ -259,6 +260,7 @@
           <span id="licenseCodeDisplay" class="license-code-display"></span>
           <button id="btnDeactivateLicense" class="btn btn-small btn-danger-sm">Деактивировать</button>
         </div>
+        <div id="licenseDiagBox" class="license-diag hidden"></div>
       </div>
     </div>
 

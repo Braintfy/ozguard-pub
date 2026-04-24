@@ -1465,6 +1465,56 @@ textarea:focus, input[type="text"]:focus {
   margin-top: 4px;
 }
 
+.license-error-help,
+.license-diag {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #fff5f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #7f1d1d;
+  line-height: 1.4;
+}
+
+.license-diag {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #7c2d12;
+}
+
+.license-diag-title {
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.license-diag-msg {
+  margin-bottom: 6px;
+  color: #b91c1c;
+}
+
+.license-diag-tips {
+  margin: 0 0 6px 0;
+  padding-left: 16px;
+}
+
+.license-diag-tips li {
+  margin-bottom: 2px;
+}
+
+.license-diag-footer {
+  display: flex;
+  gap: 6px;
+  font-size: 10px;
+  color: #9a3412;
+}
+
+.license-diag-footer a {
+  color: #c2410c;
+  text-decoration: underline;
+}
+
 .license-active-text {
   color: #d97706;
   font-weight: 500;
