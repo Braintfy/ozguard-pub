@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.9.19] - 2026-04-26
+### Added
+- **Настройка «Жалобы: магазины-исключения»** в табе Настройки — `#complaintExcludeInput` (textarea) + `#disableOzonBlacklist` (checkbox). Пользовательский список добавляется К дефолтному Ozon-blacklist, либо чекбокс полностью отключает дефолт. Сохраняются в `chrome.storage.local.complaintExcludeSellers` / `ozonBlacklistDisabled`
+- **Подсказка `data-hint-host="complaint_exclusions"`** в Настройках — стандартная скрываемая подсказка через ✕, восстанавливается через «Показать подсказки» (ключ добавлен в `SETTINGS_HINT_KEYS`)
+### Changed
+- **Удалён фиксированный зелёный блок** `.complaint-blacklist-note` под `#complaintSkuInput` в табе Жалобы — заменён скрываемой подсказкой в Настройках
+- **`isBlacklistedComplaintSeller()` использует runtime-конфиг** — `complaintExcludeList` (из storage) + `DEFAULT_OZON_BLACKLIST` если `ozonBlacklistDisabled === false`
+- **Лог при «В жалобы»** — теперь говорит конкретно что пропущено (Ozon-магазины + пользовательские исключения, или только пользовательские если дефолт отключен)
+### Removed
+- **CSS `.complaint-blacklist-note`** — заменён на `.checkbox-row` для нового чекбокса
+
 ## [5.9.18] - 2026-04-26
 ### Added
 - **Watchdog для бота жалоб** (`background/service-worker.js`) — `chrome.alarms.create('supportWatchdog', { periodInMinutes: 1 })` будит SW раз в минуту, проверяет `Date.now() - supportState.lastActivityTs`. На 3+ мин idle — пишет в лог `[WATCHDOG] Нет активности N мин` + DOM-снимок (`phase`, `chatMsgCount`, `hasInput`, `hasFileInput`, `hasSendButton`, последние сообщения бота/юзера). На 6+ мин — ставит паузу и шлёт `supportNeedAction` с просьбой проверить чат и прислать лог. `_bumpActivity()` вызывается в `supportLog` — каждый лог продлевает ttl

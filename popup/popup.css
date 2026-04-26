@@ -1465,15 +1465,19 @@ textarea:focus, input[type="text"]:focus {
   margin-top: 4px;
 }
 
-.complaint-blacklist-note {
-  margin-top: 8px;
-  padding: 6px 10px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 6px;
-  font-size: 10.5px;
-  color: #14532d;
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 11px;
+  color: #555;
+  cursor: pointer;
   line-height: 1.4;
+}
+
+.checkbox-row input[type="checkbox"] {
+  margin-top: 2px;
+  cursor: pointer;
 }
 
 .license-error-help,

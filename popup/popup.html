@@ -12,7 +12,7 @@
     <div class="header-right">
       <a id="btnBuyPro" class="buy-pro-btn" href="https://codefic.ru/#pricing" target="_blank">Купить PRO</a>
       <button id="btnHelp" class="btn-help" title="Инструкция">?</button>
-      <span id="versionBadge" class="version" title="Текущая версия">v5.9.18</span>
+      <span id="versionBadge" class="version" title="Текущая версия">v5.9.19</span>
     </div>
   </header>
 
@@ -281,6 +281,26 @@
     </div>
 
     <div class="settings-group">
+      <h2 class="settings-title">Жалобы: магазины-исключения</h2>
+      <div class="hint-banner hint-info hint-compact" data-hint-host="complaint_exclusions">
+        <div class="hint-banner-body">
+          <span class="hint-banner-icon">🛡️</span>
+          <span>Магазины из этого списка НЕ будут получать жалобы при нажатии «В жалобы». По одному на строку (частичное совпадение названия). По умолчанию <b>Ozon</b>, <b>Ozon Беларусь</b>, <b>ООО «Интернет Решения»</b> пропускаются автоматически — их можно отключить ниже.</span>
+        </div>
+        <button class="hint-close" data-hint="complaint_exclusions" title="Скрыть">✕</button>
+      </div>
+      <textarea id="complaintExcludeInput" rows="3" placeholder="Партнёр Ozon&#10;Магазин-партнёр"></textarea>
+      <div class="settings-row" style="margin-top: 6px;">
+        <button id="btnSaveComplaintExclusions" class="btn btn-small">Сохранить</button>
+        <span id="complaintExclusionsSavedHint" class="saved-hint hidden">Сохранено</span>
+      </div>
+      <label class="checkbox-row" style="margin-top: 8px;">
+        <input type="checkbox" id="disableOzonBlacklist">
+        <span>Отключить пропуск Ozon-магазинов по умолчанию (на свой риск)</span>
+      </label>
+    </div>
+
+    <div class="settings-group">
       <h2 class="settings-title">Задержка между запросами</h2>
       <div class="hint-banner hint-info hint-compact" data-hint-host="delay">
         <div class="hint-banner-body">
@@ -383,7 +403,6 @@
       <input type="file" id="importCsvInput" accept=".csv" style="display:none;">
     </div>
     <div id="complaintSkuWarning" class="batch-warning hidden"></div>
-    <div class="complaint-blacklist-note">🛡️ При «В жалобы» автоматически пропускаются магазины: <b>Ozon</b>, <b>Ozon Беларусь</b>, <b>ООО «Интернет Решения»</b> и подобные. На сам Ozon бот жалобы не подаёт.</div>
 
     <!-- Настройки: два селекта в ряд -->
     <div class="complaint-settings-grid">
