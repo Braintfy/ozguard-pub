@@ -1,5 +1,19 @@
 # Changelog
 
+## [5.9.18] - 2026-04-26
+### Added
+- **Watchdog для бота жалоб** (`background/service-worker.js`) — `chrome.alarms.create('supportWatchdog', { periodInMinutes: 1 })` будит SW раз в минуту, проверяет `Date.now() - supportState.lastActivityTs`. На 3+ мин idle — пишет в лог `[WATCHDOG] Нет активности N мин` + DOM-снимок (`phase`, `chatMsgCount`, `hasInput`, `hasFileInput`, `hasSendButton`, последние сообщения бота/юзера). На 6+ мин — ставит паузу и шлёт `supportNeedAction` с просьбой проверить чат и прислать лог. `_bumpActivity()` вызывается в `supportLog` — каждый лог продлевает ttl
+- **Хардкод-blacklist для жалоб** (`popup/popup.js` `COMPLAINT_SELLER_BLACKLIST`) — `['ozon', 'озон', 'интернет решения', 'internet solutions']`. При «В жалобы» SKU магазинов с этими подстроками в `sellerName` пропускаются, в лог пишется счётчик и список первых 3 имён. Защита от инцидента когда бот пожаловался на товар Ozon Беларусь. Инфо-блок `.complaint-blacklist-note` в HTML под `#complaintSkuInput`
+- **Подробная диагностика прикреплений** (`background/service-worker.js` фаза `waiting_attachment`):
+  - Перед каждым файлом — лог размера в КБ + MIME-типа (`(${fileSizeKb} КБ, тип ${file.type || '?'}, baseline ${baselineCount})`)
+  - Время прикрепления в мс (`за ${attachMs}мс`)
+  - При провале верификации — финальный DOM-снимок: `msgs ${baselineCount}→${finalCount}, last user: «...», last bot: «...»`
+  - После провала всех файлов — `[ATTACH-DIAG]` с состоянием input/sendBtn/viewport
+- **Счётчик подряд-провалов прикреплений** — `supportState.consecutiveAttachFails`. После 1 провала — подсказка о возможных причинах. После 5 — `⚠ N SKU подряд... Возможно Ozon заблокировал чат от спама ИЛИ изменился интерфейс. Скопируйте лог и пришлите в t.me/firadex`. НЕ блокирует работу — бот продолжает (это не критическая ошибка)
+### Changed
+- **Имитация человека сохранена** — все паузы между файлами/SKU остались, watchdog их не задевает (3 мин idle ≈ 6× больше типичной паузы)
+- **Watchdog НЕ останавливает бота на единичных задержках** — только после 6 минут idle (нормальная подача жалобы редко занимает >2 мин)
+
 ## [5.9.17] - 2026-04-24
 ### Fixed
 - **Критический баг форматтера ввода лицензии** — `popup/popup.js` при каждом `input` стрипал все не-alphanumeric символы и принудительно пересобирал ключ в формат 3-5-5-5, ломая любые ключи с блоками иной длины (например `OZG-TEST1-LIFE-00001` → `OZG-TEST1-LIFE0-0001` → сервер возвращал `License not found`). Фикс: форматтер теперь non-destructive — только `toUpperCase()` и удаление символов кроме `[A-Z0-9-]`; дефисы пользователя сохраняются. `maxlength` на `#licenseCodeInput` поднят с 21 до 32
