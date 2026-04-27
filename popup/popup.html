@@ -12,7 +12,7 @@
     <div class="header-right">
       <a id="btnBuyPro" class="buy-pro-btn" href="https://codefic.ru/#pricing" target="_blank">Купить PRO</a>
       <button id="btnHelp" class="btn-help" title="Инструкция">?</button>
-      <span id="versionBadge" class="version" title="Текущая версия">v5.9.19</span>
+      <span id="versionBadge" class="version" title="Текущая версия">v5.9.21</span>
     </div>
   </header>
 
@@ -236,7 +236,7 @@
         <span>Пробный период: осталось <b id="trialDaysLeftText">—</b></span>
       </div>
       <div id="licenseInputBlock">
-        <button id="btnActivateTrial" class="btn-trial hidden">⚡ Попробовать PRO бесплатно — 3 дня</button>
+        <button id="btnActivateTrial" class="btn-trial hidden">⚡ Попробовать PRO бесплатно — 7 дней</button>
         <div id="trialExpiredBlock" class="trial-expired-block hidden">
           <p>Пробный период закончился. Понравился OZGuard PRO?</p>
           <a class="buy-pro-settings" href="https://codefic.ru/#pricing" target="_blank">🛒 Купить PRO — от 2 990 ₽/мес</a>
@@ -355,21 +355,45 @@
       </div>
     </div>
 
-    <div class="settings-group">
-      <h2 class="settings-title">Жалобы: доказательства для отдельных SKU</h2>
-      <div class="hint-banner hint-info" data-hint-host="sku_files">
+    <div class="settings-group" id="evidenceSection">
+      <h2 class="settings-title">Жалобы: доказательства (расширенно)</h2>
+      <div class="hint-banner hint-info hint-compact" data-hint-host="evidence_mode">
         <div class="hint-banner-body">
           <span class="hint-banner-icon">💡</span>
-          <span>Если у вас на каждый товар своё доказательство (видео распаковки, сертификат бренда), добавьте здесь: <b>ваш SKU</b> + файлы. Бот при обработке жалобы на конкурента-нарушителя проверит, из какого вашего SKU он был найден, и прикрепит именно эти файлы. Если для SKU нет файлов и нет общего пула — жалоба помечается «failed». Видео до 200 MB хранятся в IndexedDB.</span>
+          <span><b>Два режима:</b> «По SKU → файлы» — указываете свой SKU, добавляете файлы (раньше так и было). «По файлу → SKU» — загружаете файл один раз и перечисляете список SKU, к которым он подходит. Бот сам подберёт нужный файл. Если бот в чате попросит дополнительные доказательства — следующие файлы из набора будут отправлены автоматически. <b>Данные обоих режимов хранятся раздельно</b> — при переключении ничего не теряется, можно вернуться обратно.</span>
         </div>
-        <button class="hint-close" data-hint="sku_files" title="Скрыть">✕</button>
+        <button class="hint-close" data-hint="evidence_mode" title="Скрыть">✕</button>
       </div>
-      <div class="settings-row" style="gap:6px;">
-        <input type="text" id="skuFileSkuInput" placeholder="Ваш SKU (11-значный)" class="input-license" style="flex:1;max-width:180px;">
-        <button id="btnAddSkuFile" class="btn btn-small">＋ Добавить</button>
+      <div class="evidence-mode-toggle">
+        <label class="radio-row">
+          <input type="radio" name="evidenceMode" value="sku_first" checked>
+          <span>По <b>SKU</b> → файлы (по умолчанию)</span>
+        </label>
+        <label class="radio-row">
+          <input type="radio" name="evidenceMode" value="file_first">
+          <span>По <b>файлу</b> → список SKU</span>
+        </label>
       </div>
-      <input type="file" id="skuFileInput" multiple accept="image/*,video/*,.pdf,.doc,.docx" style="display:none;">
-      <div id="skuFilesList" class="sku-files-list hidden"></div>
+
+      <!-- Режим 1: SKU → файлы (старый UI) -->
+      <div id="evidenceSkuFirstUI">
+        <div class="settings-row" style="gap:6px;">
+          <input type="text" id="skuFileSkuInput" placeholder="Ваш SKU (11-значный)" class="input-license" style="flex:1;max-width:180px;">
+          <button id="btnAddSkuFile" class="btn btn-small">＋ Добавить</button>
+        </div>
+        <input type="file" id="skuFileInput" multiple accept="image/*,video/*,.pdf,.doc,.docx" style="display:none;">
+        <div id="skuFilesList" class="sku-files-list hidden"></div>
+      </div>
+
+      <!-- Режим 2: файл → список SKU (v5.9.20) -->
+      <div id="evidenceFileFirstUI" class="hidden">
+        <div class="settings-row" style="gap:6px;">
+          <button id="btnAddFileFirst" class="btn btn-small">📎 Добавить файл</button>
+          <span class="saved-hint" style="font-size:10.5px;color:#666;">Видео до 200 MB</span>
+        </div>
+        <input type="file" id="fileFirstInput" accept="image/*,video/*,.pdf,.doc,.docx" style="display:none;">
+        <div id="fileFirstList" class="file-first-list hidden"></div>
+      </div>
     </div>
   </main>
 
@@ -445,6 +469,9 @@
         <input type="file" id="complaintFileInput" multiple accept="image/*,video/*,.pdf,.doc,.docx">
       </div>
       <div id="complaintFileList" class="file-list hidden"></div>
+      <div class="settings-row" style="margin-top:6px; justify-content:flex-end;">
+        <button id="btnGoToEvidenceSettings" class="btn-link-settings" title="Открыть расширенные настройки доказательств">⚙ В настройки доказательств →</button>
+      </div>
     </div>
 
     <!-- Управление -->

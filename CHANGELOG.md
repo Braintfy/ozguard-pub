@@ -1,5 +1,36 @@
 # Changelog
 
+## [5.9.21] - 2026-04-27
+### Changed
+- **Триал PRO продлён с 3 до 7 дней** — все упоминания обновлены:
+  - `popup/popup.html`: текст кнопки `#btnActivateTrial` — «⚡ Попробовать PRO бесплатно — 7 дней»
+  - `popup/popup.js`: текст кнопки в двух фолбэк-местах после ошибки активации, сообщение в `addLog` после успешной активации
+  - `background/service-worker.js`: дефолтное значение `daysLeft` в ответе `activateTrial()` — `result.days_left ?? 7` (срабатывает только если сервер не вернул значение)
+  - `project.md`: упоминания пробного периода
+  - `trial-hardening-guide.md`: пример сценария с реинсталлом
+- **Срок триала задаётся сервером** — расширение не хардкодит длительность, читает `result.expires_at` и `result.days_left` из ответа `/api/license` action `trial_activate`. Поэтому реальное действие изменения зависит от обновления `TRIAL_DAYS` на codefic.ru (см. промпт ниже)
+
+## [5.9.20] - 2026-04-27
+### Added
+- **Детекция фазы `evidence_insufficient`** в `content/support-automation.js` — паттерны: `доказательств недостаточно`, `приложить новые доказательства`, `авторские права не подтверждены`, `доказательства + подтвердить + авторск`. Возвращает `phase: 'waiting_attachment', detail: 'evidence_insufficient'`. Применимо ко всем сценариям (plagiat_legacy / content_beta / brand_beta) — детектор работает по тексту бота, не зависит от пути навигации
+- **Последовательная подача файлов** в `background/service-worker.js`:
+  - На первый `waiting_attachment` бот отправляет ВСЕ файлы (старое поведение)
+  - На повторный `evidence_insufficient` отправляет ТОЛЬКО следующий неотправленный файл (`item._evidenceUsedIdx`)
+  - Если файлы исчерпаны — `failed` с причиной «Бот запросил доп. доказательства, но файлы исчерпаны»
+- **Новый режим «По файлу → SKU»** (`evidenceMode = 'file_first'`):
+  - Storage: `complaintFileSkus` (массив `{id, name, type, size, storage, skus[]}`) + `complaintFileSkusBlobs` (`{id: base64}` для мелких файлов; крупные — IndexedDB)
+  - Каждый файл несёт свой список SKU. `pickFilesForItem()` возвращает файлы где хотя бы один parent-SKU из item совпадает с file.skus
+  - UI: `#evidenceFileFirstUI` — загрузчик одного файла + textarea со списком SKU на файл
+- **Переключатель режимов** в Настройках → раздел «Жалобы: доказательства (расширенно)» — radio `evidenceMode` с двумя опциями: `sku_first` (по умолчанию, существующий) / `file_first` (новый). Состояние сохраняется в `chrome.storage.local.evidenceMode`
+- **Кнопка «⚙ В настройки доказательств →»** в табе Жалобы под общим пулом файлов — `#btnGoToEvidenceSettings`. Переключает на таб Настройки и скроллит к `#evidenceSection`
+- **Подсказка `evidence_mode`** (скрываемая через ✕, в `SETTINGS_HINT_KEYS`) — объясняет оба режима + явно говорит что данные сохраняются раздельно при переключении
+### Changed
+- **Storage isolation:** `complaintSkuFiles` и `complaintFileSkus` — независимые ветки. `chrome.storage.local.set({k: v})` это update указанных ключей, не replace всего storage. Переключение режима не теряет файлы другого режима. Storage переживает обновления расширения (только uninstall чистит)
+- **`item._evidenceUsedIdx`** — новое поле в queue item, инкрементируется при verified attach. Используется для последующего «следующий файл» при insufficient
+- **`pickFilesForItem()`** возвращает `source: 'file_first' | 'parent' | 'common' | 'none'` — для логирования какой источник сработал
+### Fixed
+- **Зацикливание на повторных запросах доказательств** — раньше второй запрос «доказательств недостаточно» снова попадал в `waiting_attachment` и отправлял те же файлы в бесконечном цикле. Теперь либо отправляет следующий, либо помечает failed
+
 ## [5.9.19] - 2026-04-26
 ### Added
 - **Настройка «Жалобы: магазины-исключения»** в табе Настройки — `#complaintExcludeInput` (textarea) + `#disableOzonBlacklist` (checkbox). Пользовательский список добавляется К дефолтному Ozon-blacklist, либо чекбокс полностью отключает дефолт. Сохраняются в `chrome.storage.local.complaintExcludeSellers` / `ozonBlacklistDisabled`
