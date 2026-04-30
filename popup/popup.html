@@ -92,7 +92,7 @@
             <li><b>Исключения при сборе</b> — названия своих магазинов, которые не попадут в результаты. По одному на строку, частичное совпадение. Например, напишите «Restoremind» — и все ваши магазины с этим словом будут скрыты.</li>
             <li><b>Задержка</b> — пауза между запросами к OZON (мс). Рекомендация: 2000–3000 при 5–20 SKU, 4000–5000 при 50+ SKU.</li>
             <li><b>Подсказки интерфейса</b> — кнопки «Скрыть все подсказки» / «Показать все подсказки» управляют баннерами во вкладке «Жалобы» (VPN-предупреждение, инструкция).</li>
-            <li><b>Жалобы: защита от каскада обращений</b> — лимит автообращений за сессию (по умолчанию 10) и лимит эскалаций подряд (по умолчанию 5). После лимита бот ставит паузу с кнопкой «Продолжить». <b>0</b> эскалаций = брендовый режим без остановок, с увеличенной паузой между обращениями (для больших каталогов).</li>
+            <li><b>Жалобы: антибот-паузы</b> — при больших пакетах бот продолжает работу автоматически и делает паузы между обращениями без ручного подтверждения.</li>
             <li><b>Жалобы: доказательства для отдельных SKU</b> — добавьте свой SKU и файлы (видео до 200 MB, сертификаты, PDF). Бот при подаче жалобы на конкурента узнаёт из какого вашего SKU он был найден и прикрепит именно эти файлы. Если у вас несколько своих SKU указали на одного конкурента — файлы объединяются. Если для SKU нет привязанных файлов — используется <i>общий пул</i> из вкладки «Жалобы». Если и общего нет — SKU помечается failed.</li>
           </ul>
         </div>
@@ -119,7 +119,7 @@
             <i>Передано оператору</i> — обращение ушло на ручное рассмотрение (не ошибка, Ozon эскалировал);<br>
             <i>Ошибки</i> — failed по техническим причинам (нет файлов, поле ввода недоступно, зацикливание).<br>
             Для каждой категории: 📋 Копировать, ↻ В очередь (для повтора), 📥 XLSX, ✕ Очистить.</div>
-          <div class="help-tip">⏸ <b>Гейт лимита</b> — после 10 новых обращений за сессию или 5 эскалаций подряд бот ставит паузу. Жмите <b>Продолжить</b>, чтобы разрешить ещё порцию. Это защищает ваш seller-аккаунт от риска блокировки за массовое создание обращений.</div>
+          <div class="help-tip">⏱ <b>Большие пакеты</b> — бот не останавливается на лимите обращений, но сохраняет антибот-паузы между действиями. Остановить или поставить на паузу можно вручную.</div>
         </div>
 
         <div class="help-section">
@@ -317,41 +317,20 @@
     </div>
 
     <div class="settings-group">
-      <h2 class="settings-title">Жалобы: защита от каскада обращений</h2>
+      <h2 class="settings-title">Жалобы: антибот-паузы</h2>
       <div class="hint-banner hint-info" data-hint-host="cascade">
         <div class="hint-banner-body">
           <span class="hint-banner-icon">💡</span>
-          <span>Когда Ozon эскалирует чат оператору, бот оставляет обращение открытым и начинает новый чат для следующего SKU. Если эскалаций подряд много, оператор перегружается. Эти настройки ограничивают сколько новых обращений бот создаст без вашего подтверждения.</span>
+          <span>Бот больше не останавливается после заданного числа новых обращений и не ждёт кнопку «Продолжить». Для больших пакетов он продолжает работу автоматически, пишет диагностические предупреждения и сохраняет антибот-паузы.</span>
         </div>
         <button class="hint-close" data-hint="cascade" title="Скрыть">✕</button>
       </div>
-      <div class="settings-row">
-        <label class="complaint-setting-label" for="limitNewChats">Автообращений за сессию</label>
-        <input type="number" id="limitNewChats" min="1" max="500" step="1" value="10" class="input-number">
-        <span class="settings-unit">шт</span>
-      </div>
-      <div class="hint-banner hint-info hint-compact" data-hint-host="cascade_limit">
-        <div class="hint-banner-body">
-          <span class="hint-banner-icon">💡</span>
-          <span>После этого числа новых обращений бот ставит паузу и ждёт кнопку «Продолжить». Нажатие разрешает ещё столько же. Для селлеров с большим брендовым каталогом можно поставить 100-500.</span>
-        </div>
-        <button class="hint-close" data-hint="cascade_limit" title="Скрыть">✕</button>
-      </div>
-      <div class="settings-row" style="margin-top:8px;">
-        <label class="complaint-setting-label" for="limitConsecEsc">Эскалаций подряд</label>
-        <input type="number" id="limitConsecEsc" min="0" max="50" step="1" value="5" class="input-number">
-        <span class="settings-unit">шт</span>
-      </div>
       <div class="hint-banner hint-info hint-compact" data-hint-host="cascade_consec">
         <div class="hint-banner-body">
-          <span class="hint-banner-icon">💡</span>
-          <span>Сколько подряд чатов могут эскалироваться до паузы. 0 = не останавливаться (для брендового каталога). При этом между обращениями сохраняется увеличенная пауза.</span>
+          <span class="hint-banner-icon">⏱</span>
+          <span>Если много чатов подряд передаются оператору, OZGuard сделает увеличенную паузу и продолжит следующий SKU. Ручной гейт лимита отключён.</span>
         </div>
         <button class="hint-close" data-hint="cascade_consec" title="Скрыть">✕</button>
-      </div>
-      <div class="settings-row" style="margin-top:6px;">
-        <button id="btnSaveComplaintLimits" class="btn btn-small">Сохранить</button>
-        <span id="complaintLimitsSavedHint" class="saved-hint hidden">Сохранено</span>
       </div>
     </div>
 
@@ -363,6 +342,12 @@
           <span><b>Два режима:</b> «По SKU → файлы» — указываете свой SKU, добавляете файлы (раньше так и было). «По файлу → SKU» — загружаете файл один раз и перечисляете список SKU, к которым он подходит. Бот сам подберёт нужный файл. Если бот в чате попросит дополнительные доказательства — следующие файлы из набора будут отправлены автоматически. <b>Данные обоих режимов хранятся раздельно</b> — при переключении ничего не теряется, можно вернуться обратно.</span>
         </div>
         <button class="hint-close" data-hint="evidence_mode" title="Скрыть">✕</button>
+      </div>
+      <div class="hint-banner hint-warning hint-compact" id="evidenceStorageHint">
+        <div class="hint-banner-body">
+          <span class="hint-banner-icon">⚠</span>
+          <span>Доказательства сохраняются внутри текущей установки расширения. Если после обновления загрузить новую распакованную папку и Chrome выдаст другой ID расширения, старые файлы будут недоступны и их нужно добавить заново.</span>
+        </div>
       </div>
       <div class="evidence-mode-toggle">
         <label class="radio-row">
@@ -538,7 +523,7 @@
       </div>
     </div>
 
-    <!-- Блок подтверждения лимита обращений (показывается когда бот упёрся в лимит) -->
+    <!-- Блок ручной проверки для BETA-autostop и старых восстановленных сессий -->
     <div id="complaintLimitGate" class="complaint-limit-gate hidden">
       <div class="limit-gate-body">
         <span class="limit-gate-icon">⏸</span>
@@ -548,7 +533,7 @@
         </div>
       </div>
       <div class="limit-gate-actions">
-        <button id="btnLimitGateContinue" class="btn btn-small btn-primary">▶ Продолжить (ещё порцию)</button>
+        <button id="btnLimitGateContinue" class="btn btn-small btn-primary">▶ Продолжить</button>
         <button id="btnLimitGateStop" class="btn btn-small btn-danger-sm">⏹ Остановить</button>
       </div>
     </div>
