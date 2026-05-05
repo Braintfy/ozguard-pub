@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.9.29] - 2026-05-05
+### Fixed
+- **Защита следующего SKU от старого обращения** — `background/service-worker.js` теперь ставит бот на паузу, если после `failed`/`chat_escalated` не удалось открыть новую страницу чатов. Следующий SKU больше не продолжает работу в проблемном обращении
+- **Per-SKU и file-first доказательства для ручных SKU** — `popup/popup.js` и `pickFilesForItem()` используют сам SKU как fallback, если нет `parentMap`. Ручной список SKU больше не теряет привязанные доказательства
+- **Read-only `supportGetStatus`** — получение статуса больше не запускает цикл жалоб. Восстановление и продолжение вынесены в `supportRecoverAndContinue`, popup вызывает его явно только для активной storage-сессии
+- **Снижен риск падений MV3 на больших видео** — безопасный лимит файлов для жалоб снижен до 50 MB, background дополнительно проверяет размер перед base64-конвертацией
+- **BETA autostop не считает эскалации ошибками** — статус `escalated` сбрасывает серию `consecutiveFailed`, как нормальный бизнес-исход Ozon
+- **DOM-click fallback стал безопаснее** — `content/support-automation.js` ограничивает fallback-клики областью чата и ищет `input[type=file]` рядом с полем ввода, а не первый file input на странице
+### Changed
+- **Версия диагностики content script** — `support-automation.js` обновлён до `5.9.29`
+- **Версия расширения** — `manifest.json` обновлён до `5.9.29`
+
 ## [5.9.28] - 2026-05-05
 ### Fixed
 - **Зависание после серии `chat_escalated`** — длинные антибот-паузы в `background/service-worker.js` теперь проходят через keepalive helper с Chrome API heartbeat, сохранением активной сессии и логами начала/окончания паузы. MV3 service worker может проснуться и продолжить ночной прогон без ручного Stop/Start
