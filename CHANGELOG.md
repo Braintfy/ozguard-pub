@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.9.28] - 2026-05-05
+### Fixed
+- **Зависание после серии `chat_escalated`** — длинные антибот-паузы в `background/service-worker.js` теперь проходят через keepalive helper с Chrome API heartbeat, сохранением активной сессии и логами начала/окончания паузы. MV3 service worker может проснуться и продолжить ночной прогон без ручного Stop/Start
+- **Восстановление активной support-сессии после сна service worker** — `activeSupportSession` хранит очередь, логи, файлы, связи SKU↔доказательства, режим жалобы, лимиты, `sellerTabId` и session metadata. `supportWatchdog`, `supportResume`, `supportRefresh` и `supportGetStatus` восстанавливают state из storage, если память service worker пустая
+- **Защита от двойного цикла жалоб** — добавлены `supportLoopRunning`/`supportLoopToken` и единый `ensureSupportLoop()`. Повторное «Возобновить» или восстановление из watchdog больше не стартует второй параллельный loop
+- **Надёжное продолжение после эскалаций** — после пометки SKU как `escalated` прогресс сохраняется до антибот-паузы; после паузы бот заново ищет вкладку seller.ozon.ru при потере tab id и открывает новую страницу чатов для следующего SKU
+### Changed
+- **Версия расширения** — `manifest.json` обновлён до `5.9.28`
+
 ## [5.9.27] - 2026-05-04
 ### Fixed
 - **Зависание бота жалоб на `waiting_attachment`** — `background/service-worker.js` теперь завершает только проблемный SKU и восстанавливает страницу чатов для следующего SKU, если Ozon отклонил доказательства, файлы исчерпаны или файл не появился в чате. Пакет больше не останавливается из-за одного отказа Ozon по доказательствам
