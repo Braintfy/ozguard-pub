@@ -58,7 +58,7 @@
           <div class="help-step"><span class="help-num">1</span><div>В <a href="https://seller.ozon.ru" target="_blank" class="link-ozon">личном кабинете OZON</a> перейдите: <b>Товары → Цены товаров → Скачать шаблон</b>.</div></div>
           <div class="help-step"><span class="help-num">2</span><div>Перетащите скачанный <b>.xlsx</b> файл в зону «Загрузите XLSX шаблон» или нажмите на неё.</div></div>
           <div class="help-step"><span class="help-num">3</span><div>Выберите нужные статусы товаров — «Продается», «Готов к продаже», «Не продается» — и нажмите <b>«Применить»</b>. SKU попадут в поле ввода.</div></div>
-          <div class="help-tip">По умолчанию отмечен только «Продается» — чтобы не тратить время на снятые товары.</div>
+          <div class="help-tip">По умолчанию отмечен только «Продается» — чтобы не тратить время на снятые товары. Кнопка <b>🕘 Последние</b> быстро возвращает 3 последних применённых XLSX-списка.</div>
         </div>
 
         <div class="help-section">
@@ -193,8 +193,16 @@
     </section>
 
     <div class="batch-section" id="batchDrop">
-      <div class="batch-icon">📂</div>
-      <div class="batch-text">Загрузите XLSX шаблон <b>«Цены товаров»</b> из OZON<br>для пакетного сбора конкурентов</div>
+      <div class="batch-upload-row">
+        <div class="batch-upload-copy">
+          <div class="batch-icon">📂</div>
+          <div class="batch-text">Загрузите XLSX шаблон <b>«Цены товаров»</b> из OZON<br>для пакетного сбора конкурентов</div>
+        </div>
+        <div class="batch-history-wrap">
+          <button id="btnBatchHistory" class="btn btn-small batch-history-btn" type="button" disabled title="Последние пакетные загрузки">🕘 Последние</button>
+          <div id="batchHistoryMenu" class="batch-history-menu hidden"></div>
+        </div>
+      </div>
       <div id="batchFilename" class="batch-filename hidden"></div>
       <div id="batchInfo" class="batch-info hidden"></div>
       <div id="batchWarning" class="batch-warning hidden"></div>
