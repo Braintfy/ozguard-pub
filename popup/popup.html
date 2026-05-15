@@ -115,8 +115,9 @@
             <b>Общий пул</b> — файлы из зоны «Доказательства» во вкладке «Жалобы». Прикрепляются ко ВСЕМ жалобам.<br>
             <b>Per-SKU</b> — файлы из блока «Доказательства для отдельных SKU» в Настройках. Привязываются к конкретному вашему SKU и прикрепляются только к нарушителям, которые были найдены по нему. Приоритет выше общего пула.<br>
             Видео/сертификаты до 200 MB сохраняются в IndexedDB браузера, переживают закрытие popup и перезагрузку.</div>
-          <div class="help-tip">🛎 <b>Блок «Проблемные SKU»</b> — показывает две категории:<br>
+          <div class="help-tip">🛎 <b>Блок «Проблемные SKU»</b> — показывает три категории:<br>
             <i>Передано оператору</i> — обращение ушло на ручное рассмотрение (не ошибка, Ozon эскалировал);<br>
+            <i>Без нарушений</i> — Ozon проверил обращение, но не подтвердил нарушение;<br>
             <i>Ошибки</i> — failed по техническим причинам (нет файлов, поле ввода недоступно, зацикливание).<br>
             Для каждой категории: 📋 Копировать, ↻ В очередь (для повтора), 📥 XLSX, ✕ Очистить.</div>
           <div class="help-tip">⏱ <b>Большие пакеты</b> — бот не останавливается на лимите обращений, но сохраняет антибот-паузы между действиями. Остановить или поставить на паузу можно вручную.</div>
@@ -497,7 +498,7 @@
     <!-- Очередь SKU -->
     <div id="complaintQueue" class="complaint-queue hidden"></div>
 
-    <!-- Блок проблемных SKU: failed (ошибки) + escalated (в ручной обработке у оператора) -->
+    <!-- Блок проблемных SKU: escalated + noViolation + failed -->
     <div id="problemSkusBlock" class="problem-skus hidden">
       <div class="problem-skus-header">
         <span class="problem-skus-title">⚠ Проблемные SKU</span>
@@ -515,6 +516,18 @@
             </div>
           </div>
           <div id="problemEscalatedList" class="problem-list"></div>
+        </div>
+        <div id="problemNoViolationWrap" class="problem-cat problem-cat-neutral hidden">
+          <div class="problem-cat-header">
+            <span class="problem-cat-title">○ Без нарушений (<span id="problemNoViolationCount">0</span>)</span>
+            <div class="problem-cat-actions">
+              <button class="btn btn-small btn-problem-copy" data-cat="noViolation" title="Скопировать SKU в буфер">📋 Копировать</button>
+              <button class="btn btn-small btn-problem-requeue" data-cat="noViolation" title="Перенести в текущий ввод для повтора">↻ В очередь</button>
+              <button class="btn btn-small btn-problem-xlsx" data-cat="noViolation" title="Скачать XLSX">📥 XLSX</button>
+              <button class="btn btn-small btn-danger-sm btn-problem-clear" data-cat="noViolation" title="Очистить">✕</button>
+            </div>
+          </div>
+          <div id="problemNoViolationList" class="problem-list"></div>
         </div>
         <div id="problemFailedWrap" class="problem-cat hidden">
           <div class="problem-cat-header">

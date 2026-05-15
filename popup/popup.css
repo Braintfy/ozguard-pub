@@ -2041,6 +2041,8 @@ textarea:focus, input[type="text"]:focus {
 .queue-skipped .queue-icon { color: #999; }
 .queue-pending .queue-icon { color: #ccc; }
 .queue-escalated .queue-icon { color: #f57c00; }
+.queue-no_violation .queue-icon { color: #607d8b; }
+.queue-no_violation .queue-error { color: #607d8b; }
 
 /* Кнопка «К доказательствам» в строке родительского SKU */
 .btn-evidence-sku {
@@ -2127,6 +2129,11 @@ textarea:focus, input[type="text"]:focus {
 .problem-skus.collapsed .btn-icon-toggle { transform: rotate(-90deg); }
 .problem-skus-body { padding: 6px 10px; }
 .problem-cat { margin: 6px 0; }
+.problem-cat-neutral .problem-cat-title { color: #455a64; }
+.problem-cat-neutral .problem-list {
+  border-color: #d7e1e5;
+  background: #fbfdfe;
+}
 .problem-cat-header {
   display: flex;
   align-items: center;
