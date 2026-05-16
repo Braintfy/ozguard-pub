@@ -415,12 +415,10 @@
     <!-- Ввод артикулов -->
     <label for="complaintSkuInput">Артикулы (по одному на строку):</label>
     <textarea id="complaintSkuInput" rows="3" placeholder="1234567890&#10;9876543210"></textarea>
-    <div class="complaint-parent-row">
-      <div class="complaint-parent-field">
-        <label for="complaintParentSkuInput">Родительский SKU</label>
-        <input id="complaintParentSkuInput" class="input-select" type="text" inputmode="numeric" placeholder="Ваш SKU для списка ниже">
-      </div>
-      <button id="btnCopyComplaintParentSku" class="btn btn-small" title="Скопировать родительский SKU">📋</button>
+    <label class="complaint-parent-label" for="complaintParentSkuInput">Родительский SKU</label>
+    <div class="complaint-parent-input-wrap">
+      <input id="complaintParentSkuInput" class="complaint-parent-input" type="text" inputmode="numeric" placeholder="Ваш SKU — бот отправит его перед SKU нарушителя">
+      <button id="btnCopyComplaintParentSku" class="complaint-parent-copy" title="Скопировать">📋</button>
     </div>
     <div class="complaint-parent-hint">Если список SKU вставлен вручную, укажите ваш товар — бот отправит его перед SKU нарушителя.</div>
     <div class="complaint-import-row">

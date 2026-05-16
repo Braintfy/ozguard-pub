@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.9.36] - 2026-05-16
+### Fixed
+- **Зацикливание `in_progress` после отправки parent SKU** — `background/service-worker.js` обработчик фазы `in_progress` перезаписывал `item.step` на `'article_sent'`, даже когда реальный step = `'parent_sent'`. Из-за этого `waiting_article` handler считал артикул уже отправленным и уходил в бесконечный 5с-цикл (12 повторов → стоп). Фикс: не трогать step если он `'parent_sent'`.
+- **`in_progress` loop guard больше не останавливает весь пакет** — `background/service-worker.js` при зацикливании на фазе `in_progress` (Ozon не ответил в течение 60с) теперь помечает только текущий SKU как `failed` и продолжает пакет через `finishProblemSupportItem`, как уже делалось для `waiting_attachment`. Раньше ставил `isRunning = false` и останавливал все оставшиеся SKU.
+
+### Changed
+- **Кнопка «В жалобы» теперь мержит SKU** — `popup/popup.js` `btnSendToComplaints` дополняет существующий список в жалобах вместо замены. Каждая сборка по одному SKU добавляет свои находки + parent SKU через `parentMap`. Поле «Родительский SKU» обновляется только если пустое.
+- **Редизайн блока «Родительский SKU»** — `popup/popup.html` + `popup/popup.css`: увеличенное поле ввода в стиле основного textarea, inline-кнопка копирования внутри поля (absolute position), единый стиль label.
+- **Версия диагностики content script** — `support-automation.js` обновлён до `5.9.36`.
+- **Версия расширения** — `manifest.json` обновлён до `5.9.36`.
+
 ## [5.9.35] - 2026-05-16
 ### Added
 - **Ручной родительский SKU для пакета жалоб** — `popup/popup.html` / `popup/popup.js` добавляют отдельное поле «Родительский SKU» в разделе «Жалобы». Если поле заполнено, при запуске оно принудительно привязывает все SKU текущего списка к указанному parent SKU через существующий `complaintParentMap`.

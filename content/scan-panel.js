@@ -1,1 +1,113 @@
-!function(){"use strict";if(document.getElementById("__ozguard-scan-panel"))return;const e=document.createElement("div");e.id="__ozguard-scan-panel",e.innerHTML='\n    <div id="ozgScanHeader" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#005bff;color:#fff;border-radius:8px 8px 0 0;cursor:grab;user-select:none;">\n      <span style="font-weight:700;font-size:12px;">OZGuard</span>\n      <span id="ozgScanProgress" style="font-size:11px;opacity:0.9;">0/0 (0%)</span>\n      <div style="display:flex;gap:4px;">\n        <button id="ozgScanPause" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;" title="Пауза">⏸</button>\n        <button id="ozgScanStop" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;" title="Стоп">⏹</button>\n        <button id="ozgScanClose" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:14px;padding:0 2px;" title="Скрыть">✕</button>\n      </div>\n    </div>\n    <div id="ozgScanBody" style="max-height:180px;overflow-y:auto;padding:6px 10px;font-size:11px;line-height:1.5;color:#333;"></div>\n  ',Object.assign(e.style,{position:"fixed",bottom:"20px",right:"20px",width:"380px",background:"#fff",borderRadius:"8px",boxShadow:"0 4px 20px rgba(0,0,0,0.15)",zIndex:"2147483647",fontFamily:"-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif",border:"1px solid #e0e2e8",overflow:"hidden"}),document.body.appendChild(e);const t=document.getElementById("ozgScanHeader"),n=document.getElementById("ozgScanBody"),o=document.getElementById("ozgScanProgress"),d=document.getElementById("ozgScanPause"),i=document.getElementById("ozgScanStop"),a=document.getElementById("ozgScanClose");let s=!1,r=!1,c=0,l=0;t.addEventListener("mousedown",n=>{r=!0,c=n.clientX-e.offsetLeft,l=n.clientY-e.offsetTop,t.style.cursor="grabbing"}),document.addEventListener("mousemove",t=>{if(!r)return;let n=t.clientX-c,o=t.clientY-l;n=Math.max(0,Math.min(window.innerWidth-e.offsetWidth,n)),o=Math.max(0,Math.min(window.innerHeight-e.offsetHeight,o)),e.style.left=n+"px",e.style.top=o+"px",e.style.right="auto",e.style.bottom="auto"}),document.addEventListener("mouseup",()=>{r=!1,t.style.cursor="grab"}),a.addEventListener("click",()=>{e.style.display="none"}),d.addEventListener("click",()=>{s?(chrome.runtime.sendMessage({action:"resumeScan"}),s=!1,d.textContent="⏸",d.title="Пауза"):(chrome.runtime.sendMessage({action:"pauseScan"}),s=!0,d.textContent="▶",d.title="Продолжить")}),i.addEventListener("click",()=>{chrome.runtime.sendMessage({action:"stopScan"}),o.textContent="Остановлено",d.disabled=!0,i.disabled=!0}),chrome.runtime.onMessage.addListener(e=>{if("scanPanelUpdate"===e.action){if(e.log){const t=document.createElement("div");for(t.textContent=e.log,n.appendChild(t),n.scrollTop=n.scrollHeight;n.children.length>100;)n.removeChild(n.firstChild)}if(e.total>0){const t=Math.round(e.current/e.total*100);o.textContent=`${e.current}/${e.total} (${t}%)`}}"scanComplete"!==e.action&&"scanStopped"!==e.action||(o.textContent="Завершено",d.disabled=!0,i.disabled=!0)})}();
+// OZGuard Scan Panel v5.9.16
+// Плавающая панель прогресса сканирования на www.ozon.ru
+// ISOLATED world — коммуникация через chrome.runtime.onMessage
+
+(function() {
+  'use strict';
+
+  if (document.getElementById('__ozguard-scan-panel')) return;
+
+  const panel = document.createElement('div');
+  panel.id = '__ozguard-scan-panel';
+  panel.innerHTML = `
+    <div id="ozgScanHeader" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#005bff;color:#fff;border-radius:8px 8px 0 0;cursor:grab;user-select:none;">
+      <span style="font-weight:700;font-size:12px;">OZGuard</span>
+      <span id="ozgScanProgress" style="font-size:11px;opacity:0.9;">0/0 (0%)</span>
+      <div style="display:flex;gap:4px;">
+        <button id="ozgScanPause" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;" title="Пауза">⏸</button>
+        <button id="ozgScanStop" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px;" title="Стоп">⏹</button>
+        <button id="ozgScanClose" style="background:none;border:none;color:rgba(255,255,255,0.7);cursor:pointer;font-size:14px;padding:0 2px;" title="Скрыть">✕</button>
+      </div>
+    </div>
+    <div id="ozgScanBody" style="max-height:180px;overflow-y:auto;padding:6px 10px;font-size:11px;line-height:1.5;color:#333;"></div>
+  `;
+  Object.assign(panel.style, {
+    position: 'fixed', bottom: '20px', right: '20px', width: '380px',
+    background: '#fff', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+    zIndex: '2147483647', fontFamily: '-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif',
+    border: '1px solid #e0e2e8', overflow: 'hidden'
+  });
+  document.body.appendChild(panel);
+
+  const header = document.getElementById('ozgScanHeader');
+  const body = document.getElementById('ozgScanBody');
+  const progress = document.getElementById('ozgScanProgress');
+  const pauseBtn = document.getElementById('ozgScanPause');
+  const stopBtn = document.getElementById('ozgScanStop');
+  const closeBtn = document.getElementById('ozgScanClose');
+
+  let isPaused = false;
+
+  // Drag
+  let isDragging = false, dragX = 0, dragY = 0;
+  header.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    dragX = e.clientX - panel.offsetLeft;
+    dragY = e.clientY - panel.offsetTop;
+    header.style.cursor = 'grabbing';
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    let x = e.clientX - dragX;
+    let y = e.clientY - dragY;
+    x = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, x));
+    y = Math.max(0, Math.min(window.innerHeight - panel.offsetHeight, y));
+    panel.style.left = x + 'px';
+    panel.style.top = y + 'px';
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
+  });
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    header.style.cursor = 'grab';
+  });
+
+  // Close
+  closeBtn.addEventListener('click', () => { panel.style.display = 'none'; });
+
+  // Pause
+  pauseBtn.addEventListener('click', () => {
+    if (isPaused) {
+      chrome.runtime.sendMessage({ action: 'resumeScan' });
+      isPaused = false;
+      pauseBtn.textContent = '⏸';
+      pauseBtn.title = 'Пауза';
+    } else {
+      chrome.runtime.sendMessage({ action: 'pauseScan' });
+      isPaused = true;
+      pauseBtn.textContent = '▶';
+      pauseBtn.title = 'Продолжить';
+    }
+  });
+
+  // Stop
+  stopBtn.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'stopScan' });
+    progress.textContent = 'Остановлено';
+    pauseBtn.disabled = true;
+    stopBtn.disabled = true;
+  });
+
+  // Receive updates
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.action === 'scanPanelUpdate') {
+      if (msg.log) {
+        const line = document.createElement('div');
+        line.textContent = msg.log;
+        body.appendChild(line);
+        body.scrollTop = body.scrollHeight;
+        // Ограничиваем 100 строк
+        while (body.children.length > 100) body.removeChild(body.firstChild);
+      }
+      if (msg.total > 0) {
+        const pct = Math.round((msg.current / msg.total) * 100);
+        progress.textContent = `${msg.current}/${msg.total} (${pct}%)`;
+      }
+    }
+    if (msg.action === 'scanComplete' || msg.action === 'scanStopped') {
+      progress.textContent = 'Завершено';
+      pauseBtn.disabled = true;
+      stopBtn.disabled = true;
+    }
+  });
+})();

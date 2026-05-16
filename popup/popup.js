@@ -1,1 +1,3350 @@
-!function(){"use strict";const e="files",t=2097152,n=52428800;function s(){return new Promise((t,n)=>{const s=indexedDB.open("ozguard-files",1);s.onupgradeneeded=()=>{const t=s.result;t.objectStoreNames.contains(e)||t.createObjectStore(e)},s.onsuccess=()=>t(s.result),s.onerror=()=>n(s.error)})}async function o(t,n,o){const a=await s();return new Promise((s,i)=>{const l=a.transaction(e,"readwrite");l.objectStore(e).put({blob:n,...o},t),l.oncomplete=()=>{a.close(),s()},l.onerror=()=>{a.close(),i(l.error)}})}async function a(t){const n=await s();return new Promise((s,o)=>{const a=n.transaction(e,"readonly").objectStore(e).get(t);a.onsuccess=()=>{n.close(),s(a.result||null)},a.onerror=()=>{n.close(),o(a.error)}})}async function i(t){const n=await s();return new Promise(s=>{const o=n.transaction(e,"readwrite");o.objectStore(e).delete(t),o.oncomplete=()=>{n.close(),s()},o.onerror=()=>{n.close(),s()}})}async function l(e){return new Promise((t,n)=>{const s=new FileReader;s.onload=()=>t(s.result.split(",")[1]),s.onerror=()=>n(s.error),s.readAsDataURL(e)})}function c(e){return e>=1048576?(e/1048576).toFixed(1)+" MB":e>=1024?Math.round(e/1024)+" KB":e+" B"}window.__ozgFiles={put:o,get:a,del:i,toB64:l};const r=document.getElementById("skuInput"),d=document.getElementById("excludeSellersInput"),u=document.getElementById("btnStart"),m=document.getElementById("btnPause"),g=document.getElementById("btnStop"),p=document.getElementById("progressWrap"),h=document.getElementById("progressCurrent"),f=document.getElementById("progressTotal"),v=document.getElementById("progressPercent"),y=document.getElementById("progressFill"),b=document.getElementById("resultsSection"),E=document.getElementById("resultsContainer"),L=document.getElementById("totalSellers"),k=document.getElementById("btnCopy"),S=document.getElementById("btnCopySku"),B=document.getElementById("btnExcel"),x=document.getElementById("btnClearSession"),w=document.getElementById("logContainer"),I=document.getElementById("logCount"),C=document.getElementById("historyContainer"),$=document.getElementById("btnClearHistory"),M=document.getElementById("delayMs"),T=document.getElementById("btnSaveDelay"),U=document.getElementById("btnSaveExclusions"),P=document.getElementById("exclusionsSavedHint"),A=document.getElementById("complaintExcludeInput"),H=document.getElementById("btnSaveComplaintExclusions"),z=document.getElementById("complaintExclusionsSavedHint"),F=document.getElementById("disableOzonBlacklist"),N=document.getElementById("proBadge"),D=document.getElementById("freeBadge"),j=document.getElementById("licenseDot"),_=document.getElementById("licenseStatusText"),K=document.getElementById("licenseCodeInput"),q=document.getElementById("btnActivateLicense"),O=document.getElementById("licenseError"),R=document.getElementById("licenseInputBlock"),V=document.getElementById("licenseActiveBlock"),G=document.getElementById("licenseCodeDisplay"),X=document.getElementById("licenseTypeInfo"),W=document.getElementById("licenseTypeBadge"),Z=document.getElementById("licenseDaysLeft"),J=document.getElementById("btnDeactivateLicense"),Q=document.getElementById("licenseErrorHelp"),Y=document.getElementById("licenseDiagBox"),ee=document.getElementById("btnBuyPro"),te=document.getElementById("btnBuyProSettings"),ne=document.getElementById("sessionModal"),se=document.getElementById("modalTitle"),oe=document.getElementById("modalBody"),ae=document.getElementById("modalClose"),ie=document.getElementById("modalDownload"),le=document.getElementById("modalCopy"),ce=document.getElementById("modalLogs"),re=document.getElementById("batchDrop"),de=document.getElementById("batchFileInput"),ue=document.getElementById("batchFilename"),me=document.getElementById("batchInfo"),ge=document.getElementById("batchWarning"),pe=document.getElementById("btnBatchHistory"),he=document.getElementById("batchHistoryMenu");let fe=[],ve=!1,ye=0,be=null,Ee=!1,Le=!1;const ke="batchUploadHistory",Se=["ozon","озон","интернет решения","internet solutions"];let Be=[],xe=!1;function we(e){if(!e)return!1;const t=String(e).toLowerCase().trim();return!(xe||!Se.some(e=>t.includes(e)))||!!Be.some(e=>e&&t.includes(e))}function Ie(){chrome.runtime.sendMessage({action:"getLicenseStatus"},e=>{!chrome.runtime.lastError&&e&&(Le=e.isPro,function(e){if(Le=e.isPro,Pe(Q,null),Pe(Y,null),Ce.classList.add("hidden"),$e.classList.add("hidden"),Me.classList.add("hidden"),e.isPro)if(N.classList.remove("hidden"),D.classList.add("hidden"),ee&&(ee.style.display="none"),te&&(te.style.display="none"),j.className="license-dot active",e.isTrial){if(N.textContent="TRIAL",N.className="pro-badge trial-badge",_.textContent="PRO (пробный)",R.classList.remove("hidden"),V.classList.add("hidden"),te&&(te.style.display=""),X.classList.remove("hidden"),W.textContent="Пробный",W.className="license-type-badge trial",Z.textContent=`осталось ${e.daysLeft} дн.`,Z.className="license-days-left"+(e.daysLeft<=1?" expiring":""),Me.classList.remove("hidden"),null!=e.daysLeft){const t=e.daysLeft<=0?"менее 1 дня":`${e.daysLeft} дн.`;Te.textContent=t}}else{N.textContent="PRO",N.className="pro-badge",_.textContent="PRO-версия",R.classList.add("hidden"),V.classList.remove("hidden");const t=e.code||"";G.textContent=t.length>8?t.slice(0,3)+"-*****-*****-*****":t,e.type?(X.classList.remove("hidden"),"lifetime"===e.type?(W.textContent="Вечная",W.className="license-type-badge lifetime",Z.textContent=""):(W.textContent="Месячная",W.className="license-type-badge monthly",null!=e.daysLeft?(Z.textContent=`осталось ${e.daysLeft} дн.`,Z.className="license-days-left"+(e.daysLeft<=3?" expiring":"")):Z.textContent="")):X.classList.add("hidden"),e.lastError&&e.lastError.code&&Pe(Y,e.lastError.code,e.lastError.message)}else N.classList.add("hidden"),N.textContent="PRO",N.className="pro-badge hidden",D.classList.remove("hidden"),ee&&(ee.style.display=""),j.className="license-dot",R.classList.remove("hidden"),V.classList.add("hidden"),X.classList.add("hidden"),e.trialExpired?(_.textContent="Пробный период закончился",$e.classList.remove("hidden"),te&&(te.style.display="none")):e.canActivateTrial?(_.textContent="FREE-версия",Ce.classList.remove("hidden")):"expired"===e.error?(_.textContent="Подписка истекла",Pe(Q,"expired")):"verification_needed"===e.error?(_.textContent="Требуется проверка (нет интернета)",Pe(Q,"verification_needed")):_.textContent="FREE-версия",e.lastError&&e.lastError.code&&Pe(Q,e.lastError.code,e.lastError.message)}(e))})}const Ce=document.getElementById("btnActivateTrial"),$e=document.getElementById("trialExpiredBlock"),Me=document.getElementById("trialInfoBlock"),Te=document.getElementById("trialDaysLeftText"),Ue={invalid_key:{title:"Код не найден",tips:["Проверьте код в письме после оплаты или в личном кабинете codefic.ru","Вставляйте ключ целиком (включая OZG-). Пробелы и лишние символы расширение удалит само","Если ключ потерян — напишите в поддержку t.me/firadex"]},revoked:{title:"Код отозван",tips:["Ключ заблокирован администратором codefic.ru","Это могло произойти из-за возврата оплаты или обнаружения передачи ключа","Свяжитесь с поддержкой: t.me/firadex"]},expired:{title:"Срок подписки истёк",tips:["Продлите подписку в личном кабинете codefic.ru","После оплаты ключ автоматически продлится — заново вводить его не нужно","Если оплата прошла, но ключ всё ещё истёкший — нажмите «Активировать» ещё раз"]},max_activations:{title:"Лимит устройств исчерпан",tips:["Откройте расширение на другом устройстве и нажмите «Деактивировать»","Или напишите в поддержку t.me/firadex — увеличим лимит устройств","Обычно лимит 2 устройства. Если часто переустанавливаете — пишите нам, поднимем"]},not_activated_here:{title:"Ключ не привязан к этому устройству",tips:["Нажмите «Активировать» ещё раз — мы привяжем текущий браузер","Если после реинсталла не активируется — возможно, исчерпан лимит устройств","Такое бывает, когда новую версию распаковали в другую папку (изменился ID расширения)"]},verification_needed:{title:"Требуется проверка связи с сервером",tips:["Расширение не смогло подтвердить ключ более 7 дней","Проверьте интернет и откройте codefic.ru в соседней вкладке","Если сайт открывается — нажмите «Активировать» ещё раз или подождите авто-проверку"]},network_error:{title:"Нет связи с codefic.ru",tips:["Проверьте интернет и отключите VPN, если он блокирует *.ru домены","Если используете корпоративный прокси — добавьте codefic.ru в исключения","Расширение продолжает работать в офлайн-режиме до 7 дней без верификации"]},rate_limited:{title:"Слишком много запросов",tips:["Подождите минуту и попробуйте снова","Не нажимайте «Активировать» многократно подряд"]}};function Pe(e,t,n){if(!e)return;if(!t)return e.classList.add("hidden"),void(e.innerHTML="");const s=Ue[t];if(!s)return e.classList.remove("hidden"),void(e.innerHTML=`<div class="license-diag-title">Ошибка активации</div><div class="license-diag-msg">${Ae(n||"")}</div>`);const o=s.tips.map(e=>`<li>${Ae(e)}</li>`).join("");e.classList.remove("hidden"),e.innerHTML=`\n      <div class="license-diag-title">⚠️ ${Ae(s.title)}</div>\n      ${n?`<div class="license-diag-msg">${Ae(n)}</div>`:""}\n      <ul class="license-diag-tips">${o}</ul>\n      <div class="license-diag-footer">\n        <a href="https://codefic.ru/#pricing" target="_blank">Личный кабинет</a>\n        <span>·</span>\n        <a href="https://t.me/firadex" target="_blank">Поддержка</a>\n      </div>\n    `}function Ae(e){return String(e).replace(/[&<>"']/g,e=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[e]))}Ie(),Ce.addEventListener("click",()=>{Ce.disabled=!0,Ce.textContent="Активация...",chrome.runtime.sendMessage({action:"activateTrial"},e=>{if(Ce.disabled=!1,chrome.runtime.lastError)return st("Ошибка расширения"),void(Ce.textContent="⚡ Попробовать PRO бесплатно — 7 дней");e.success?(Ie(),je("PRO (пробный) активирован на 7 дней")):(st(e.error||"Ошибка активации"),Ce.textContent="⚡ Попробовать PRO бесплатно — 7 дней")})});const He=document.getElementById("helpModal");document.getElementById("btnHelp").addEventListener("click",()=>He.classList.toggle("hidden")),document.getElementById("helpModalClose").addEventListener("click",()=>He.classList.add("hidden")),He.addEventListener("click",e=>{e.target===He&&He.classList.add("hidden")});const ze=document.getElementById("logSection");function Fe(e){document.querySelectorAll(".tab").forEach(e=>e.classList.remove("active")),document.querySelectorAll(".tab-content").forEach(e=>e.classList.remove("active"));const t=document.querySelector(`[data-tab="${e}"]`);t&&t.classList.add("active");const n="tab"+e.charAt(0).toUpperCase()+e.slice(1),s=document.getElementById(n);s&&s.classList.add("active"),"history"===e&&et()}function Ne(e){return e.split(/[\n,;\s]+/).map(e=>e.trim()).filter(e=>/^\d{3,}$/.test(e))}document.getElementById("logToggle").addEventListener("click",()=>{ze.classList.toggle("collapsed")}),chrome.storage.local.get(["complaintExcludeSellers","ozonBlacklistDisabled"],e=>{Array.isArray(e.complaintExcludeSellers)&&(Be=e.complaintExcludeSellers.map(e=>String(e||"").toLowerCase().trim()).filter(Boolean),A&&(A.value=e.complaintExcludeSellers.join("\n"))),xe=!!e.ozonBlacklistDisabled,F&&(F.checked=xe)}),chrome.storage.local.get(["excludeSellers","delayMs","lastScanResults","lastScanLogs"],e=>{if(e.excludeSellers&&(d.value=e.excludeSellers.join("\n")),e.delayMs&&(M.value=e.delayMs),e.lastScanResults&&e.lastScanResults.length>0&&(fe=e.lastScanResults,Ke(),e.lastScanLogs&&e.lastScanLogs.length>0))for(const t of e.lastScanLogs)je(t)}),document.querySelectorAll(".tab").forEach(e=>{e.addEventListener("click",()=>{Fe(e.dataset.tab),chrome.storage.local.set({lastActiveTab:e.dataset.tab})})}),chrome.storage.local.get(["lastActiveTab"],e=>{e.lastActiveTab&&"scan"!==e.lastActiveTab&&Fe(e.lastActiveTab)});let De=new Set;function je(e){ye++,I.textContent=ye;const t=document.createElement("div");t.className="log-line",e.includes("Ошибка")||e.includes("ошибка")||e.includes("Таймаут")||e.includes("error")?t.classList.add("error"):(e.includes("конкурент")||e.includes("Завершено")||e.includes("завершен"))&&t.classList.add("success"),t.textContent=e,w.appendChild(t),w.scrollTop=w.scrollHeight}function _e(e,t){h.textContent=e,f.textContent=t;const n=t>0?Math.round(e/t*100):0;v.textContent=n+"%",y.style.width=n+"%"}function Ke(){if(E.innerHTML="",0===fe.length)return;b.classList.remove("hidden");let e=0;for(const t of fe){const n=document.createElement("div");n.className="sku-group";const s=document.createElement("div");if(s.className="sku-header",t.error){const e=`https://www.ozon.ru/product/${t.sku}/`;s.innerHTML=`<span>SKU ${Oe(t.sku)}</span><span class="sku-error">${Oe(t.error)}</span>`,n.appendChild(s);const o=document.createElement("div");o.className="my-sku-row",o.innerHTML=`<button class="btn-copy-my-sku" data-sku="${Oe(t.sku)}" title="Копировать SKU">&#x2398;</button> <span class="my-sku-num">${Oe(t.sku)}</span> <a href="${Oe(e)}" target="_blank" class="my-sku-link">открыть на OZON</a>`,n.appendChild(o),E.appendChild(n);continue}const o=t.sellers?t.sellers.length:0;e+=o;const a=t.productName?t.productName.substring(0,40):"SKU "+t.sku,i=`https://www.ozon.ru/product/${t.sku}/`,l=(t.sellers||[]).map(e=>e.competitorSku).filter(Boolean),c=`Скопировать ${l.length} SKU конкурентов`;s.innerHTML=`<span>${Oe(a)}</span><span class="count-group">${o} конк.${l.length>0?`<button class="btn-copy-group-skus" data-skus="${Oe(l.join("\n"))}" title="${Oe(c)}">&#x2398;</button>`:""}</span>`,n.appendChild(s);const r=document.createElement("div");r.className="my-sku-row";const d=De.has(String(t.sku));if(r.innerHTML=`<button class="btn-copy-my-sku" data-sku="${Oe(t.sku)}" title="Копировать мой SKU">&#x2398;</button> <span class="my-sku-num">${Oe(t.sku)}</span> <a href="${Oe(i)}" target="_blank" class="my-sku-link">открыть на OZON</a> <button class="btn-evidence-sku ${d?"has-evidence":""}" data-sku="${Oe(t.sku)}" title="${d?"Доказательства уже привязаны — открыть в настройках":"Привязать доказательства для этого SKU"}">${d?"✓ Доказательства":"📎 К доказательствам"}</button>`,n.appendChild(r),0===o){const e=document.createElement("div");e.className="no-sellers",e.textContent="Других продавцов не найдено",n.appendChild(e)}else for(const e of t.sellers){const t=document.createElement("div");t.className="seller-item";const s=e.url?`<a href="${Oe(e.url)}" target="_blank">${Oe(e.name)}</a>`:Oe(e.name),o=e.price?` <span class="seller-price">${Oe(e.price)} ₽</span>`:"",a=e.productLink||(e.competitorSku?`https://www.ozon.ru/product/${e.competitorSku}/`:""),i=e.competitorSku?`<a href="${Oe(a)}" target="_blank" class="seller-sku" title="Открыть карточку конкурента">${Oe(e.competitorSku)}</a><button class="btn-copy-sku" data-sku="${Oe(e.competitorSku)}" title="Копировать SKU">&#x2398;</button>`:"";t.innerHTML=`${i}${i&&s?" ":""}${s}${o}`,n.appendChild(t)}E.appendChild(n)}L.textContent=e,E.querySelectorAll(".btn-copy-sku, .btn-copy-my-sku").forEach(e=>{e.addEventListener("click",t=>{t.preventDefault(),t.stopPropagation(),navigator.clipboard.writeText(e.dataset.sku),e.textContent="✓",setTimeout(()=>{e.innerHTML="&#x2398;"},800)})}),E.querySelectorAll(".btn-copy-group-skus").forEach(e=>{e.addEventListener("click",t=>{t.preventDefault(),t.stopPropagation(),navigator.clipboard.writeText(e.dataset.skus),e.textContent="✓",setTimeout(()=>{e.innerHTML="&#x2398;"},1e3)})}),E.querySelectorAll(".btn-evidence-sku").forEach(e=>{e.addEventListener("click",t=>{t.preventDefault(),t.stopPropagation();const n=e.dataset.sku;Fe("settings"),chrome.storage.local.set({lastActiveTab:"settings"});const s=document.getElementById("skuFileSkuInput"),o=document.getElementById("skuFilesList");if(s){s.value=n,s.focus();const e=s.closest(".settings-group");e&&(e.scrollIntoView({behavior:"smooth",block:"start"}),e.classList.add("highlight-settings"),setTimeout(()=>e.classList.remove("highlight-settings"),2e3)),o&&o.querySelectorAll(".sku-file-bundle").forEach(e=>{const t=e.querySelector(".sku-file-bundle-sku");t&&t.textContent.trim()===n&&(e.classList.add("highlight-bundle"),setTimeout(()=>e.classList.remove("highlight-bundle"),2500))})}})})}function qe(){E&&E.querySelectorAll(".btn-evidence-sku").forEach(e=>{const t=e.dataset.sku,n=De.has(String(t));e.classList.toggle("has-evidence",n),e.textContent=n?"✓ Доказательства":"📎 К доказательствам",e.title=n?"Доказательства уже привязаны — открыть в настройках":"Привязать доказательства для этого SKU"})}function Oe(e){const t=document.createElement("div");return t.textContent=e||"",t.innerHTML}function Re(){ve=!1,u.disabled=!0,m.disabled=!1,m.textContent="⏸",g.disabled=!1,r.disabled=!0,p.classList.remove("hidden")}function Ve(){ve=!1,u.disabled=!1,m.disabled=!0,m.textContent="⏸",g.disabled=!0,r.disabled=!1}new Promise(e=>{chrome.storage.local.get(["complaintSkuFiles"],t=>{const n=t.complaintSkuFiles||{};De=new Set(Object.keys(n).filter(e=>(n[e]||[]).length>0)),e(De)})}),chrome.storage.onChanged.addListener((e,t)=>{if("local"===t&&e.complaintSkuFiles){const t=e.complaintSkuFiles.newValue||{};De=new Set(Object.keys(t).filter(e=>(t[e]||[]).length>0)),qe()}});let Ge="fast";const Xe=document.getElementById("scanModeFast"),We=document.getElementById("scanModeVisual");function Ze(e){Ge=e,Xe.classList.toggle("active","fast"===e),We.classList.toggle("active","visual"===e),chrome.storage.local.set({scanMode:e})}function Je(e){const t=[];for(const n of e)if(n.error)t.push(`SKU ${n.sku}: ${n.error}`);else{t.push(`SKU ${n.sku} (${n.productName||""}) — ${(n.sellers||[]).length} конкурентов:`);for(const e of n.sellers||[]){const n=[`  ${e.name}`];e.price&&n.push(e.price+" ₽"),e.competitorSku&&n.push("SKU:"+e.competitorSku),e.sellerId&&n.push("ID:"+e.sellerId),t.push(n.join(" | "))}}navigator.clipboard.writeText(t.join("\n"))}function Qe(e,t){const n=[["Мой SKU","Название","SKU конкурента","ID продавца","Продавец","Цена","Ссылка"]];for(const t of e)if(t.error)n.push([t.sku,"","","","ОШИБКА: "+t.error,"",""]);else if(t.sellers&&0!==t.sellers.length)for(const e of t.sellers)n.push([t.sku,t.productName||"",e.competitorSku||"",e.sellerId||"",e.name,e.price||"",e.url||""]);else n.push([t.sku,t.productName||"","","","Нет конкурентов","",""]);const s=n.map(e=>e.map(e=>'"'+String(e).replace(/"/g,'""')+'"').join(";")).join("\r\n"),o=new Blob(["\ufeff"+s],{type:"text/csv;charset=utf-8;"}),a=URL.createObjectURL(o),i=document.createElement("a");i.href=a,i.download=t+"_"+function(e){const t=e=>String(e).padStart(2,"0");return`${e.getFullYear()}${t(e.getMonth()+1)}${t(e.getDate())}_${t(e.getHours())}${t(e.getMinutes())}`}(new Date)+".csv",i.click(),URL.revokeObjectURL(a)}function Ye(e,t){const n=e.textContent;e.textContent=t,setTimeout(()=>{e.textContent=n},1200)}function et(){chrome.runtime.sendMessage({action:"getHistory"},e=>{!chrome.runtime.lastError&&e&&function(e){if(C.innerHTML="",0===e.length)return void(C.innerHTML='<div class="empty-state">Нет сохранённых сессий</div>');for(const t of e){const e=document.createElement("div");e.className="history-card";const n=new Date(t.date).toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}),s=new Set,o={};if(t.results)for(const e of t.results){const t=String(e.sku||"").trim();e.sellers&&e.sellers.forEach(e=>{e.competitorSku&&(s.add(e.competitorSku),t&&(o[e.competitorSku]||(o[e.competitorSku]=[]),o[e.competitorSku].includes(t)||o[e.competitorSku].push(t)))})}e.innerHTML=`\n        <div class="history-date">${Oe(n)}</div>\n        <div class="history-stats">\n          <div class="history-stat"><div class="label">SKU</div><div class="value">${t.skusCount}</div></div>\n          <div class="history-stat"><div class="label">Найдено</div><div class="value accent">${t.sellersFound}</div></div>\n        </div>\n        <div class="history-actions">\n          <button class="btn btn-small btn-download">📥 Excel</button>\n          <button class="btn btn-small btn-view">👁 Детали</button>\n          ${s.size>0?`<button class="btn btn-small btn-pro btn-to-complaints" title="${s.size} SKU конкурентов">📨 Жалобы</button>`:""}\n          <button class="btn btn-small btn-danger-sm btn-delete">✕</button>\n        </div>\n      `,e.querySelector(".btn-download").addEventListener("click",e=>{e.stopPropagation(),Qe(t.results,"ozguard_"+t.id)}),e.querySelector(".btn-view").addEventListener("click",e=>{e.stopPropagation(),tt(t)});const a=e.querySelector(".btn-to-complaints");a&&a.addEventListener("click",async e=>{if(e.stopPropagation(),!Le)return void alert("Жалобы доступны в PRO-версии");const n=Xt(t.results);let a="";if(1===n.length){if(a=await Yt(n[0]),null===a)return;Wt(o,s,a)}const i=Ne(ot.value),l=new Set([...i,...s]);ot.value=[...l].join("\n"),a&&0===i.length&&Zt(a),ot.dispatchEvent(new Event("input"));try{const e=await $n();for(const t of Object.keys(o)){const n=new Set([...e[t]||[],...o[t]]);e[t]=[...n]}await Mn(e)}catch(e){}Fe("complaints"),chrome.storage.local.set({lastActiveTab:"complaints"}),a&&en(`Родительский SKU ${a} привязан к ${s.size} SKU`)}),e.querySelector(".btn-delete").addEventListener("click",e=>{e.stopPropagation(),chrome.runtime.sendMessage({action:"deleteHistorySession",sessionId:t.id},()=>et())}),C.appendChild(e)}}(e.history||[])})}function tt(e){be=e,Ee=!1;const t=new Date(e.date);se.textContent=t.toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})+" — "+e.skusCount+" SKU",nt(e),ne.classList.remove("hidden")}function nt(e){let t='<table class="results-table"><thead><tr><th>SKU конк.</th><th>Продавец</th><th>Цена</th></tr></thead><tbody>';for(const n of e.results)if(n.error)t+=`<tr><td colspan="3" class="sku-error">${Oe(n.sku)}: ${Oe(n.error)}</td></tr>`;else if(n.sellers&&0!==n.sellers.length)for(const e of n.sellers){const n=e.productLink||(e.competitorSku?`https://www.ozon.ru/product/${e.competitorSku}/`:"");t+=`<tr><td>${e.competitorSku?`<span class="sku-cell"><a href="${Oe(n)}" target="_blank" title="Открыть карточку">${Oe(e.competitorSku)}</a><button class="btn-copy-sku" data-sku="${Oe(e.competitorSku)}" title="Копировать SKU">&#x2398;</button></span>`:"—"}</td><td>${e.url?`<a href="${Oe(e.url)}" target="_blank">${Oe(e.name)}</a>`:Oe(e.name)}</td><td>${e.price?Oe(e.price)+" ₽":"—"}</td></tr>`}else t+=`<tr><td colspan="3" class="no-sellers">${Oe(n.sku)}: Нет конкурентов</td></tr>`;t+="</tbody></table>",oe.innerHTML=t,oe.querySelectorAll(".btn-copy-sku").forEach(e=>{e.addEventListener("click",t=>{t.preventDefault(),t.stopPropagation(),navigator.clipboard.writeText(e.dataset.sku),e.textContent="✓",setTimeout(()=>{e.innerHTML="&#x2398;"},800)})})}function st(e){O.textContent=e,O.classList.remove("hidden")}chrome.storage.local.get(["scanMode"],e=>{e.scanMode&&Ze(e.scanMode)}),Xe.addEventListener("click",()=>Ze("fast")),We.addEventListener("click",()=>Ze("visual")),u.addEventListener("click",()=>{const e=Ne(r.value);if(0===e.length)return void je("Нет валидных SKU");const t=(d.value||"").split("\n").map(e=>e.trim()).filter(Boolean);fe=[],E.innerHTML="",b.classList.add("hidden"),w.innerHTML="",ye=0,I.textContent="0",_e(0,e.length),Re(),chrome.runtime.sendMessage({action:"startScan",skus:e,config:{excludeSellers:t,scanMode:Ge}},e=>{chrome.runtime.lastError&&(je("Ошибка: "+chrome.runtime.lastError.message),Ve())})}),m.addEventListener("click",()=>{ve?(chrome.runtime.sendMessage({action:"resumeScan"}),ve=!1,m.textContent="⏸"):(chrome.runtime.sendMessage({action:"pauseScan"}),ve=!0,m.textContent="▶")}),g.addEventListener("click",()=>{chrome.runtime.sendMessage({action:"stopScan"}),Ve()}),chrome.runtime.onMessage.addListener(e=>{"scanProgress"===e.action&&(_e(e.current,e.total),fe.push({sku:e.sku,sellers:e.sellers||[],productName:e.productName||"",error:e.error||null}),Ke(),chrome.storage.local.set({lastScanResults:fe})),"scanComplete"===e.action&&(Ve(),e.results&&(fe=e.results,Ke()),chrome.storage.local.set({lastScanResults:fe,lastScanLogs:[...w.querySelectorAll(".log-line")].map(e=>e.textContent)})),"scanLog"===e.action&&je(e.text),"supportLog"===e.action&&en(e.text),"supportProgress"===e.action&&(tn(e.current,e.total),e.item&&chrome.runtime.sendMessage({action:"supportGetStatus"},e=>{e&&e.queue&&nn(e.queue)}),Mt.textContent="▶",Tt.textContent=`Обработка ${e.current}/${e.total}`),"supportComplete"===e.action&&(on(),Mt.textContent="✓",Tt.textContent="Завершено",e.queue&&nn(e.queue)),"supportNeedAction"===e.action&&(Ut.classList.remove("hidden"),Ut.textContent=e.message||"",Mt.textContent="⚠",Tt.textContent="Требуется действие"),e.action}),k.addEventListener("click",()=>{Je(fe),Ye(k,"✓")}),S.addEventListener("click",()=>{!function(e){const t=new Set;for(const n of e)if(!n.error&&n.sellers)for(const e of n.sellers)e.competitorSku&&t.add(e.competitorSku);navigator.clipboard.writeText([...t].join("\n"))}(fe),Ye(S,"✓")}),B.addEventListener("click",()=>{Qe(fe,"ozguard_results")}),x.addEventListener("click",()=>{fe=[],E.innerHTML="",b.classList.add("hidden"),w.innerHTML="",ye=0,I.textContent="0",r.value="",p.classList.add("hidden"),chrome.storage.local.remove(["lastScanResults","lastScanLogs"]),ue.classList.add("hidden"),me.classList.add("hidden"),ge.classList.add("hidden"),je("Сессия очищена. Результаты доступны в Истории.")}),$.addEventListener("click",()=>{chrome.runtime.sendMessage({action:"clearHistory"},()=>et())}),ae.addEventListener("click",()=>{ne.classList.add("hidden")}),ne.addEventListener("click",e=>{e.target===ne&&ne.classList.add("hidden")}),ie.addEventListener("click",()=>{be&&Qe(be.results,"ozguard_"+be.id)}),le.addEventListener("click",()=>{be&&(Je(be.results),Ye(le,"✓"))}),ce.addEventListener("click",()=>{if(be)if(Ee)nt(be),ce.textContent="📝 Логи",Ee=!1;else{const e=be.logs||[];oe.innerHTML=0===e.length?'<div class="empty-state">Логи отсутствуют</div>':'<div class="modal-logs">'+e.map(e=>Oe(e)).join("\n")+"</div>",ce.textContent="📊 Таблица",Ee=!0}}),q.addEventListener("click",()=>{const e=K.value.trim();e?(O.classList.add("hidden"),Pe(Q,null),q.disabled=!0,chrome.runtime.sendMessage({action:"activateLicense",code:e},e=>{if(q.disabled=!1,chrome.runtime.lastError)st("Ошибка расширения");else if(e&&e.success)K.value="",Pe(Q,null),Ie(),je("PRO-версия активирована");else{const t=e&&e.error||"Неверный код";st(t),Pe(Q,e&&e.code||"unknown",t)}})):st("Введите код")}),K.addEventListener("input",()=>{const e=K.value.toUpperCase().replace(/[^A-Z0-9-]/g,"");if(e!==K.value){const t=K.selectionStart;K.value=e;try{K.setSelectionRange(t,t)}catch(e){}}}),J.addEventListener("click",()=>{chrome.runtime.sendMessage({action:"deactivateLicense"},()=>{Ie(),je("Лицензия деактивирована")})}),U.addEventListener("click",()=>{const e=(d.value||"").split("\n").map(e=>e.trim()).filter(Boolean);chrome.storage.local.set({excludeSellers:e}),P.classList.remove("hidden"),setTimeout(()=>P.classList.add("hidden"),2e3),Ye(U,"✓")}),H&&H.addEventListener("click",()=>{const e=(A.value||"").split("\n").map(e=>e.trim()).filter(Boolean);Be=e.map(e=>e.toLowerCase()),chrome.storage.local.set({complaintExcludeSellers:e}),z&&(z.classList.remove("hidden"),setTimeout(()=>z.classList.add("hidden"),2e3)),Ye(H,"✓")}),F&&F.addEventListener("change",()=>{xe=F.checked,chrome.storage.local.set({ozonBlacklistDisabled:xe})}),T.addEventListener("click",()=>{const e=parseInt(M.value,10);e>=500&&e<=1e4&&(chrome.storage.local.set({delayMs:e}),Ye(T,"✓"))});const ot=document.getElementById("complaintSkuInput"),at=document.getElementById("complaintParentSkuInput"),it=document.getElementById("btnCopyComplaintParentSku"),lt=document.getElementById("parentSkuModal"),ct=document.getElementById("parentSkuModalInput"),rt=document.getElementById("parentSkuModalError"),dt=document.getElementById("parentSkuModalApply"),ut=document.getElementById("parentSkuModalCancel"),mt=document.getElementById("parentSkuModalClose");let gt=null;const pt=document.getElementById("vpnWarning"),ht=document.getElementById("instructionHint"),ft=document.getElementById("btnShowHints"),vt=document.getElementById("btnShowSettingsHints"),yt=["vpn","instruction","evidence"],bt=["exclusions","complaint_exclusions","delay","cascade","cascade_limit","cascade_consec","sku_files","evidence_mode"];function Et(e){const t=yt.some(t=>e[t]),n=bt.some(t=>e[t]);ft.classList.toggle("hidden",!t),vt&&vt.classList.toggle("hidden",!n)}const Lt=function(){const e={vpn:pt,instruction:ht};return document.querySelectorAll("[data-hint-host]").forEach(t=>{const n=t.dataset.hintHost;n&&!e[n]&&(e[n]=t)}),e}();function kt(e,t){for(const t of e)Lt[t]&&(Lt[t].style.display="");chrome.storage.local.get(["dismissedHints"],t=>{const n=t.dismissedHints||{};for(const t of e)delete n[t];chrome.storage.local.set({dismissedHints:n},()=>{Et(n)})}),t&&t.classList.add("hidden")}chrome.storage.local.get(["dismissedHints"],e=>{const t=e.dismissedHints||{};for(const[e,n]of Object.entries(Lt))n&&t[e]&&(n.style.display="none");Et(t)}),document.querySelectorAll(".hint-close").forEach(e=>{e.addEventListener("click",()=>{const t=e.dataset.hint,n=Lt[t]||e.closest(".hint-banner");n&&(n.style.display="none"),chrome.storage.local.get(["dismissedHints"],e=>{const n=e.dismissedHints||{};n[t]=!0,chrome.storage.local.set({dismissedHints:n}),Et(n)})})}),ft.addEventListener("click",()=>{kt(yt,ft)}),vt&&vt.addEventListener("click",()=>{kt(bt,vt)});const St=document.getElementById("complaintSkuWarning"),Bt=document.getElementById("complaintMode"),xt=document.getElementById("complaintType"),wt=document.getElementById("btnComplaintStart"),It=document.getElementById("btnComplaintPause"),Ct=document.getElementById("btnComplaintStop"),$t=document.getElementById("complaintStatus"),Mt=document.getElementById("complaintStatusIcon"),Tt=document.getElementById("complaintStatusText"),Ut=document.getElementById("complaintHint"),Pt=document.getElementById("complaintProgressWrap"),At=document.getElementById("complaintProgressCurrent"),Ht=document.getElementById("complaintProgressTotal"),zt=document.getElementById("complaintProgressPercent"),Ft=document.getElementById("complaintProgressFill"),Nt=document.getElementById("complaintQueue"),Dt=document.getElementById("complaintLogContainer"),jt=document.getElementById("complaintLogCount"),_t=document.getElementById("complaintFileDrop"),Kt=document.getElementById("complaintFileInput"),qt=document.getElementById("complaintFileList"),Ot=document.getElementById("btnSendToComplaints");let Rt=0,Vt=!1;function Gt(e){const t=Ne(String(e||""));return 1===t.length?t[0]:null}function Xt(e){const t=new Set;for(const n of e||[]){const e=String(n?.sku||"").trim();/^\d{3,}$/.test(e)&&t.add(e)}return[...t]}function Wt(e,t,n){if(!n)return 0;let s=0;for(const o of t){const t=String(o||"").trim();t&&(e[t]=[n],s++)}return s}function Zt(e){at&&(at.value=e||"",at.dispatchEvent(new Event("change")))}function Jt(e){if(lt&&lt.classList.add("hidden"),gt){const t=gt;gt=null,t(e)}}function Qt(){const e=Gt(ct?.value||"");e?Jt(e):rt&&(rt.textContent="Укажите ровно один SKU, минимум 3 цифры.",rt.classList.remove("hidden"))}function Yt(e){if(!lt||!ct){const t=prompt("Ваш родительский SKU для этой сборки:",e||"");if(null===t)return Promise.resolve(null);const n=Gt(t);return n?Promise.resolve(n):(alert("Укажите ровно один SKU, минимум 3 цифры."),Promise.resolve(null))}return new Promise(t=>{gt=t,ct.value=e||"",rt&&rt.classList.add("hidden"),lt.classList.remove("hidden"),setTimeout(()=>{ct.focus(),ct.select()},0)})}function en(e){Rt++,jt.textContent=Rt;const t=document.createElement("div");t.className="log-line",e.includes("Ошибка")||e.includes("ошибка")||e.includes("failed")||e.includes("⛔")?t.classList.add("error"):(e.includes("отправлен")||e.includes("✓")||e.includes("✅")||e.includes("done")||e.includes("завершено"))&&t.classList.add("success"),t.textContent=e,Dt.appendChild(t),Dt.scrollTop=Dt.scrollHeight;const n=document.getElementById("complaintLogSection");n&&n.scrollIntoView({behavior:"smooth",block:"end"}),En()}function tn(e,t){At.textContent=e,Ht.textContent=t;const n=t>0?Math.round(e/t*100):0;zt.textContent=n+"%",Ft.style.width=n+"%"}function nn(e){Nt.classList.remove("hidden"),Nt.innerHTML="";for(const t of e){const e=document.createElement("div");e.className="queue-item queue-"+t.status;const n="done"===t.status?"✓":"failed"===t.status?"✗":"escalated"===t.status?"🛎":"no_violation"===t.status?"○":"skipped"===t.status?"—":"pending"===t.status?"○":"●";e.innerHTML=`<span class="queue-icon">${n}</span><span class="queue-sku">${Oe(t.sku)}</span>`,t.error&&(e.innerHTML+=`<span class="queue-error">${Oe(t.error)}</span>`),Nt.appendChild(e)}}function sn(){wt.disabled=!0,It.disabled=!1,Ct.disabled=!1,ot.disabled=!0,at&&(at.disabled=!0),it&&(it.disabled=!0),Bt.disabled=!0,xt.disabled=!0,Pt.classList.remove("hidden"),$t.classList.remove("hidden"),Mt.textContent="🚀",Tt.textContent="Запуск, подготовка чата…"}function on(){Vt=!1,wt.disabled=!1,It.disabled=!0,It.textContent="⏸",Ct.disabled=!0,ot.disabled=!1,at&&(at.disabled=!1),it&&(it.disabled=!1),Bt.disabled=!1,xt.disabled=!1,Mt.textContent="⏹",Tt.textContent="Остановлено",Ut.classList.add("hidden")}dt&&dt.addEventListener("click",Qt),ut&&ut.addEventListener("click",()=>Jt(null)),mt&&mt.addEventListener("click",()=>Jt(null)),ct&&ct.addEventListener("keydown",e=>{"Enter"===e.key?(e.preventDefault(),Qt()):"Escape"===e.key&&(e.preventDefault(),Jt(null))}),it&&it.addEventListener("click",()=>{const e=Gt(at?.value||"");e?(navigator.clipboard.writeText(e),Ye(it,"✓")):Ye(it,"—")}),ot.addEventListener("input",()=>{const e=document.getElementById("complaintStartError");e&&e.classList.add("hidden");const t=Ne(ot.value);St.classList.add("hidden"),t.length>50?(St.textContent=`⚠ ${t.length} жалоб — это займёт ~${Math.round(45*t.length/60)} мин. Антибот-паузы будут активны.`,St.classList.remove("hidden")):t.length>20&&(St.textContent=`⚠ ${t.length} жалоб — рекомендуем тестовый прогон сначала.`,St.classList.remove("hidden"))}),Ot.addEventListener("click",async()=>{if(!Le)return void je("⛔ Жалобы доступны в PRO-версии.");const e=new Set,t={};let n=0;const s=new Set;for(const o of fe){if(o.error||!o.sellers)continue;const a=String(o.sku||"").trim();for(const i of o.sellers){if(!i.competitorSku)continue;const o=i.name||i.sellerName||"";we(o)?(n++,o&&s.add(o)):(e.add(i.competitorSku),a&&(t[i.competitorSku]||(t[i.competitorSku]=[]),t[i.competitorSku].includes(a)||t[i.competitorSku].push(a)))}}if(n>0){const e=[...s].slice(0,3).join(", "),t=xe?"из вашего списка исключений в Настройках":"Ozon-магазины и ваши исключения из Настроек";je(`⚠ Пропущено ${n} SKU (${e}${s.size>3?"…":""}) — ${t}`)}if(0===e.size)return void je("Нет SKU конкурентов для отправки в жалобы");const o=Xt(fe);let a="";if(1===o.length){if(a=await Yt(o[0]),null===a)return void je("Перенос в Жалобы отменён");Wt(t,e,a)}try{const e=await $n();for(const n of Object.keys(t)){const s=new Set([...e[n]||[],...t[n]]);e[n]=[...s]}await Mn(e)}catch(e){}ot.value=[...e].join("\n"),Zt(a),ot.dispatchEvent(new Event("input")),ot.dispatchEvent(new Event("change")),document.querySelectorAll(".tab").forEach(e=>e.classList.remove("active")),document.querySelectorAll(".tab-content").forEach(e=>e.classList.remove("active")),document.querySelector('[data-tab="complaints"]').classList.add("active"),document.getElementById("tabComplaints").classList.add("active"),je(`${e.size} SKU конкурентов отправлено в Жалобы`),a&&je(`Родительский SKU ${a} привязан к ${e.size} SKU`)});const an=document.getElementById("btnImportCsv"),ln=document.getElementById("importCsvInput"),cn=document.getElementById("importCsvHint");an.addEventListener("click",()=>{ln.click()}),ln.addEventListener("change",()=>{const e=ln.files[0];if(!e)return;ln.value="";const t=new FileReader;t.onload=()=>{const n=t.result.split(/\r?\n/).filter(Boolean),s=new Set;for(let e=1;e<n.length;e++){const t=n[e].split(";").map(e=>e.replace(/^"|"$/g,"").trim())[2]||"";/^\d{3,}$/.test(t)&&s.add(t)}if(0===s.size)return cn.textContent="SKU не найдены",cn.style.color="#d32f2f",cn.classList.remove("hidden"),void setTimeout(()=>cn.classList.add("hidden"),3e3);const o=Ne(ot.value),a=new Set([...o,...s]);ot.value=[...a].join("\n"),ot.dispatchEvent(new Event("input")),cn.textContent=`+${s.size} SKU`,cn.style.color="#2e7d32",cn.classList.remove("hidden"),setTimeout(()=>cn.classList.add("hidden"),3e3),en(`Импортировано ${s.size} SKU конкурентов из ${e.name}`)},t.readAsText(e,"utf-8")});let rn=document.getElementById("complaintStartError");function dn(e){rn.innerHTML=e,rn.classList.remove("hidden")}rn||(rn=document.createElement("div"),rn.id="complaintStartError",rn.className="complaint-start-error hidden",wt.parentNode.insertBefore(rn,wt.nextSibling)),wt.addEventListener("click",async()=>{rn.classList.add("hidden");const e=Ne(ot.value);if(0===e.length)return void en("Нет валидных артикулов");const t=String(at?.value||"").trim(),n=t?Gt(t):"";if(t&&!n)return void en("⛔ Родительский SKU должен быть одним артикулом, минимум 3 цифры.");if(!Le)return void en("⛔ Жалобы доступны в PRO-версии. Введите код активации в Настройках.");let s=!1;try{const t=await new Promise(e=>chrome.runtime.sendMessage({action:"supportGetProgress"},e)),n=t?.progress;if(n&&n.processedSkus&&n.processedSkus.length>0){const t=new Set(n.processedSkus.map(e=>e.sku)),o=e.filter(e=>t.has(e));if(o.length>0){const t=`Найдено ${o.length} SKU из ${e.length}, которые уже обрабатывались ранее.\n\nОК — пропустить их (продолжить с неотработанных)\nОтмена — начать заново (все SKU будут обработаны)`;s=!confirm(t)}}}catch(e){}if(0===(await new Promise(e=>chrome.tabs.query({url:"https://seller.ozon.ru/*"},e))).length)return void dn('⚠ Нет открытой вкладки seller.ozon.ru<br>Откройте <a href="https://seller.ozon.ru/app/messenger/?group=support_v2" target="_blank" class="link-ozon">seller.ozon.ru → Поддержка</a> в браузере, затем повторите запуск.');Dt.innerHTML="",Rt=0,jt.textContent="0",Nt.innerHTML="",tn(0,e.length),sn(),e.length>100&&en(`⚠ ${e.length} жалоб — большой пакет. Старт может занять больше времени, антибот-паузы будут активны.`);const o=await $n();if(n){const t=Wt(o,e,n);await Mn(o),en(`Родительский SKU ${n} привязан к ${t} SKU`)}const a=function(e,t){const n=new Set;for(const s of e){const e=String(s||"").trim();e&&n.add(e);const o=t&&t[s];if(Array.isArray(o))for(const e of o){const t=String(e||"").trim();t&&n.add(t)}}return n}(e,o),i=un.map(e=>vn(e,"common")),l=function(e){const t={};for(const n of Object.keys(Sn)){if(e&&!e.has(String(n).trim()))continue;const s=Sn[n]||[];if(0===s.length)continue;const o=s.map(e=>vn(e,"sku"));o.length>0&&(t[n]=o)}return t}(a),c=await Cn(),{evidenceMode:r,fileSkus:d}=zn(a),u={action:"supportStart",skus:e,mode:Bt.value,complaintType:xt.value,files:i,skuFiles:l,evidenceMode:r,fileSkus:d,parentMap:o,limits:c,resetProgress:s};if(function(e){try{return JSON.stringify(e).length}catch(e){return 1/0}}(u)>5242880)return en("Ошибка: стартовый пакет слишком большой. Уменьшите количество SKU или очистите лишние доказательства в Настройках."),void on();try{chrome.runtime.sendMessage(u,e=>chrome.runtime.lastError?(en("Ошибка: "+chrome.runtime.lastError.message),void on()):e?void("license_required"===e.status?(en("⛔ "+e.error),on()):"all_done"===e.status?(en("ℹ "+e.error),dn("ℹ️ "+e.error),on()):"error"===e.status&&(en("Ошибка: "+e.error),"multiple_tabs"!==e.code&&"stale_tab"!==e.code&&"no_tab"!==e.code||dn("⚠️ "+e.error),on())):(en("Ошибка: background не ответил на запуск жалоб"),void on()))}catch(e){en("Ошибка запуска: не удалось передать задачу в background ("+(e.message||e)+")"),on()}}),It.addEventListener("click",()=>{Vt?(chrome.runtime.sendMessage({action:"supportResume"}),Vt=!1,It.textContent="⏸",Mt.textContent="▶",Tt.textContent="Выполнение..."):(chrome.runtime.sendMessage({action:"supportPause"}),Vt=!0,It.textContent="▶",Mt.textContent="⏸",Tt.textContent="На паузе")}),Ct.addEventListener("click",()=>{chrome.runtime.sendMessage({action:"supportStop"}),on()}),_t.addEventListener("click",()=>Kt.click()),_t.addEventListener("dragover",e=>{e.preventDefault(),_t.classList.add("dragover")}),_t.addEventListener("dragleave",()=>_t.classList.remove("dragover")),_t.addEventListener("drop",e=>{e.preventDefault(),_t.classList.remove("dragover"),pn(e.dataTransfer.files)}),Kt.addEventListener("change",()=>{pn(Kt.files),Kt.value=""});let un=[],mn={};function gn(){return"f_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,8)}async function pn(e){for(const s of e){if(s.size>n){en(`✗ ${s.name}: слишком большой (${c(s.size)} > ${c(n)})`);continue}s.size>10485760&&en(`⚠ ${s.name} — ${c(s.size)} (сохраняется в IndexedDB, не в обычном хранилище)`);const e=gn(),a={id:e,name:s.name,type:s.type||"application/octet-stream",size:s.size};try{if(s.size>=t)await o(e,s,{name:a.name,type:a.type,size:a.size}),a.storage="idb";else{const t=await l(s);mn[e]=t,a.storage="local"}un.push(a)}catch(e){en(`✗ ${s.name}: ошибка сохранения — ${e.message||e}`)}}await hn(),fn()}async function hn(){const e={};for(const t of un)"local"===t.storage&&mn[t.id]&&(e[t.id]=mn[t.id]);await new Promise(t=>{chrome.storage.local.set({complaintFilesMeta:un,complaintFilesBlobs:e},()=>{chrome.runtime.lastError?(console.warn("[OZG] persistComplaintFiles error:",chrome.runtime.lastError.message),en("⚠ Хранилище переполнено — переношу файлы в IndexedDB..."),async function(){for(const e of un){if("local"!==e.storage)continue;const t=mn[e.id];if(t)try{const n=await fetch("data:"+(e.type||"application/octet-stream")+";base64,"+t),s=await n.blob();await o(e.id,s,{name:e.name,type:e.type,size:e.size}),e.storage="idb",delete mn[e.id]}catch(t){console.warn("[OZG] migrate failed",e.name,t)}}await new Promise(e=>chrome.storage.local.set({complaintFilesMeta:un,complaintFilesBlobs:{}},e))}().then(t)):t()})})}function fn(){0!==un.length?(qt.classList.remove("hidden"),qt.innerHTML=un.map((e,t)=>{const n=e.size?`<span class="file-size">${c(e.size)}</span>`:"",s="idb"===e.storage?'<span class="file-storage" title="Крупный файл в IndexedDB">IDB</span>':"";return`<div class="file-item"><span class="file-name">${Oe(e.name)}</span>${n}${s}<button class="btn-close" data-idx="${t}" title="Удалить">&times;</button></div>`}).join(""),qt.querySelectorAll(".btn-close").forEach(e=>{e.addEventListener("click",async t=>{t.stopPropagation();const n=parseInt(e.dataset.idx,10),s=un[n];if(s){if("idb"===s.storage)try{await i(s.id)}catch(e){}delete mn[s.id],un.splice(n,1),await hn(),fn()}})})):qt.classList.add("hidden")}function vn(e,t){return{id:e.id,name:e.name,type:e.type||"application/octet-stream",size:e.size||0,storage:"idb"===e.storage?"idb":"local",source:t}}async function yn(e,t){const n=[];for(const t of e||[])if(t&&"idb"===t.storage&&t.id)try{const e=await a(t.id);e&&e.blob||n.push(t.name||t.id)}catch(e){n.push(t.name||t.id)}if(0===n.length)return;en(`⚠ ${t}: файл числится в списке, но тело файла недоступно (${n.slice(0,3).join(", ")}${n.length>3?" и ещё "+(n.length-3):""}). Загрузите доказательство заново. Такое бывает при установке новой распакованной копии расширения с другим ID.`)}chrome.storage.local.get(["complaintFilesMeta","complaintFilesBlobs","complaintFilesData"],async e=>{if((!e.complaintFilesMeta||0===e.complaintFilesMeta.length)&&Array.isArray(e.complaintFilesData)&&e.complaintFilesData.length>0){const t=[],n={};for(const s of e.complaintFilesData){const e=gn();t.push({id:e,name:s.name,type:s.type,size:null,storage:"local"}),n[e]=s.base64,mn[e]=s.base64}un=t,await new Promise(e=>chrome.storage.local.set({complaintFilesMeta:t,complaintFilesBlobs:n},e)),chrome.storage.local.remove(["complaintFilesData"])}else un=e.complaintFilesMeta||[],mn=e.complaintFilesBlobs||{};fn(),yn(un,"Общие доказательства")}),chrome.runtime.onMessage.addListener((e,t,n)=>!(!e||"getComplaintFilePayload"!==e.action)&&(async function(e,t){let n=null,s=null;if("common"===e){if(n=un.find(e=>e.id===t),!n)throw new Error("Файл не найден в общем пуле");"local"===n.storage&&(s=mn[t]||null)}else if("sku"===e){for(const e of Object.keys(Sn))if(n=(Sn[e]||[]).find(e=>e.id===t),n)break;if(!n)throw new Error("Файл не найден в per-SKU доказательствах");"local"===n.storage&&(s=Bn[t]||null)}else{if("file_first"!==e)throw new Error("Неизвестный источник файла");if(n=Pn.find(e=>e.id===t),!n)throw new Error("Файл не найден в режиме файл → SKU");"local"===n.storage&&(s=An[t]||null)}if("idb"===n.storage){const e=await a(t);e&&e.blob&&(s=await l(e.blob))}if(!s)throw new Error("Не удалось прочитать файл");return{name:n.name,type:n.type||"application/octet-stream",base64:s}}(e.source,e.id).then(e=>n({ok:!0,file:e})).catch(e=>n({ok:!1,error:e.message||String(e)})),!0));const bn=document.getElementById("complaintLogSection");function En(){const e={skus:ot.value,parentSku:at?at.value:"",mode:Bt.value,complaintType:xt.value,logs:Array.from(Dt.children).map(e=>e.textContent),fileNames:un.map(e=>e.name)};chrome.storage.local.set({lastComplaintSession:e})}document.getElementById("complaintLogToggle").addEventListener("click",()=>{bn.classList.toggle("collapsed")}),ot.addEventListener("change",En),at&&at.addEventListener("change",En),Bt.addEventListener("change",En),xt.addEventListener("change",En),chrome.storage.local.get(["lastComplaintSession"],e=>{if(!e.lastComplaintSession)return;const t=e.lastComplaintSession;if(t.skus&&(ot.value=t.skus),t.parentSku&&at&&(at.value=t.parentSku),t.mode&&(Bt.value=t.mode),t.complaintType){const e="seller"===t.complaintType||"brand"===t.complaintType?"plagiat_legacy":t.complaintType;xt.value=e}if(t.logs&&t.logs.length>0)for(const e of t.logs)en(e);ot.dispatchEvent(new Event("input")),kn()});const Ln=document.getElementById("betaWarning");function kn(){if(!Ln)return;const e="content_beta"===xt.value||"brand_beta"===xt.value;Ln.classList.toggle("hidden",!e)}xt.addEventListener("change",kn),setTimeout(kn,0),chrome.runtime.sendMessage({action:"supportGetStatus"},e=>{if(chrome.runtime.lastError||!e)return;if(e.queue&&e.queue.length>0||e.logs&&e.logs.length>0){if(e.isRunning){if(sn(),e.limitGateActive)if("beta_autostop"===e.limitGateReason){bs("BETA: серия ошибок","Путь жалобы остановлен после нескольких ошибок подряд. Проверьте чат вручную или нажмите «Продолжить», чтобы попробовать ещё.")}else Es(),chrome.runtime.sendMessage({action:"supportResume"}),Mt.textContent="▶",Tt.textContent="Выполнение...";else e.isPaused?(Vt=!0,It.textContent="▶",Mt.textContent="⏸",Tt.textContent="На паузе"):(Mt.textContent="▶",Tt.textContent="Выполнение...");"storage"!==e.source||e.isPaused||e.limitGateActive||chrome.runtime.sendMessage({action:"supportRecoverAndContinue"})}else $t.classList.remove("hidden"),Mt.textContent="✓",Tt.textContent="storage"===e.source?"Последняя сессия":"Завершено";if(e.queue&&e.queue.length>0&&(nn(e.queue),tn(Math.min(e.currentIndex+1,e.queue.length),e.queue.length)),e.logs&&e.logs.length>0){Dt.innerHTML="",Rt=0,jt.textContent="0";for(const t of e.logs)en(t)}}});let Sn={},Bn={},xn={maxChatsPerSession:10,maxConsecutiveEscalations:5},wn={escalated:[],failed:[],noViolation:[]};async function In(){const e={};for(const t of Object.keys(Sn))for(const n of Sn[t]||[])"local"===n.storage&&Bn[n.id]&&(e[n.id]=Bn[n.id]);await new Promise(t=>{chrome.storage.local.set({complaintSkuFiles:Sn,complaintSkuFilesBlobs:e},()=>{chrome.runtime.lastError?(console.warn("[OZG] persistSkuFiles error:",chrome.runtime.lastError.message),async function(){for(const e of Object.keys(Sn))for(const t of Sn[e]||[]){if("local"!==t.storage)continue;const e=Bn[t.id];if(e)try{const n=await fetch("data:"+(t.type||"application/octet-stream")+";base64,"+e),s=await n.blob();await o(t.id,s,{name:t.name,type:t.type,size:t.size}),t.storage="idb",delete Bn[t.id]}catch(e){}}await new Promise(e=>chrome.storage.local.set({complaintSkuFiles:Sn,complaintSkuFilesBlobs:{}},e))}().then(t)):t()})})}async function Cn(){const e=await new Promise(e=>chrome.storage.local.get(["complaintLimits"],e));return e.complaintLimits&&(xn=Object.assign(xn,e.complaintLimits)),xn}async function $n(){return(await new Promise(e=>chrome.storage.local.get(["complaintParentMap"],e))).complaintParentMap||{}}async function Mn(e){await new Promise(t=>chrome.storage.local.set({complaintParentMap:e},t))}async function Tn(){await new Promise(e=>chrome.storage.local.set({complaintProblems:wn},e))}let Un="sku_first",Pn=[],An={};async function Hn(){const e={};for(const t of Pn)"local"===t.storage&&An[t.id]&&(e[t.id]=An[t.id]);await new Promise(t=>chrome.storage.local.set({evidenceMode:Un,complaintFileSkus:Pn,complaintFileSkusBlobs:e},t))}function zn(e){const t=[];if("file_first"!==Un)return{evidenceMode:Un,fileSkus:[]};for(const n of Pn){const s=Array.isArray(n.skus)?n.skus.map(e=>String(e).trim()).filter(Boolean):[];e&&!s.some(t=>e.has(t))||t.push({...vn(n,"file_first"),skus:s})}return{evidenceMode:Un,fileSkus:t}}const Fn=document.getElementById("limitNewChats"),Nn=document.getElementById("limitConsecEsc"),Dn=document.getElementById("btnSaveComplaintLimits"),jn=document.getElementById("complaintLimitsSavedHint");(async()=>{await Cn(),Fn&&(Fn.value=xn.maxChatsPerSession),Nn&&(Nn.value=xn.maxConsecutiveEscalations)})(),Dn&&Dn.addEventListener("click",async()=>{const e=Math.max(1,Math.min(500,parseInt(Fn.value,10)||10)),t=Math.max(0,Math.min(50,parseInt(Nn.value,10)||5));xn={maxChatsPerSession:e,maxConsecutiveEscalations:t},Fn.value=e,Nn.value=t,await new Promise(e=>chrome.storage.local.set({complaintLimits:xn},e)),jn.classList.remove("hidden"),setTimeout(()=>jn.classList.add("hidden"),2e3),Ye(Dn,"✓")});const _n=document.getElementById("skuFileSkuInput"),Kn=document.getElementById("btnAddSkuFile"),qn=document.getElementById("skuFileInput"),On=document.getElementById("skuFilesList");let Rn=null;function Vn(){const e=Object.keys(Sn);0!==e.length?(On.classList.remove("hidden"),On.innerHTML=e.map(e=>{const t=Sn[e]||[],n=t.map((t,n)=>{const s=t.size?`<span class="file-size">${c(t.size)}</span>`:"",o="idb"===t.storage?'<span class="file-storage" title="IndexedDB">IDB</span>':"";return`<div class="sku-file-bundle-file"><span class="file-name">${Oe(t.name)}</span>${s}${o}<button class="btn-close" data-sku="${Oe(e)}" data-idx="${n}" title="Удалить файл">&times;</button></div>`}).join("");return`<div class="sku-file-bundle">\n        <div class="sku-file-bundle-header">\n          <span class="sku-file-bundle-sku">${Oe(e)}</span>\n          <span style="color:#888;font-size:10px;">${t.length} файл(ов)</span>\n          <div class="sku-file-bundle-actions">\n            <button class="btn btn-small btn-add-files-to-sku" data-sku="${Oe(e)}" title="Добавить ещё файл к этому SKU">＋</button>\n            <button class="btn btn-small btn-danger-sm btn-remove-sku" data-sku="${Oe(e)}" title="Удалить SKU и все его файлы">✕</button>\n          </div>\n        </div>\n        <div class="sku-file-bundle-files">${n}</div>\n      </div>`}).join(""),On.querySelectorAll(".sku-file-bundle-file .btn-close").forEach(e=>{e.addEventListener("click",async t=>{t.stopPropagation();const n=e.dataset.sku,s=parseInt(e.dataset.idx,10),o=Sn[n]||[],a=o[s];if(a){if("idb"===a.storage)try{await i(a.id)}catch(e){}delete Bn[a.id],o.splice(s,1),0===o.length&&delete Sn[n],await In(),Vn()}})}),On.querySelectorAll(".btn-remove-sku").forEach(e=>{e.addEventListener("click",async t=>{t.stopPropagation();const n=e.dataset.sku;if(confirm(`Удалить все доказательства для SKU ${n}?`)){for(const e of Sn[n]||[]){if("idb"===e.storage)try{await i(e.id)}catch(e){}delete Bn[e.id]}delete Sn[n],await In(),Vn()}})}),On.querySelectorAll(".btn-add-files-to-sku").forEach(e=>{e.addEventListener("click",t=>{t.stopPropagation(),Rn=e.dataset.sku,qn.click()})})):On.classList.add("hidden")}Kn&&_n&&qn&&(Kn.addEventListener("click",()=>{const e=(_n.value||"").trim();/^\d{3,}$/.test(e)?(Rn=e,qn.click()):alert("Введите числовой SKU (минимум 3 цифры)")}),qn.addEventListener("change",async()=>{const e=Array.from(qn.files||[]);qn.value="";const s=Rn;if(Rn=null,s&&0!==e.length){Sn[s]||(Sn[s]=[]);for(const a of e){if(a.size>n){alert(`${a.name}: слишком большой (${c(a.size)} > ${c(n)})`);continue}a.size>10485760&&console.log(`[OZG] ${a.name} (${c(a.size)}) → IndexedDB`);const e=gn(),i={id:e,name:a.name,type:a.type||"application/octet-stream",size:a.size};try{a.size>=t?(await o(e,a,{name:i.name,type:i.type,size:i.size}),i.storage="idb"):(Bn[e]=await l(a),i.storage="local"),Sn[s].push(i)}catch(e){alert(`${a.name}: ошибка сохранения — ${e.message||e}`)}}0===Sn[s].length&&delete Sn[s],await In(),Vn(),_n.value=""}})),async function(){const e=await new Promise(e=>chrome.storage.local.get(["complaintSkuFiles","complaintSkuFilesBlobs"],e));Sn=e.complaintSkuFiles||{},Bn=e.complaintSkuFilesBlobs||{}}().then(()=>{Vn();const e=[];for(const t of Object.values(Sn))Array.isArray(t)&&e.push(...t);yn(e,"Per-SKU доказательства")});const Gn=document.getElementById("evidenceSkuFirstUI"),Xn=document.getElementById("evidenceFileFirstUI"),Wn=document.getElementById("btnAddFileFirst"),Zn=document.getElementById("fileFirstInput"),Jn=document.getElementById("fileFirstList"),Qn=document.querySelectorAll('input[name="evidenceMode"]');function Yn(){Gn&&Xn&&("file_first"===Un?(Gn.classList.add("hidden"),Xn.classList.remove("hidden")):(Gn.classList.remove("hidden"),Xn.classList.add("hidden")),Qn.forEach(e=>{e.checked=e.value===Un}))}function es(){if(Jn){if(0===Pn.length)return Jn.classList.add("hidden"),void(Jn.innerHTML="");Jn.classList.remove("hidden"),Jn.innerHTML=Pn.map((e,t)=>{const n=e.size?c(e.size):"",s=(e.skus||[]).join("\n");return`\n        <div class="file-first-bundle" data-idx="${t}">\n          <div class="file-first-bundle-header">\n            <span class="file-first-name" title="${Oe(e.name)}">${Oe(e.name)}</span>\n            <span class="file-first-meta">${Oe(n)}</span>\n            <button class="btn-close" data-action="remove-ff" data-idx="${t}" title="Удалить">✕</button>\n          </div>\n          <label class="file-first-skus-label">SKU к которым применяется этот файл (по одному на строку):</label>\n          <textarea class="file-first-skus" data-idx="${t}" placeholder="1234567890&#10;9876543210">${Oe(s)}</textarea>\n        </div>\n      `}).join(""),Jn.querySelectorAll('button[data-action="remove-ff"]').forEach(e=>{e.addEventListener("click",async()=>{const t=parseInt(e.dataset.idx,10);if(isNaN(t)||t<0||t>=Pn.length)return;const n=Pn[t];if("idb"===n.storage)try{await i(n.id)}catch(e){}else"local"===n.storage&&delete An[n.id];Pn.splice(t,1),await Hn(),es()})}),Jn.querySelectorAll("textarea.file-first-skus").forEach(e=>{e.addEventListener("input",async()=>{const t=parseInt(e.dataset.idx,10);!isNaN(t)&&Pn[t]&&(Pn[t].skus=e.value.split("\n").map(e=>e.trim()).filter(Boolean),await Hn())})})}}Wn&&Zn&&(Wn.addEventListener("click",()=>Zn.click()),Zn.addEventListener("change",async()=>{const e=Zn.files?.[0];if(Zn.value="",!e)return;if(e.size>n)return void alert(`${e.name}: слишком большой (${c(e.size)} > ${c(n)})`);const s=gn(),a={id:s,name:e.name,type:e.type||"application/octet-stream",size:e.size,skus:[]};try{e.size>=t?(await o(s,e,{name:a.name,type:a.type,size:a.size}),a.storage="idb"):(An[s]=await l(e),a.storage="local"),Pn.push(a),await Hn(),es()}catch(t){alert(`${e.name}: ошибка сохранения — ${t.message||t}`)}})),Qn.forEach(e=>{e.addEventListener("change",async()=>{e.checked&&(Un="file_first"===e.value?"file_first":"sku_first",await Hn(),Yn())})}),async function(){const e=await new Promise(e=>chrome.storage.local.get(["evidenceMode","complaintFileSkus","complaintFileSkusBlobs"],e));Un="file_first"===e.evidenceMode?"file_first":"sku_first",Pn=Array.isArray(e.complaintFileSkus)?e.complaintFileSkus:[],An=e.complaintFileSkusBlobs||{}}().then(()=>{Yn(),es(),yn(Pn,"Доказательства режима «файл → SKU»")});const ts=document.getElementById("btnGoToEvidenceSettings");ts&&ts.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(e=>e.classList.remove("active")),document.querySelectorAll(".tab-content").forEach(e=>e.classList.remove("active"));const e=document.querySelector('[data-tab="settings"]'),t=document.getElementById("tabSettings");e&&e.classList.add("active"),t&&t.classList.add("active"),setTimeout(()=>{const e=document.getElementById("evidenceSection");e&&e.scrollIntoView({behavior:"smooth",block:"start"})},50)});const ns=document.getElementById("problemSkusBlock"),ss=document.getElementById("problemEscalatedWrap"),os=document.getElementById("problemFailedWrap"),as=document.getElementById("problemNoViolationWrap"),is=document.getElementById("problemEscalatedList"),ls=document.getElementById("problemFailedList"),cs=document.getElementById("problemNoViolationList"),rs=document.getElementById("problemEscalatedCount"),ds=document.getElementById("problemFailedCount"),us=document.getElementById("problemNoViolationCount"),ms=document.getElementById("btnProblemSkusToggle");function gs(){const e=wn.escalated||[],t=wn.failed||[],n=wn.noViolation||[];0!==e.length||0!==t.length||0!==n.length?(ns.classList.remove("hidden"),e.length>0?(ss.classList.remove("hidden"),rs.textContent=e.length,is.innerHTML=e.map(e=>`<div class="problem-list-item"><span class="sku">${Oe(e.sku)}</span><span class="reason">${Oe(e.error||"")}</span></div>`).join("")):ss.classList.add("hidden"),n.length>0?(as.classList.remove("hidden"),us.textContent=n.length,cs.innerHTML=n.map(e=>`<div class="problem-list-item"><span class="sku">${Oe(e.sku)}</span><span class="reason">${Oe(e.error||"")}</span></div>`).join("")):as.classList.add("hidden"),t.length>0?(os.classList.remove("hidden"),ds.textContent=t.length,ls.innerHTML=t.map(e=>`<div class="problem-list-item"><span class="sku">${Oe(e.sku)}</span><span class="reason">${Oe(e.error||"")}</span></div>`).join("")):os.classList.add("hidden")):ns.classList.add("hidden")}ms&&ms.addEventListener("click",()=>{ns.classList.toggle("collapsed")}),document.addEventListener("click",async e=>{const t=e.target.closest(".btn-problem-copy"),n=e.target.closest(".btn-problem-requeue"),s=e.target.closest(".btn-problem-xlsx"),o=e.target.closest(".btn-problem-clear");if(t){const e=t.dataset.cat,n=wn[e]||[];navigator.clipboard.writeText(n.map(e=>e.sku).join("\n")),Ye(t,"✓")}else if(n){const e=n.dataset.cat,t=wn[e]||[];if(0===t.length)return;const s=Ne(ot.value),o=new Set([...s,...t.map(e=>e.sku)]);ot.value=[...o].join("\n"),ot.dispatchEvent(new Event("input")),ot.dispatchEvent(new Event("change")),Ye(n,"✓")}else if(s)!function(e){const t=wn[e]||[];if(0===t.length)return;const n=[["SKU","Причина","Время"]];for(const e of t)n.push([e.sku,e.error||"",e.ts?new Date(e.ts).toLocaleString("ru-RU"):""]);const s=n.map(e=>e.map(e=>'"'+String(e||"").replace(/"/g,'""')+'"').join(";")).join("\r\n"),o=new Blob(["\ufeff"+s],{type:"text/csv;charset=utf-8"}),a=URL.createObjectURL(o),i=document.createElement("a");i.href=a,i.download=`ozguard_problems_${e}_${Date.now()}.csv`,i.click(),setTimeout(()=>URL.revokeObjectURL(a),1e3)}(s.dataset.cat);else if(o){const e=o.dataset.cat;if(!confirm(`Очистить список «${"escalated"===e?"переданные оператору":"noViolation"===e?"без нарушений":"ошибки"}»?`))return;wn[e]=[],await Tn(),gs()}}),async function(){const e=await new Promise(e=>chrome.storage.local.get(["complaintProblems"],e));wn=Object.assign({escalated:[],failed:[],noViolation:[]},e.complaintProblems||{})}().then(gs);const ps=document.getElementById("complaintLimitGate"),hs=document.getElementById("limitGateTitle"),fs=document.getElementById("limitGateDetails"),vs=document.getElementById("btnLimitGateContinue"),ys=document.getElementById("btnLimitGateStop");function bs(e,t){ps.classList.remove("hidden"),hs.textContent=e,fs.textContent=t,Mt.textContent="⏸",Tt.textContent="Ожидает подтверждения"}function Es(){ps.classList.add("hidden")}vs&&vs.addEventListener("click",()=>{Es(),chrome.runtime.sendMessage({action:"supportLimitContinue"})}),ys&&ys.addEventListener("click",()=>{Es(),chrome.runtime.sendMessage({action:"supportStop"}),on()}),chrome.runtime.onMessage.addListener(e=>{e&&("supportLimitReached"===e.action?(e.title||"").includes("Лимит обращений")?(Es(),chrome.runtime.sendMessage({action:"supportResume"})):bs(e.title||"Пауза",e.details||""):"supportProblem"===e.action&&e.sku&&e.category&&async function(e,t,n){wn=Object.assign({escalated:[],failed:[],noViolation:[]},wn||{}),wn[e]||(wn[e]=[]);const s=wn[e].findIndex(e=>e.sku===t),o={sku:t,error:n||"",ts:Date.now()};s>=0?wn[e][s]=o:wn[e].push(o),await Tn(),gs()}(e.category,e.sku,e.error))});const Ls=document.getElementById("btnComplaintClear");Ls&&Ls.addEventListener("click",()=>{ot.value="",at&&(at.value=""),Bt.value="auto",xt.value="plagiat_legacy",Dt.innerHTML="",Rt=0,jt.textContent="0",Nt.innerHTML="",Nt.classList.add("hidden"),Pt.classList.add("hidden"),$t.classList.add("hidden"),St.classList.add("hidden"),Ut.classList.add("hidden"),chrome.storage.local.remove(["lastComplaintSession","complaintProgress","activeSupportSession"])}),chrome.runtime.sendMessage({action:"getScanStatus"},e=>{if(!chrome.runtime.lastError&&e&&e.isRunning&&(Re(),e.isPaused&&(ve=!0,m.textContent="▶"),_e(e.currentIndex+1,e.total),e.results&&e.results.length>0&&(fe=e.results,Ke()),e.logs&&e.logs.length>0))for(const t of e.logs)je(t)}),re.addEventListener("click",e=>{e.target.closest(".batch-filter")||e.target.closest(".batch-history-wrap")||e.target.closest("#batchWarning")||e.target.closest("#batchFilename")||e.target.closest("#batchInfo")||"INPUT"===e.target.tagName||"BUTTON"===e.target.tagName||"LABEL"===e.target.tagName||"A"===e.target.tagName||de.click()}),re.addEventListener("dragover",e=>{e.preventDefault(),re.classList.add("dragover")}),re.addEventListener("dragleave",()=>{re.classList.remove("dragover")}),re.addEventListener("drop",e=>{e.preventDefault(),re.classList.remove("dragover");const t=e.dataTransfer.files[0];t&&Cs(t)}),de.addEventListener("change",()=>{const e=de.files[0];e&&Cs(e),de.value=""});let ks=[],Ss="",Bs=[];function xs(e){return Array.isArray(e)?e.map(e=>String(e).trim()).filter(e=>/^\d{3,}$/.test(e)):[]}function ws(e){const t=Array.isArray(e)?e.filter(Boolean):[];return 0===t.length?"":t.length<=2?t.join(", "):`${t.slice(0,2).join(", ")} +${t.length-2}`}function Is(){const e=Bs.length>0;if(pe.disabled=!e,pe.title=e?"Показать последние пакетные загрузки":"История появится после применения XLSX",!e)return he.innerHTML='<div class="batch-history-empty">История пока пустая</div>',void he.classList.add("hidden");he.innerHTML=Bs.map((e,t)=>{const n=function(e){const t=new Date(e);return Number.isNaN(t.getTime())?"":t.toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}(e.createdAt),s=ws(e.appliedStatuses),o=`${e.appliedCount||e.skus.length} SKU${n?" · "+n:""}`;return`<button type="button" class="batch-history-item" data-index="${t}">\n        <div class="batch-history-name">${Oe(e.sourceName)}</div>\n        <div class="batch-history-meta">${Oe(o)}</div>\n        ${s?`<div class="batch-history-statuses">${Oe(s)}</div>`:""}\n      </button>`}).join("")}async function Cs(e){if(e.name.match(/\.xlsx?$/i)){Ss=e.name,je(`Загружен: ${e.name}`),ue.textContent=e.name,ue.classList.remove("hidden"),me.classList.add("hidden"),ge.classList.add("hidden");try{const t=await async function(e){const t=await e.arrayBuffer(),n=await Ms(t),s=n["xl/sharedStrings.xml"],o=[];if(s){const e=(new TextDecoder).decode(s).matchAll(/<t[^>]*>([^<]*)<\/t>/g);for(const t of e)o.push(t[1])}let a="xl/worksheets/sheet2.xml";const i=n["xl/workbook.xml"];if(i){const e=[...(new TextDecoder).decode(i).matchAll(/<sheet[^>]*name="([^"]*)"[^>]*sheetId="(\d+)"[^>]*r:id="([^"]*)"/g)];for(const t of e)if(t[1].includes("Товары")||t[1].includes("цен")||t[1].includes("price")){const e=t[3].match(/\d+/);e&&(a=`xl/worksheets/sheet${e[0]}.xml`)}}const l=n[a];if(!l){for(const e of Object.keys(n))if(e.match(/xl\/worksheets\/sheet\d+\.xml/)){const t=(new TextDecoder).decode(n[e]);if(t.includes("SKU")||t.includes("Товары"))return $s(t,o)}throw new Error("Лист с данными не найден")}return $s((new TextDecoder).decode(l),o)}(e);if(0===t.length)return je("В файле не найдены числовые SKU"),me.textContent="SKU не найдены. Проверьте что это шаблон «Цены товаров» из OZON.",void me.classList.remove("hidden");ks=t,me.textContent=`Найдено ${t.length} товаров`,me.classList.remove("hidden"),function(e){const t={};for(const n of e){const e=n.status||"Без статуса";t[e]||(t[e]=[]),t[e].push(n)}const n=Object.keys(t).sort();let s='<div class="batch-filter">';s+='<div class="batch-filter-title">Фильтр по статусу:</div>';for(const e of n){const n=t[e].length,o=(e.replace(/\s+/g,"_"),"Продается"===e?"checked":"");s+=`<label class="batch-filter-item"><input type="checkbox" class="batch-status-cb" value="${Oe(e)}" ${o}> ${Oe(e)} <span class="batch-filter-count">(${n})</span></label>`}s+='<div class="batch-filter-actions">',s+='<button id="btnBatchSelectAll" class="btn btn-small">Все</button>',s+='<button id="btnBatchApply" class="btn btn-small btn-primary">Применить</button>',s+="</div></div>",ge.innerHTML=s,ge.classList.remove("hidden"),document.getElementById("btnBatchSelectAll").addEventListener("click",()=>{ge.querySelectorAll(".batch-status-cb").forEach(e=>e.checked=!0)}),document.getElementById("btnBatchApply").addEventListener("click",()=>{const e=new Set;ge.querySelectorAll(".batch-status-cb:checked").forEach(t=>e.add(t.value));const t=ks.filter(t=>e.has(t.status||"Без статуса"));0!==t.length?(r.value=t.map(e=>e.sku).join("\n"),je(`Импортировано ${t.length} SKU (из ${ks.length}) — статусы: ${[...e].join(", ")}`),ge.innerHTML=`✅ Выбрано ${t.length} из ${ks.length} товаров`,t.length>100&&(ge.innerHTML+=`<br>⚠ Рекомендуем задержку 3-5 сек для ${t.length} SKU`),function({sourceName:e,skus:t,appliedStatuses:n,totalCount:s}){const o=xs(t);if(0===o.length)return;const a={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),sourceName:e||"XLSX",createdAt:(new Date).toISOString(),skus:o,appliedStatuses:Array.isArray(n)?n.filter(Boolean):[],totalCount:Number(s)||o.length,appliedCount:o.length},i=a.skus.join("\n"),l=Bs.filter(e=>!(e.sourceName===a.sourceName&&e.skus.join("\n")===i));Bs=[a,...l].slice(0,3),chrome.storage.local.set({[ke]:Bs},()=>{Is()})}({sourceName:Ss||"XLSX",skus:t.map(e=>e.sku),appliedStatuses:[...e],totalCount:ks.length})):je("Нет товаров с выбранными статусами")})}(t)}catch(e){je(`Ошибка парсинга XLSX: ${e.message}`),me.textContent="Ошибка чтения файла: "+e.message,me.classList.remove("hidden")}}else je("Ошибка: нужен файл .xlsx")}function $s(e,t){const n={},s=/<c\s+r="([A-Z]+)(\d+)"([^>]*)>(?:<f>[^<]*<\/f>)?<v>([^<]*)<\/v><\/c>/g;let o;for(;null!==(o=s.exec(e));){const e=o[1],s=parseInt(o[2],10);if(s<4)continue;const a=o[3];let i=o[4];if(a.includes('t="s"')){i=t[parseInt(i,10)]||i}n[s]||(n[s]={}),n[s][e]=i.trim()}const a=[];for(const[,e]of Object.entries(n)){const t=(e.B||"").trim();/^\d{3,}$/.test(t)&&a.push({sku:t,name:(e.C||"").substring(0,80),status:e.D||""})}return a}async function Ms(e){const t=new DataView(e),n={},s=new Uint8Array(e);let o=-1;for(let e=s.length-22;e>=0;e--)if(101010256===t.getUint32(e,!0)){o=e;break}if(o<0)throw new Error("Не ZIP-файл");const a=t.getUint32(o+16,!0),i=t.getUint16(o+10,!0);let l=a;for(let e=0;e<i&&33639248===t.getUint32(l,!0);e++){const e=t.getUint16(l+10,!0),o=t.getUint32(l+20,!0),a=(t.getUint32(l+24,!0),t.getUint16(l+28,!0)),i=t.getUint16(l+30,!0),c=t.getUint16(l+32,!0),r=t.getUint32(l+42,!0),d=(new TextDecoder).decode(s.slice(l+46,l+46+a)),u=r;if(67324752===t.getUint32(u,!0)){const a=u+30+t.getUint16(u+26,!0)+t.getUint16(u+28,!0),i=s.slice(a,a+o);if(0===e)n[d]=i;else if(8===e)try{const e=new DecompressionStream("deflate-raw"),t=e.writable.getWriter(),s=e.readable.getReader();t.write(i),t.close();const o=[];let a=0;for(;;){const{done:e,value:t}=await s.read();if(e)break;o.push(t),a+=t.length}const l=new Uint8Array(a);let c=0;for(const e of o)l.set(e,c),c+=e.length;n[d]=l}catch(e){}}l+=46+a+i+c}return n}chrome.storage.local.get([ke],e=>{var t;t=e[ke],Bs=Array.isArray(t)?t.map(e=>{const t=xs(e?.skus);return 0===t.length?null:{id:String(e.id||Date.now().toString(36)+Math.random().toString(36).slice(2,7)),sourceName:String(e.sourceName||"XLSX").slice(0,120),createdAt:e.createdAt||(new Date).toISOString(),skus:t,appliedStatuses:Array.isArray(e.appliedStatuses)?e.appliedStatuses.map(String).filter(Boolean).slice(0,12):[],totalCount:Number(e.totalCount)||t.length,appliedCount:Number(e.appliedCount)||t.length}}).filter(Boolean).slice(0,3):[],Is()}),pe.addEventListener("click",e=>{e.stopPropagation(),pe.disabled||(Is(),he.classList.toggle("hidden"))}),he.addEventListener("click",e=>{e.stopPropagation();const t=e.target.closest(".batch-history-item");if(!t)return;const n=Number(t.dataset.index),s=Bs[n];s&&function(e){const t=xs(e.skus);if(0===t.length)return void je("История XLSX пуста или повреждена");r.value=t.join("\n"),ue.textContent=e.sourceName||"XLSX из истории",ue.classList.remove("hidden"),me.textContent=`Из истории: ${t.length} SKU`,me.classList.remove("hidden");const n=ws(e.appliedStatuses);ge.innerHTML=`✅ Загружено из истории: ${t.length} SKU`,n&&(ge.innerHTML+=`<br>Статусы: ${Oe(n)}`);ge.classList.remove("hidden"),he.classList.add("hidden"),je(`Из истории XLSX импортировано ${t.length} SKU — ${e.sourceName||"XLSX"}`)}(s)}),document.addEventListener("click",e=>{e.target.closest(".batch-history-wrap")||he.classList.add("hidden")}),function(){const e="https://codefic.ru/#install",t=document.getElementById("versionBadge"),n=document.getElementById("updateBanner"),s=document.getElementById("updateLatestVersion"),o=document.getElementById("updateDownloadLink"),a=document.getElementById("updateBannerClose");if(!t||!n)return;const i=chrome.runtime.getManifest().version;function l(a,i,l){const c=function(t){if(!t||"string"!=typeof t)return e;const n=t.trim();return/^https?:\/\//i.test(n)?/\.zip(\?|#|$)/i.test(n)?e:n:e}(i);t.classList.add("has-update"),t.title=`Доступна версия ${a} — скачать`,t.style.cursor="pointer",t.onclick=()=>{window.open(c,"_blank")},l!==a&&(s.textContent="v"+a,o.href=c,n.classList.remove("hidden"))}t.textContent="v"+i,a.addEventListener("click",()=>{n.classList.add("hidden"),chrome.storage.local.get(["extensionVersionCache"],e=>{const t=e.extensionVersionCache?.version;t&&chrome.storage.local.set({dismissedUpdateVersion:t})})}),async function(){const e=await new Promise(e=>chrome.storage.local.get(["extensionVersionCache","dismissedUpdateVersion"],e)),t=e.dismissedUpdateVersion||null,n=e.extensionVersionCache;let s=n;if(!n||!n.checkedAt||Date.now()-n.checkedAt>216e5){const e=await async function(){try{const e=await fetch("https://codefic.ru/api/extension-version",{method:"GET",cache:"no-cache"});if(!e.ok)return null;const t=await e.json();return t&&t.version?{version:String(t.version).trim(),downloadUrl:t.download_url||t.downloadUrl||null,releaseNotes:t.release_notes||t.releaseNotes||null,checkedAt:Date.now()}:null}catch(e){return null}}();e&&(s=e,chrome.storage.local.set({extensionVersionCache:e}))}s&&s.version&&function(e,t){const n=String(e||"").split(".").map(e=>parseInt(e,10)||0),s=String(t||"").split(".").map(e=>parseInt(e,10)||0),o=Math.max(n.length,s.length);for(let e=0;e<o;e++){const t=n[e]||0,o=s[e]||0;if(t>o)return!0;if(t<o)return!1}return!1}(s.version,i)&&l(s.version,s.downloadUrl,t)}()}()}();
+(function() {
+  'use strict';
+
+  // === IndexedDB для больших файлов (>5 MB, видео до 200 MB) ===
+  // chrome.storage.local лимит 10 MB на всё хранилище → видео туда не влезет.
+  // Мелкие файлы (<5 MB) остаются в chrome.storage.local для совместимости,
+  // крупные едут в IndexedDB. Ключ = id файла, значение = {name, type, size, blob}.
+  const OZG_DB_NAME = 'ozguard-files';
+  const OZG_DB_STORE = 'files';
+  // Порог: всё что >2 MB идёт в IndexedDB. Chrome.storage.local лимит 10 MB на ВСЁ
+  // хранилище — если класть туда base64 от пары PDF-ок уже можно упереться в квоту.
+  // 2 MB * ~5 файлов = 10 MB ≈ безопасный потолок для быстрого кеша.
+  const LARGE_FILE_THRESHOLD = 2 * 1024 * 1024;  // 2 MB
+  const MAX_FILE_SIZE = 50 * 1024 * 1024;        // безопасный потолок для MV3/base64-передачи
+
+  function ozgOpenDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(OZG_DB_NAME, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(OZG_DB_STORE)) db.createObjectStore(OZG_DB_STORE);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  async function ozgPutBlob(id, blob, meta) {
+    const db = await ozgOpenDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(OZG_DB_STORE, 'readwrite');
+      tx.objectStore(OZG_DB_STORE).put({ blob, ...meta }, id);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); reject(tx.error); };
+    });
+  }
+  async function ozgGetBlob(id) {
+    const db = await ozgOpenDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(OZG_DB_STORE, 'readonly');
+      const req = tx.objectStore(OZG_DB_STORE).get(id);
+      req.onsuccess = () => { db.close(); resolve(req.result || null); };
+      req.onerror = () => { db.close(); reject(req.error); };
+    });
+  }
+  async function ozgDeleteBlob(id) {
+    const db = await ozgOpenDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(OZG_DB_STORE, 'readwrite');
+      tx.objectStore(OZG_DB_STORE).delete(id);
+      tx.oncomplete = () => { db.close(); resolve(); };
+      tx.onerror = () => { db.close(); resolve(); };
+    });
+  }
+  async function ozgBlobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  }
+  function ozgFormatSize(bytes) {
+    if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    if (bytes >= 1024) return Math.round(bytes / 1024) + ' KB';
+    return bytes + ' B';
+  }
+  // Экспортируем в window scope для локальной диагностики/совместимости.
+  // Файлы в background теперь передаются лениво через getComplaintFilePayload.
+  window.__ozgFiles = { put: ozgPutBlob, get: ozgGetBlob, del: ozgDeleteBlob, toB64: ozgBlobToBase64 };
+
+  // === Элементы UI ===
+  const skuInput = document.getElementById('skuInput');
+  const excludeSellersInput = document.getElementById('excludeSellersInput');
+  const btnStart = document.getElementById('btnStart');
+  const btnPause = document.getElementById('btnPause');
+  const btnStop = document.getElementById('btnStop');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressCurrent = document.getElementById('progressCurrent');
+  const progressTotal = document.getElementById('progressTotal');
+  const progressPercent = document.getElementById('progressPercent');
+  const progressFill = document.getElementById('progressFill');
+  const resultsSection = document.getElementById('resultsSection');
+  const resultsContainer = document.getElementById('resultsContainer');
+  const totalSellersEl = document.getElementById('totalSellers');
+  const btnCopy = document.getElementById('btnCopy');
+  const btnCopySku = document.getElementById('btnCopySku');
+  const btnExcel = document.getElementById('btnExcel');
+  const btnClearSession = document.getElementById('btnClearSession');
+  const logContainer = document.getElementById('logContainer');
+  const logCount = document.getElementById('logCount');
+  const historyContainer = document.getElementById('historyContainer');
+  const btnClearHistory = document.getElementById('btnClearHistory');
+
+  // Настройки
+  const delayMsInput = document.getElementById('delayMs');
+  const btnSaveDelay = document.getElementById('btnSaveDelay');
+  const btnSaveExclusions = document.getElementById('btnSaveExclusions');
+  const exclusionsSavedHint = document.getElementById('exclusionsSavedHint');
+  const complaintExcludeInput = document.getElementById('complaintExcludeInput');
+  const btnSaveComplaintExclusions = document.getElementById('btnSaveComplaintExclusions');
+  const complaintExclusionsSavedHint = document.getElementById('complaintExclusionsSavedHint');
+  const disableOzonBlacklist = document.getElementById('disableOzonBlacklist');
+
+  // Лицензия
+  const proBadge = document.getElementById('proBadge');
+  const freeBadge = document.getElementById('freeBadge');
+  const licenseDot = document.getElementById('licenseDot');
+  const licenseStatusText = document.getElementById('licenseStatusText');
+  const licenseCodeInput = document.getElementById('licenseCodeInput');
+  const btnActivateLicense = document.getElementById('btnActivateLicense');
+  const licenseError = document.getElementById('licenseError');
+  const licenseInputBlock = document.getElementById('licenseInputBlock');
+  const licenseActiveBlock = document.getElementById('licenseActiveBlock');
+  const licenseCodeDisplay = document.getElementById('licenseCodeDisplay');
+  const licenseTypeInfo = document.getElementById('licenseTypeInfo');
+  const licenseTypeBadge = document.getElementById('licenseTypeBadge');
+  const licenseDaysLeft = document.getElementById('licenseDaysLeft');
+  const btnDeactivateLicense = document.getElementById('btnDeactivateLicense');
+  const licenseErrorHelp = document.getElementById('licenseErrorHelp');
+  const licenseDiagBox = document.getElementById('licenseDiagBox');
+  const btnBuyPro = document.getElementById('btnBuyPro');
+  const btnBuyProSettings = document.getElementById('btnBuyProSettings');
+
+  // Модалка
+  const sessionModal = document.getElementById('sessionModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const modalClose = document.getElementById('modalClose');
+  const modalDownload = document.getElementById('modalDownload');
+  const modalCopy = document.getElementById('modalCopy');
+  const modalLogs = document.getElementById('modalLogs');
+
+  // Batch upload
+  const batchDrop = document.getElementById('batchDrop');
+  const batchFileInput = document.getElementById('batchFileInput');
+  const batchFilename = document.getElementById('batchFilename');
+  const batchInfo = document.getElementById('batchInfo');
+  const batchWarning = document.getElementById('batchWarning');
+  const btnBatchHistory = document.getElementById('btnBatchHistory');
+  const batchHistoryMenu = document.getElementById('batchHistoryMenu');
+
+  // === Состояние ===
+  let allResults = [];
+  let isPaused = false;
+  let logEntries = 0;
+  let currentModalSession = null;
+  let showingLogs = false;
+  let isProLicense = false;
+  const BATCH_HISTORY_KEY = 'batchUploadHistory';
+  const BATCH_HISTORY_LIMIT = 3;
+
+  // Дефолтный blacklist продавцов для жалоб (Ozon-магазины).
+  // Был инцидент: бот пожаловался на товар Ozon Беларусь (продавец сам Ozon).
+  // Можно отключить чекбоксом #disableOzonBlacklist в Настройках.
+  const DEFAULT_OZON_BLACKLIST = [
+    'ozon',
+    'озон',
+    'интернет решения',
+    'internet solutions'
+  ];
+
+  // Состояние пользовательских настроек blacklist'а — заполняется при загрузке storage
+  let complaintExcludeList = [];
+  let ozonBlacklistDisabled = false;
+
+  function isBlacklistedComplaintSeller(sellerName) {
+    if (!sellerName) return false;
+    const s = String(sellerName).toLowerCase().trim();
+    if (!ozonBlacklistDisabled && DEFAULT_OZON_BLACKLIST.some(pat => s.includes(pat))) return true;
+    if (complaintExcludeList.some(pat => pat && s.includes(pat))) return true;
+    return false;
+  }
+
+  // === Лицензия — загрузка статуса ===
+  function loadLicenseStatus() {
+    chrome.runtime.sendMessage({ action: 'getLicenseStatus' }, (resp) => {
+      if (chrome.runtime.lastError || !resp) return;
+      isProLicense = resp.isPro;
+      updateLicenseUI(resp);
+    });
+  }
+
+  const btnActivateTrial = document.getElementById('btnActivateTrial');
+  const trialExpiredBlock = document.getElementById('trialExpiredBlock');
+  const trialInfoBlock = document.getElementById('trialInfoBlock');
+  const trialDaysLeftText = document.getElementById('trialDaysLeftText');
+
+  // Подробные советы по кодам ошибок лицензии — показываем в блоке под полем ввода и под активным ключом.
+  const LICENSE_HELP = {
+    invalid_key: {
+      title: 'Код не найден',
+      tips: [
+        'Проверьте код в письме после оплаты или в личном кабинете codefic.ru',
+        'Вставляйте ключ целиком (включая OZG-). Пробелы и лишние символы расширение удалит само',
+        'Если ключ потерян — напишите в поддержку t.me/firadex'
+      ]
+    },
+    revoked: {
+      title: 'Код отозван',
+      tips: [
+        'Ключ заблокирован администратором codefic.ru',
+        'Это могло произойти из-за возврата оплаты или обнаружения передачи ключа',
+        'Свяжитесь с поддержкой: t.me/firadex'
+      ]
+    },
+    expired: {
+      title: 'Срок подписки истёк',
+      tips: [
+        'Продлите подписку в личном кабинете codefic.ru',
+        'После оплаты ключ автоматически продлится — заново вводить его не нужно',
+        'Если оплата прошла, но ключ всё ещё истёкший — нажмите «Активировать» ещё раз'
+      ]
+    },
+    max_activations: {
+      title: 'Лимит устройств исчерпан',
+      tips: [
+        'Откройте расширение на другом устройстве и нажмите «Деактивировать»',
+        'Или напишите в поддержку t.me/firadex — увеличим лимит устройств',
+        'Обычно лимит 2 устройства. Если часто переустанавливаете — пишите нам, поднимем'
+      ]
+    },
+    not_activated_here: {
+      title: 'Ключ не привязан к этому устройству',
+      tips: [
+        'Нажмите «Активировать» ещё раз — мы привяжем текущий браузер',
+        'Если после реинсталла не активируется — возможно, исчерпан лимит устройств',
+        'Такое бывает, когда новую версию распаковали в другую папку (изменился ID расширения)'
+      ]
+    },
+    verification_needed: {
+      title: 'Требуется проверка связи с сервером',
+      tips: [
+        'Расширение не смогло подтвердить ключ более 7 дней',
+        'Проверьте интернет и откройте codefic.ru в соседней вкладке',
+        'Если сайт открывается — нажмите «Активировать» ещё раз или подождите авто-проверку'
+      ]
+    },
+    network_error: {
+      title: 'Нет связи с codefic.ru',
+      tips: [
+        'Проверьте интернет и отключите VPN, если он блокирует *.ru домены',
+        'Если используете корпоративный прокси — добавьте codefic.ru в исключения',
+        'Расширение продолжает работать в офлайн-режиме до 7 дней без верификации'
+      ]
+    },
+    rate_limited: {
+      title: 'Слишком много запросов',
+      tips: [
+        'Подождите минуту и попробуйте снова',
+        'Не нажимайте «Активировать» многократно подряд'
+      ]
+    }
+  };
+
+  function renderLicenseHelp(targetEl, code, message) {
+    if (!targetEl) return;
+    if (!code) { targetEl.classList.add('hidden'); targetEl.innerHTML = ''; return; }
+    const data = LICENSE_HELP[code];
+    if (!data) {
+      targetEl.classList.remove('hidden');
+      targetEl.innerHTML = `<div class="license-diag-title">Ошибка активации</div><div class="license-diag-msg">${escapeHTML(message || '')}</div>`;
+      return;
+    }
+    const tipsHtml = data.tips.map(t => `<li>${escapeHTML(t)}</li>`).join('');
+    targetEl.classList.remove('hidden');
+    targetEl.innerHTML = `
+      <div class="license-diag-title">⚠️ ${escapeHTML(data.title)}</div>
+      ${message ? `<div class="license-diag-msg">${escapeHTML(message)}</div>` : ''}
+      <ul class="license-diag-tips">${tipsHtml}</ul>
+      <div class="license-diag-footer">
+        <a href="https://codefic.ru/#pricing" target="_blank">Личный кабинет</a>
+        <span>·</span>
+        <a href="https://t.me/firadex" target="_blank">Поддержка</a>
+      </div>
+    `;
+  }
+
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function updateLicenseUI(status) {
+    isProLicense = status.isPro;
+    // Сбрасываем диагностические подсказки — заполним ниже если есть ошибка
+    renderLicenseHelp(licenseErrorHelp, null);
+    renderLicenseHelp(licenseDiagBox, null);
+    // Скрываем триал-элементы по умолчанию
+    btnActivateTrial.classList.add('hidden');
+    trialExpiredBlock.classList.add('hidden');
+    trialInfoBlock.classList.add('hidden');
+
+    if (status.isPro) {
+      proBadge.classList.remove('hidden');
+      freeBadge.classList.add('hidden');
+      if (btnBuyPro) btnBuyPro.style.display = 'none';
+      if (btnBuyProSettings) btnBuyProSettings.style.display = 'none';
+      licenseDot.className = 'license-dot active';
+
+      if (status.isTrial) {
+        // Триал активен
+        proBadge.textContent = 'TRIAL';
+        proBadge.className = 'pro-badge trial-badge';
+        licenseStatusText.textContent = 'PRO (пробный)';
+        licenseInputBlock.classList.remove('hidden');
+        licenseActiveBlock.classList.add('hidden');
+        if (btnBuyProSettings) btnBuyProSettings.style.display = '';
+        licenseTypeInfo.classList.remove('hidden');
+        licenseTypeBadge.textContent = 'Пробный';
+        licenseTypeBadge.className = 'license-type-badge trial';
+        licenseDaysLeft.textContent = `осталось ${status.daysLeft} дн.`;
+        licenseDaysLeft.className = 'license-days-left' + (status.daysLeft <= 1 ? ' expiring' : '');
+        // Отображение оставшегося времени триала
+        trialInfoBlock.classList.remove('hidden');
+        if (status.daysLeft != null) {
+          const daysText = status.daysLeft <= 0 ? 'менее 1 дня' : `${status.daysLeft} дн.`;
+          trialDaysLeftText.textContent = daysText;
+        }
+      } else {
+        // Полный PRO
+        proBadge.textContent = 'PRO';
+        proBadge.className = 'pro-badge';
+        licenseStatusText.textContent = 'PRO-версия';
+        licenseInputBlock.classList.add('hidden');
+        licenseActiveBlock.classList.remove('hidden');
+        const codeStr = status.code || '';
+        licenseCodeDisplay.textContent = codeStr.length > 8
+          ? codeStr.slice(0, 3) + '-*****-*****-*****' : codeStr;
+
+        if (status.type) {
+          licenseTypeInfo.classList.remove('hidden');
+          if (status.type === 'lifetime') {
+            licenseTypeBadge.textContent = 'Вечная';
+            licenseTypeBadge.className = 'license-type-badge lifetime';
+            licenseDaysLeft.textContent = '';
+          } else {
+            licenseTypeBadge.textContent = 'Месячная';
+            licenseTypeBadge.className = 'license-type-badge monthly';
+            if (status.daysLeft != null) {
+              licenseDaysLeft.textContent = `осталось ${status.daysLeft} дн.`;
+              licenseDaysLeft.className = 'license-days-left' + (status.daysLeft <= 3 ? ' expiring' : '');
+            } else {
+              licenseDaysLeft.textContent = '';
+            }
+          }
+        } else {
+          licenseTypeInfo.classList.add('hidden');
+        }
+
+        // Если активирован, но при последней фоновой проверке была ошибка (лимит/сеть/нет активации) —
+        // показываем предупреждение под ключом
+        if (status.lastError && status.lastError.code) {
+          renderLicenseHelp(licenseDiagBox, status.lastError.code, status.lastError.message);
+        }
+      }
+    } else {
+      proBadge.classList.add('hidden');
+      proBadge.textContent = 'PRO';
+      proBadge.className = 'pro-badge hidden';
+      freeBadge.classList.remove('hidden');
+      if (btnBuyPro) btnBuyPro.style.display = '';
+      licenseDot.className = 'license-dot';
+      licenseInputBlock.classList.remove('hidden');
+      licenseActiveBlock.classList.add('hidden');
+      licenseTypeInfo.classList.add('hidden');
+
+      if (status.trialExpired) {
+        licenseStatusText.textContent = 'Пробный период закончился';
+        trialExpiredBlock.classList.remove('hidden');
+        if (btnBuyProSettings) btnBuyProSettings.style.display = 'none';
+      } else if (status.canActivateTrial) {
+        licenseStatusText.textContent = 'FREE-версия';
+        btnActivateTrial.classList.remove('hidden');
+      } else if (status.error === 'expired') {
+        licenseStatusText.textContent = 'Подписка истекла';
+        renderLicenseHelp(licenseErrorHelp, 'expired');
+      } else if (status.error === 'verification_needed') {
+        licenseStatusText.textContent = 'Требуется проверка (нет интернета)';
+        renderLicenseHelp(licenseErrorHelp, 'verification_needed');
+      } else {
+        licenseStatusText.textContent = 'FREE-версия';
+      }
+
+      // Если есть свежая ошибка с прошлой попытки активации — показываем её
+      if (status.lastError && status.lastError.code) {
+        renderLicenseHelp(licenseErrorHelp, status.lastError.code, status.lastError.message);
+      }
+    }
+  }
+
+  loadLicenseStatus();
+
+  // === Активация триала ===
+  btnActivateTrial.addEventListener('click', () => {
+    btnActivateTrial.disabled = true;
+    btnActivateTrial.textContent = 'Активация...';
+    chrome.runtime.sendMessage({ action: 'activateTrial' }, (resp) => {
+      btnActivateTrial.disabled = false;
+      if (chrome.runtime.lastError) {
+        showLicenseError('Ошибка расширения');
+        btnActivateTrial.textContent = '⚡ Попробовать PRO бесплатно — 7 дней';
+        return;
+      }
+      if (resp.success) {
+        loadLicenseStatus();
+        addLog('PRO (пробный) активирован на 7 дней');
+      } else {
+        showLicenseError(resp.error || 'Ошибка активации');
+        btnActivateTrial.textContent = '⚡ Попробовать PRO бесплатно — 7 дней';
+      }
+    });
+  });
+
+  // === Инструкция ===
+  const helpModal = document.getElementById('helpModal');
+  document.getElementById('btnHelp').addEventListener('click', () => helpModal.classList.toggle('hidden'));
+  document.getElementById('helpModalClose').addEventListener('click', () => helpModal.classList.add('hidden'));
+  helpModal.addEventListener('click', (e) => { if (e.target === helpModal) helpModal.classList.add('hidden'); });
+
+  // === Лог toggle ===
+  const logSection = document.getElementById('logSection');
+  const logToggle = document.getElementById('logToggle');
+  logToggle.addEventListener('click', () => {
+    logSection.classList.toggle('collapsed');
+  });
+
+  // Загрузка настроек blacklist'а для жалоб (отдельный getStorage чтобы не плодить ключи в основном)
+  chrome.storage.local.get(['complaintExcludeSellers', 'ozonBlacklistDisabled'], (data) => {
+    if (Array.isArray(data.complaintExcludeSellers)) {
+      complaintExcludeList = data.complaintExcludeSellers
+        .map(s => String(s || '').toLowerCase().trim())
+        .filter(Boolean);
+      if (complaintExcludeInput) complaintExcludeInput.value = data.complaintExcludeSellers.join('\n');
+    }
+    ozonBlacklistDisabled = !!data.ozonBlacklistDisabled;
+    if (disableOzonBlacklist) disableOzonBlacklist.checked = ozonBlacklistDisabled;
+  });
+
+  // === Загрузка сохранённых настроек и последней сессии ===
+  chrome.storage.local.get(['excludeSellers', 'delayMs', 'lastScanResults', 'lastScanLogs'], (data) => {
+    if (data.excludeSellers) excludeSellersInput.value = data.excludeSellers.join('\n');
+    if (data.delayMs) delayMsInput.value = data.delayMs;
+    // Восстановить последнюю сессию если есть
+    if (data.lastScanResults && data.lastScanResults.length > 0) {
+      allResults = data.lastScanResults;
+      renderResults();
+      // Восстановить логи
+      if (data.lastScanLogs && data.lastScanLogs.length > 0) {
+        for (const log of data.lastScanLogs) addLog(log);
+      }
+    }
+  });
+
+  // === Табы ===
+  function switchTab(tabName) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const tabBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    if (tabBtn) tabBtn.classList.add('active');
+    const tabId = 'tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+    const tabEl = document.getElementById(tabId);
+    if (tabEl) tabEl.classList.add('active');
+    if (tabName === 'history') loadHistory();
+  }
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      switchTab(tab.dataset.tab);
+      chrome.storage.local.set({ lastActiveTab: tab.dataset.tab });
+    });
+  });
+
+  // Восстановить последнюю вкладку
+  chrome.storage.local.get(['lastActiveTab'], (data) => {
+    if (data.lastActiveTab && data.lastActiveTab !== 'scan') {
+      switchTab(data.lastActiveTab);
+    }
+  });
+
+  // === Парсинг SKU ===
+  function parseSkus(text) {
+    return text.split(/[\n,;\s]+/).map(s => s.trim()).filter(s => /^\d{3,}$/.test(s));
+  }
+
+  // === Список SKU с привязанными доказательствами (для бейджа в сканере) ===
+  // Кэш обновляется через chrome.storage.onChanged и при открытии popup
+  let skusWithEvidenceCache = new Set();
+  function refreshSkusWithEvidenceCache() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(['complaintSkuFiles'], (data) => {
+        const map = data.complaintSkuFiles || {};
+        skusWithEvidenceCache = new Set(Object.keys(map).filter(k => (map[k] || []).length > 0));
+        resolve(skusWithEvidenceCache);
+      });
+    });
+  }
+  refreshSkusWithEvidenceCache();
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.complaintSkuFiles) {
+      const map = changes.complaintSkuFiles.newValue || {};
+      skusWithEvidenceCache = new Set(Object.keys(map).filter(k => (map[k] || []).length > 0));
+      // Обновляем бейджи в уже отрендеренных результатах
+      if (typeof refreshEvidenceBadges === 'function') refreshEvidenceBadges();
+    }
+  });
+
+  // === Лог ===
+  function addLog(text) {
+    logEntries++;
+    logCount.textContent = logEntries;
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    if (text.includes('Ошибка') || text.includes('ошибка') || text.includes('Таймаут') || text.includes('error')) {
+      line.classList.add('error');
+    } else if (text.includes('конкурент') || text.includes('Завершено') || text.includes('завершен')) {
+      line.classList.add('success');
+    }
+    line.textContent = text;
+    logContainer.appendChild(line);
+    logContainer.scrollTop = logContainer.scrollHeight;
+  }
+
+  function getAllLogs() {
+    return [...logContainer.querySelectorAll('.log-line')].map(el => el.textContent);
+  }
+
+  // === Прогресс ===
+  function updateProgress(current, total) {
+    progressCurrent.textContent = current;
+    progressTotal.textContent = total;
+    const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+    progressPercent.textContent = pct + '%';
+    progressFill.style.width = pct + '%';
+  }
+
+  // === Рендер результатов ===
+  function renderResults() {
+    resultsContainer.innerHTML = '';
+    if (allResults.length === 0) return;
+
+    resultsSection.classList.remove('hidden');
+    let totalCount = 0;
+
+    for (const r of allResults) {
+      const group = document.createElement('div');
+      group.className = 'sku-group';
+      const header = document.createElement('div');
+      header.className = 'sku-header';
+
+      if (r.error) {
+        const productUrl = `https://www.ozon.ru/product/${r.sku}/`;
+        header.innerHTML = `<span>SKU ${esc(r.sku)}</span><span class="sku-error">${esc(r.error)}</span>`;
+        group.appendChild(header);
+        const skuRow = document.createElement('div');
+        skuRow.className = 'my-sku-row';
+        skuRow.innerHTML = `<button class="btn-copy-my-sku" data-sku="${esc(r.sku)}" title="Копировать SKU">&#x2398;</button> <span class="my-sku-num">${esc(r.sku)}</span> <a href="${esc(productUrl)}" target="_blank" class="my-sku-link">открыть на OZON</a>`;
+        group.appendChild(skuRow);
+        resultsContainer.appendChild(group);
+        continue;
+      }
+
+      const count = r.sellers ? r.sellers.length : 0;
+      totalCount += count;
+      const nameDisplay = r.productName ? r.productName.substring(0, 40) : 'SKU ' + r.sku;
+      const productUrl = `https://www.ozon.ru/product/${r.sku}/`;
+      const competitorSkuList = (r.sellers || []).map(s => s.competitorSku).filter(Boolean);
+      const copyAllTitle = `Скопировать ${competitorSkuList.length} SKU конкурентов`;
+      header.innerHTML = `<span>${esc(nameDisplay)}</span><span class="count-group">${count} конк.${competitorSkuList.length > 0 ? `<button class="btn-copy-group-skus" data-skus="${esc(competitorSkuList.join('\n'))}" title="${esc(copyAllTitle)}">&#x2398;</button>` : ''}</span>`;
+      group.appendChild(header);
+
+      // Строка с SKU товара: копировать + ссылка + кнопка «Доказательства»
+      const skuRow = document.createElement('div');
+      skuRow.className = 'my-sku-row';
+      const hasEvidence = skusWithEvidenceCache.has(String(r.sku));
+      skuRow.innerHTML = `<button class="btn-copy-my-sku" data-sku="${esc(r.sku)}" title="Копировать мой SKU">&#x2398;</button> <span class="my-sku-num">${esc(r.sku)}</span> <a href="${esc(productUrl)}" target="_blank" class="my-sku-link">открыть на OZON</a> <button class="btn-evidence-sku ${hasEvidence ? 'has-evidence' : ''}" data-sku="${esc(r.sku)}" title="${hasEvidence ? 'Доказательства уже привязаны — открыть в настройках' : 'Привязать доказательства для этого SKU'}">${hasEvidence ? '✓ Доказательства' : '📎 К доказательствам'}</button>`;
+      group.appendChild(skuRow);
+
+      if (count === 0) {
+        const noSellers = document.createElement('div');
+        noSellers.className = 'no-sellers';
+        noSellers.textContent = 'Других продавцов не найдено';
+        group.appendChild(noSellers);
+      } else {
+        for (const s of r.sellers) {
+          const item = document.createElement('div');
+          item.className = 'seller-item';
+          const nameHtml = s.url ? `<a href="${esc(s.url)}" target="_blank">${esc(s.name)}</a>` : esc(s.name);
+          const priceHtml = s.price ? ` <span class="seller-price">${esc(s.price)} ₽</span>` : '';
+          const productUrl = s.productLink || (s.competitorSku ? `https://www.ozon.ru/product/${s.competitorSku}/` : '');
+          const skuHtml = s.competitorSku ? `<a href="${esc(productUrl)}" target="_blank" class="seller-sku" title="Открыть карточку конкурента">${esc(s.competitorSku)}</a><button class="btn-copy-sku" data-sku="${esc(s.competitorSku)}" title="Копировать SKU">&#x2398;</button>` : '';
+          item.innerHTML = `${skuHtml}${skuHtml && nameHtml ? ' ' : ''}${nameHtml}${priceHtml}`;
+          group.appendChild(item);
+        }
+      }
+      resultsContainer.appendChild(group);
+    }
+    totalSellersEl.textContent = totalCount;
+
+    // Делегирование кликов по кнопкам копирования SKU
+    resultsContainer.querySelectorAll('.btn-copy-sku, .btn-copy-my-sku').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigator.clipboard.writeText(btn.dataset.sku);
+        btn.textContent = '\u2713';
+        setTimeout(() => { btn.innerHTML = '&#x2398;'; }, 800);
+      });
+    });
+
+    // Копировать все SKU конкурентов по одному товару
+    resultsContainer.querySelectorAll('.btn-copy-group-skus').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigator.clipboard.writeText(btn.dataset.skus);
+        btn.textContent = '\u2713';
+        setTimeout(() => { btn.innerHTML = '&#x2398;'; }, 1000);
+      });
+    });
+
+    // \u041a\u043d\u043e\u043f\u043a\u0430 \u00ab\ud83d\udcce \u041a \u0434\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c\u0441\u0442\u0432\u0430\u043c\u00bb \u2014 \u043f\u0435\u0440\u0435\u043d\u043e\u0441\u0438\u0442 \u0440\u043e\u0434\u0438\u0442\u0435\u043b\u044c\u0441\u043a\u0438\u0439 SKU \u0432 \u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438
+    resultsContainer.querySelectorAll('.btn-evidence-sku').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const sku = btn.dataset.sku;
+        switchTab('settings');
+        chrome.storage.local.set({ lastActiveTab: 'settings' });
+        const skuFileSkuInput = document.getElementById('skuFileSkuInput');
+        const skuFilesList = document.getElementById('skuFilesList');
+        if (skuFileSkuInput) {
+          skuFileSkuInput.value = sku;
+          skuFileSkuInput.focus();
+          const section = skuFileSkuInput.closest('.settings-group');
+          if (section) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            section.classList.add('highlight-settings');
+            setTimeout(() => section.classList.remove('highlight-settings'), 2000);
+          }
+          if (skuFilesList) {
+            skuFilesList.querySelectorAll('.sku-file-bundle').forEach(b => {
+              const sk = b.querySelector('.sku-file-bundle-sku');
+              if (sk && sk.textContent.trim() === sku) {
+                b.classList.add('highlight-bundle');
+                setTimeout(() => b.classList.remove('highlight-bundle'), 2500);
+              }
+            });
+          }
+        }
+      });
+    });
+  }
+
+  // \u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0435 \u0431\u0435\u0439\u0434\u0436\u0435\u0439 \u00ab\u2713 \u0414\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c\u0441\u0442\u0432\u0430\u00bb \u043f\u0440\u0438 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0438 \u0441\u043a\u043b-\u0444\u0430\u0439\u043b\u043e\u0432
+  function refreshEvidenceBadges() {
+    if (!resultsContainer) return;
+    resultsContainer.querySelectorAll('.btn-evidence-sku').forEach(btn => {
+      const sku = btn.dataset.sku;
+      const has = skusWithEvidenceCache.has(String(sku));
+      btn.classList.toggle('has-evidence', has);
+      btn.textContent = has ? '\u2713 \u0414\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c\u0441\u0442\u0432\u0430' : '\ud83d\udcce \u041a \u0434\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c\u0441\u0442\u0432\u0430\u043c';
+      btn.title = has ? '\u0414\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c\u0441\u0442\u0432\u0430 \u0443\u0436\u0435 \u043f\u0440\u0438\u0432\u044f\u0437\u0430\u043d\u044b \u2014 \u043e\u0442\u043a\u0440\u044b\u0442\u044c \u0432 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430\u0445' : '\u041f\u0440\u0438\u0432\u044f\u0437\u0430\u0442\u044c \u0434\u043e\u043a\u0430\u0437\u0430\u0442\u0435\u043b\u044c\u0441\u0442\u0432\u0430 \u0434\u043b\u044f \u044d\u0442\u043e\u0433\u043e SKU';
+    });
+  }
+
+  function esc(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  // === UI состояния ===
+  function setUiRunning() {
+    isPaused = false;
+    btnStart.disabled = true;
+    btnPause.disabled = false;
+    btnPause.textContent = '⏸';
+    btnStop.disabled = false;
+    skuInput.disabled = true;
+    progressWrap.classList.remove('hidden');
+  }
+
+  function setUiStopped() {
+    isPaused = false;
+    btnStart.disabled = false;
+    btnPause.disabled = true;
+    btnPause.textContent = '⏸';
+    btnStop.disabled = true;
+    skuInput.disabled = false;
+  }
+
+  // === Режим сканирования ===
+  let scanMode = 'fast';
+  const scanModeFast = document.getElementById('scanModeFast');
+  const scanModeVisual = document.getElementById('scanModeVisual');
+
+  function setScanMode(mode) {
+    scanMode = mode;
+    scanModeFast.classList.toggle('active', mode === 'fast');
+    scanModeVisual.classList.toggle('active', mode === 'visual');
+    chrome.storage.local.set({ scanMode: mode });
+  }
+
+  // Восстановить сохранённый режим
+  chrome.storage.local.get(['scanMode'], (data) => {
+    if (data.scanMode) setScanMode(data.scanMode);
+  });
+
+  scanModeFast.addEventListener('click', () => setScanMode('fast'));
+  scanModeVisual.addEventListener('click', () => setScanMode('visual'));
+
+  // === Старт ===
+  btnStart.addEventListener('click', () => {
+    const skus = parseSkus(skuInput.value);
+    if (skus.length === 0) { addLog('Нет валидных SKU'); return; }
+
+    // Собираем исключения из настроек
+    const excludeLines = (excludeSellersInput.value || '').split('\n').map(s => s.trim()).filter(Boolean);
+
+    allResults = [];
+    resultsContainer.innerHTML = '';
+    resultsSection.classList.add('hidden');
+    logContainer.innerHTML = '';
+    logEntries = 0;
+    logCount.textContent = '0';
+    updateProgress(0, skus.length);
+    setUiRunning();
+
+    chrome.runtime.sendMessage({
+      action: 'startScan',
+      skus,
+      config: { excludeSellers: excludeLines, scanMode }
+    }, (resp) => {
+      if (chrome.runtime.lastError) {
+        addLog('Ошибка: ' + chrome.runtime.lastError.message);
+        setUiStopped();
+      }
+    });
+  });
+
+  // === Пауза ===
+  btnPause.addEventListener('click', () => {
+    if (isPaused) {
+      chrome.runtime.sendMessage({ action: 'resumeScan' });
+      isPaused = false;
+      btnPause.textContent = '⏸';
+    } else {
+      chrome.runtime.sendMessage({ action: 'pauseScan' });
+      isPaused = true;
+      btnPause.textContent = '▶';
+    }
+  });
+
+  // === Стоп ===
+  btnStop.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'stopScan' });
+    setUiStopped();
+  });
+
+  // === Сообщения от service-worker ===
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.action === 'scanProgress') {
+      updateProgress(msg.current, msg.total);
+      allResults.push({
+        sku: msg.sku,
+        sellers: msg.sellers || [],
+        productName: msg.productName || '',
+        error: msg.error || null
+      });
+      renderResults();
+      // Сохраняем промежуточные результаты
+      chrome.storage.local.set({ lastScanResults: allResults });
+    }
+    if (msg.action === 'scanComplete') {
+      setUiStopped();
+      if (msg.results) { allResults = msg.results; renderResults(); }
+      // Сохраняем финальные результаты и логи
+      chrome.storage.local.set({ lastScanResults: allResults, lastScanLogs: getAllLogs() });
+    }
+    if (msg.action === 'scanLog') {
+      addLog(msg.text);
+    }
+
+    // Support automation messages
+    if (msg.action === 'supportLog') {
+      addComplaintLog(msg.text);
+    }
+    if (msg.action === 'supportProgress') {
+      updateComplaintProgress(msg.current, msg.total);
+      if (msg.item) {
+        // Обновляем очередь — запрашиваем полный статус
+        chrome.runtime.sendMessage({ action: 'supportGetStatus' }, (resp) => {
+          if (resp && resp.queue) renderComplaintQueue(resp.queue);
+        });
+      }
+      complaintStatusIcon.textContent = '▶';
+      complaintStatusText.textContent = `Обработка ${msg.current}/${msg.total}`;
+    }
+    if (msg.action === 'supportComplete') {
+      setComplaintUiStopped();
+      complaintStatusIcon.textContent = '✓';
+      complaintStatusText.textContent = 'Завершено';
+      if (msg.queue) renderComplaintQueue(msg.queue);
+    }
+    if (msg.action === 'supportNeedAction') {
+      complaintHint.classList.remove('hidden');
+      complaintHint.textContent = msg.message || '';
+      complaintStatusIcon.textContent = '⚠';
+      complaintStatusText.textContent = 'Требуется действие';
+    }
+    if (msg.action === 'supportStateUpdate') {
+      // Content script state update — log only
+    }
+  });
+
+  // === Копировать / Excel ===
+  btnCopy.addEventListener('click', () => { copyResults(allResults); flashBtn(btnCopy, '✓'); });
+  btnCopySku.addEventListener('click', () => { copyOnlySkus(allResults); flashBtn(btnCopySku, '✓'); });
+  btnExcel.addEventListener('click', () => { downloadExcel(allResults, 'ozguard_results'); });
+
+  // Очистить текущую сессию (результаты сохранены в истории)
+  btnClearSession.addEventListener('click', () => {
+    allResults = [];
+    resultsContainer.innerHTML = '';
+    resultsSection.classList.add('hidden');
+    logContainer.innerHTML = '';
+    logEntries = 0;
+    logCount.textContent = '0';
+    skuInput.value = '';
+    progressWrap.classList.add('hidden');
+    chrome.storage.local.remove(['lastScanResults', 'lastScanLogs']);
+    // Сброс batch
+    batchFilename.classList.add('hidden');
+    batchInfo.classList.add('hidden');
+    batchWarning.classList.add('hidden');
+    addLog('Сессия очищена. Результаты доступны в Истории.');
+  });
+
+  function copyResults(results) {
+    const lines = [];
+    for (const r of results) {
+      if (r.error) { lines.push(`SKU ${r.sku}: ${r.error}`); continue; }
+      lines.push(`SKU ${r.sku} (${r.productName || ''}) — ${(r.sellers || []).length} конкурентов:`);
+      for (const s of (r.sellers || [])) {
+        const parts = [`  ${s.name}`];
+        if (s.price) parts.push(s.price + ' ₽');
+        if (s.competitorSku) parts.push('SKU:' + s.competitorSku);
+        if (s.sellerId) parts.push('ID:' + s.sellerId);
+        lines.push(parts.join(' | '));
+      }
+    }
+    navigator.clipboard.writeText(lines.join('\n'));
+  }
+
+  function copyOnlySkus(results) {
+    const skus = new Set();
+    for (const r of results) {
+      if (r.error || !r.sellers) continue;
+      for (const s of r.sellers) {
+        if (s.competitorSku) skus.add(s.competitorSku);
+      }
+    }
+    navigator.clipboard.writeText([...skus].join('\n'));
+  }
+
+  function downloadExcel(results, filename) {
+    const rows = [['Мой SKU', 'Название', 'SKU конкурента', 'ID продавца', 'Продавец', 'Цена', 'Ссылка']];
+    for (const r of results) {
+      if (r.error) { rows.push([r.sku, '', '', '', 'ОШИБКА: ' + r.error, '', '']); continue; }
+      if (!r.sellers || r.sellers.length === 0) { rows.push([r.sku, r.productName || '', '', '', 'Нет конкурентов', '', '']); continue; }
+      for (const s of r.sellers) {
+        rows.push([r.sku, r.productName || '', s.competitorSku || '', s.sellerId || '', s.name, s.price || '', s.url || '']);
+      }
+    }
+
+    // CSV с BOM и ; разделителем — Excel открывает без предупреждений
+    const csv = rows.map(row => row.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename + '_' + fmtDate(new Date()) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function fmtDate(d) {
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
+  }
+
+  function flashBtn(btn, text) {
+    const orig = btn.textContent;
+    btn.textContent = text;
+    setTimeout(() => { btn.textContent = orig; }, 1200);
+  }
+
+  // === ИСТОРИЯ ===
+  function loadHistory() {
+    chrome.runtime.sendMessage({ action: 'getHistory' }, (resp) => {
+      if (chrome.runtime.lastError || !resp) return;
+      renderHistory(resp.history || []);
+    });
+  }
+
+  function renderHistory(history) {
+    historyContainer.innerHTML = '';
+    if (history.length === 0) {
+      historyContainer.innerHTML = '<div class="empty-state">Нет сохранённых сессий</div>';
+      return;
+    }
+
+    for (const session of history) {
+      const card = document.createElement('div');
+      card.className = 'history-card';
+      const date = new Date(session.date);
+      const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+      // Считаем количество SKU конкурентов в сессии + строим parent→competitor карту
+      const competitorSkus = new Set();
+      const sessionParentMap = {};
+      if (session.results) {
+        for (const r of session.results) {
+          const parentSku = String(r.sku || '').trim();
+          if (r.sellers) r.sellers.forEach(s => {
+            if (!s.competitorSku) return;
+            competitorSkus.add(s.competitorSku);
+            if (parentSku) {
+              if (!sessionParentMap[s.competitorSku]) sessionParentMap[s.competitorSku] = [];
+              if (!sessionParentMap[s.competitorSku].includes(parentSku)) sessionParentMap[s.competitorSku].push(parentSku);
+            }
+          });
+        }
+      }
+
+      card.innerHTML = `
+        <div class="history-date">${esc(dateStr)}</div>
+        <div class="history-stats">
+          <div class="history-stat"><div class="label">SKU</div><div class="value">${session.skusCount}</div></div>
+          <div class="history-stat"><div class="label">Найдено</div><div class="value accent">${session.sellersFound}</div></div>
+        </div>
+        <div class="history-actions">
+          <button class="btn btn-small btn-download">📥 Excel</button>
+          <button class="btn btn-small btn-view">👁 Детали</button>
+          ${competitorSkus.size > 0 ? `<button class="btn btn-small btn-pro btn-to-complaints" title="${competitorSkus.size} SKU конкурентов">📨 Жалобы</button>` : ''}
+          <button class="btn btn-small btn-danger-sm btn-delete">✕</button>
+        </div>
+      `;
+
+      card.querySelector('.btn-download').addEventListener('click', (e) => { e.stopPropagation(); downloadExcel(session.results, 'ozguard_' + session.id); });
+      card.querySelector('.btn-view').addEventListener('click', (e) => { e.stopPropagation(); openSessionModal(session); });
+      const btnToComplaints = card.querySelector('.btn-to-complaints');
+      if (btnToComplaints) {
+        btnToComplaints.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (!isProLicense) { alert('Жалобы доступны в PRO-версии'); return; }
+          const sourceSkus = getUniqueSourceSkus(session.results);
+          let selectedParentSku = '';
+          if (sourceSkus.length === 1) {
+            selectedParentSku = await askParentSkuForSingleSource(sourceSkus[0]);
+            if (selectedParentSku === null) return;
+            applyParentSkuOverride(sessionParentMap, competitorSkus, selectedParentSku);
+          }
+          const existing = parseSkus(complaintSkuInput.value);
+          const merged = new Set([...existing, ...competitorSkus]);
+          complaintSkuInput.value = [...merged].join('\n');
+          if (selectedParentSku && existing.length === 0) setComplaintParentSku(selectedParentSku);
+          complaintSkuInput.dispatchEvent(new Event('input'));
+          // Мержим parent-карту
+          try {
+            const prev = await loadParentMap();
+            for (const comp of Object.keys(sessionParentMap)) {
+              const m = new Set([...(prev[comp] || []), ...sessionParentMap[comp]]);
+              prev[comp] = [...m];
+            }
+            await saveParentMap(prev);
+          } catch (_) {}
+          switchTab('complaints');
+          chrome.storage.local.set({ lastActiveTab: 'complaints' });
+          if (selectedParentSku) addComplaintLog(`Родительский SKU ${selectedParentSku} привязан к ${competitorSkus.size} SKU`);
+        });
+      }
+      card.querySelector('.btn-delete').addEventListener('click', (e) => {
+        e.stopPropagation();
+        chrome.runtime.sendMessage({ action: 'deleteHistorySession', sessionId: session.id }, () => loadHistory());
+      });
+
+      historyContainer.appendChild(card);
+    }
+  }
+
+  btnClearHistory.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'clearHistory' }, () => loadHistory());
+  });
+
+  // === Модальное окно ===
+  function openSessionModal(session) {
+    currentModalSession = session;
+    showingLogs = false;
+    const date = new Date(session.date);
+    modalTitle.textContent = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' — ' + session.skusCount + ' SKU';
+    renderModalTable(session);
+    sessionModal.classList.remove('hidden');
+  }
+
+  function renderModalTable(session) {
+    let html = '<table class="results-table"><thead><tr><th>SKU конк.</th><th>Продавец</th><th>Цена</th></tr></thead><tbody>';
+    for (const r of session.results) {
+      if (r.error) { html += `<tr><td colspan="3" class="sku-error">${esc(r.sku)}: ${esc(r.error)}</td></tr>`; continue; }
+      if (!r.sellers || r.sellers.length === 0) { html += `<tr><td colspan="3" class="no-sellers">${esc(r.sku)}: Нет конкурентов</td></tr>`; continue; }
+      for (const s of r.sellers) {
+        const productUrl = s.productLink || (s.competitorSku ? `https://www.ozon.ru/product/${s.competitorSku}/` : '');
+        const skuLink = s.competitorSku
+          ? `<span class="sku-cell"><a href="${esc(productUrl)}" target="_blank" title="Открыть карточку">${esc(s.competitorSku)}</a><button class="btn-copy-sku" data-sku="${esc(s.competitorSku)}" title="Копировать SKU">&#x2398;</button></span>`
+          : '—';
+        const sellerLink = s.url
+          ? `<a href="${esc(s.url)}" target="_blank">${esc(s.name)}</a>`
+          : esc(s.name);
+        const priceStr = s.price ? esc(s.price) + ' ₽' : '—';
+        html += `<tr><td>${skuLink}</td><td>${sellerLink}</td><td>${priceStr}</td></tr>`;
+      }
+    }
+    html += '</tbody></table>';
+    modalBody.innerHTML = html;
+
+    // Делегирование копирования SKU в модалке
+    modalBody.querySelectorAll('.btn-copy-sku').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigator.clipboard.writeText(btn.dataset.sku);
+        btn.textContent = '\u2713';
+        setTimeout(() => { btn.innerHTML = '&#x2398;'; }, 800);
+      });
+    });
+  }
+
+  modalClose.addEventListener('click', () => { sessionModal.classList.add('hidden'); });
+  sessionModal.addEventListener('click', (e) => { if (e.target === sessionModal) sessionModal.classList.add('hidden'); });
+  modalDownload.addEventListener('click', () => { if (currentModalSession) downloadExcel(currentModalSession.results, 'ozguard_' + currentModalSession.id); });
+  modalCopy.addEventListener('click', () => { if (currentModalSession) { copyResults(currentModalSession.results); flashBtn(modalCopy, '✓'); } });
+  modalLogs.addEventListener('click', () => {
+    if (!currentModalSession) return;
+    if (showingLogs) {
+      renderModalTable(currentModalSession);
+      modalLogs.textContent = '📝 Логи';
+      showingLogs = false;
+    } else {
+      const logs = currentModalSession.logs || [];
+      modalBody.innerHTML = logs.length === 0
+        ? '<div class="empty-state">Логи отсутствуют</div>'
+        : '<div class="modal-logs">' + logs.map(l => esc(l)).join('\n') + '</div>';
+      modalLogs.textContent = '📊 Таблица';
+      showingLogs = true;
+    }
+  });
+
+  // === ЛИЦЕНЗИЯ ===
+  btnActivateLicense.addEventListener('click', () => {
+    const code = licenseCodeInput.value.trim();
+    if (!code) { showLicenseError('Введите код'); return; }
+    licenseError.classList.add('hidden');
+    renderLicenseHelp(licenseErrorHelp, null);
+    btnActivateLicense.disabled = true;
+    chrome.runtime.sendMessage({ action: 'activateLicense', code }, (resp) => {
+      btnActivateLicense.disabled = false;
+      if (chrome.runtime.lastError) { showLicenseError('Ошибка расширения'); return; }
+      if (resp && resp.success) {
+        licenseCodeInput.value = '';
+        renderLicenseHelp(licenseErrorHelp, null);
+        loadLicenseStatus();
+        addLog('PRO-версия активирована');
+      } else {
+        const msg = (resp && resp.error) || 'Неверный код';
+        showLicenseError(msg);
+        renderLicenseHelp(licenseErrorHelp, (resp && resp.code) || 'unknown', msg);
+      }
+    });
+  });
+
+  // Нормализация ввода: только UPPERCASE + оставляем дефисы пользователя.
+  // Форматтер НЕ перегруппирует блоки — иначе ломает ключи с блоками нестандартной длины
+  // (например тестовые OZG-TEST1-LIFE-00001 становились OZG-TEST1-LIFE0-0001).
+  licenseCodeInput.addEventListener('input', () => {
+    const cleaned = licenseCodeInput.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    if (cleaned !== licenseCodeInput.value) {
+      const pos = licenseCodeInput.selectionStart;
+      licenseCodeInput.value = cleaned;
+      try { licenseCodeInput.setSelectionRange(pos, pos); } catch (_) {}
+    }
+  });
+
+  btnDeactivateLicense.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'deactivateLicense' }, () => {
+      loadLicenseStatus();
+      addLog('Лицензия деактивирована');
+    });
+  });
+
+  function showLicenseError(text) {
+    licenseError.textContent = text;
+    licenseError.classList.remove('hidden');
+  }
+
+  // === НАСТРОЙКИ ===
+  // Сохранить исключения
+  btnSaveExclusions.addEventListener('click', () => {
+    const lines = (excludeSellersInput.value || '').split('\n').map(s => s.trim()).filter(Boolean);
+    chrome.storage.local.set({ excludeSellers: lines });
+    exclusionsSavedHint.classList.remove('hidden');
+    setTimeout(() => exclusionsSavedHint.classList.add('hidden'), 2000);
+    flashBtn(btnSaveExclusions, '✓');
+  });
+
+  // Сохранить blacklist для жалоб
+  if (btnSaveComplaintExclusions) {
+    btnSaveComplaintExclusions.addEventListener('click', () => {
+      const lines = (complaintExcludeInput.value || '').split('\n').map(s => s.trim()).filter(Boolean);
+      complaintExcludeList = lines.map(s => s.toLowerCase());
+      chrome.storage.local.set({ complaintExcludeSellers: lines });
+      if (complaintExclusionsSavedHint) {
+        complaintExclusionsSavedHint.classList.remove('hidden');
+        setTimeout(() => complaintExclusionsSavedHint.classList.add('hidden'), 2000);
+      }
+      flashBtn(btnSaveComplaintExclusions, '✓');
+    });
+  }
+
+  // Чекбокс «отключить Ozon-blacklist по умолчанию»
+  if (disableOzonBlacklist) {
+    disableOzonBlacklist.addEventListener('change', () => {
+      ozonBlacklistDisabled = disableOzonBlacklist.checked;
+      chrome.storage.local.set({ ozonBlacklistDisabled });
+    });
+  }
+
+  // Сохранить задержку
+  btnSaveDelay.addEventListener('click', () => {
+    const val = parseInt(delayMsInput.value, 10);
+    if (val >= 500 && val <= 10000) {
+      chrome.storage.local.set({ delayMs: val });
+      flashBtn(btnSaveDelay, '✓');
+    }
+  });
+
+
+  // === ЖАЛОБЫ (SUPPORT AUTOMATION) ===
+  const complaintSkuInput = document.getElementById('complaintSkuInput');
+  const complaintParentSkuInput = document.getElementById('complaintParentSkuInput');
+  const btnCopyComplaintParentSku = document.getElementById('btnCopyComplaintParentSku');
+  const parentSkuModal = document.getElementById('parentSkuModal');
+  const parentSkuModalInput = document.getElementById('parentSkuModalInput');
+  const parentSkuModalError = document.getElementById('parentSkuModalError');
+  const parentSkuModalApply = document.getElementById('parentSkuModalApply');
+  const parentSkuModalCancel = document.getElementById('parentSkuModalCancel');
+  const parentSkuModalClose = document.getElementById('parentSkuModalClose');
+  let parentSkuModalResolve = null;
+
+  // Подсказки — скрытие на крестик, сохранение в chrome.storage.local.
+  // Три группы подсказок:
+  //   complaint  (vpn, instruction, evidence)           — в табе «Жалобы», управляются btnShowHints
+  //   settings   (exclusions, delay, cascade, cascade_limit, cascade_consec, sku_files)
+  //                                                      — в табе «Настройки», управляются btnShowSettingsHints
+  // Крестик ✕ работает одинаково во всех, ключ сохраняется в dismissedHints.
+  const vpnWarning = document.getElementById('vpnWarning');
+  const instructionHint = document.getElementById('instructionHint');
+  const btnShowHints = document.getElementById('btnShowHints');
+  const btnShowSettingsHints = document.getElementById('btnShowSettingsHints');
+
+  // Ключи по группам
+  const COMPLAINT_HINT_KEYS = ['vpn', 'instruction', 'evidence'];
+  const SETTINGS_HINT_KEYS = ['exclusions', 'complaint_exclusions', 'delay', 'cascade', 'cascade_limit', 'cascade_consec', 'sku_files', 'evidence_mode'];
+
+  // Собираем все подсказки-баннеры по data-hint-host (в т.ч. в Настройках)
+  function collectHintElements() {
+    const map = { vpn: vpnWarning, instruction: instructionHint };
+    document.querySelectorAll('[data-hint-host]').forEach(el => {
+      const k = el.dataset.hintHost;
+      if (k && !map[k]) map[k] = el;
+    });
+    return map;
+  }
+
+  function updateShowHintsButtons(dismissed) {
+    // Обе кнопки работают по правилу «any hidden» — появляются сразу как хоть что-то скрыто.
+    // Раньше для Жалоб была логика «all hidden» — но с 3+ ключами (vpn/instruction/evidence)
+    // пользователь мог залипнуть если скрыл только одну, поэтому унифицировали.
+    const complaintAnyHidden = COMPLAINT_HINT_KEYS.some(k => dismissed[k]);
+    const settingsAnyHidden = SETTINGS_HINT_KEYS.some(k => dismissed[k]);
+    btnShowHints.classList.toggle('hidden', !complaintAnyHidden);
+    if (btnShowSettingsHints) {
+      btnShowSettingsHints.classList.toggle('hidden', !settingsAnyHidden);
+    }
+  }
+
+  const hintElements = collectHintElements();
+
+  chrome.storage.local.get(['dismissedHints'], (data) => {
+    const dismissed = data.dismissedHints || {};
+    for (const [key, el] of Object.entries(hintElements)) {
+      if (el && dismissed[key]) el.style.display = 'none';
+    }
+    updateShowHintsButtons(dismissed);
+  });
+
+  document.querySelectorAll('.hint-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.hint;
+      const el = hintElements[key] || btn.closest('.hint-banner');
+      if (el) el.style.display = 'none';
+      chrome.storage.local.get(['dismissedHints'], (data) => {
+        const dismissed = data.dismissedHints || {};
+        dismissed[key] = true;
+        chrome.storage.local.set({ dismissedHints: dismissed });
+        updateShowHintsButtons(dismissed);
+      });
+    });
+  });
+
+  // Обобщённый восстановитель группы ключей
+  function restoreHintGroup(keys, btnToHide) {
+    for (const k of keys) {
+      if (hintElements[k]) hintElements[k].style.display = '';
+    }
+    chrome.storage.local.get(['dismissedHints'], (data) => {
+      const dismissed = data.dismissedHints || {};
+      for (const k of keys) delete dismissed[k];
+      chrome.storage.local.set({ dismissedHints: dismissed }, () => {
+        updateShowHintsButtons(dismissed);
+      });
+    });
+    if (btnToHide) btnToHide.classList.add('hidden');
+  }
+
+  btnShowHints.addEventListener('click', () => {
+    restoreHintGroup(COMPLAINT_HINT_KEYS, btnShowHints);
+  });
+
+  if (btnShowSettingsHints) {
+    btnShowSettingsHints.addEventListener('click', () => {
+      restoreHintGroup(SETTINGS_HINT_KEYS, btnShowSettingsHints);
+    });
+  }
+
+  const complaintSkuWarning = document.getElementById('complaintSkuWarning');
+  const complaintMode = document.getElementById('complaintMode');
+  const complaintType = document.getElementById('complaintType');
+  const btnComplaintStart = document.getElementById('btnComplaintStart');
+  const btnComplaintPause = document.getElementById('btnComplaintPause');
+  const btnComplaintStop = document.getElementById('btnComplaintStop');
+  const complaintStatus = document.getElementById('complaintStatus');
+  const complaintStatusIcon = document.getElementById('complaintStatusIcon');
+  const complaintStatusText = document.getElementById('complaintStatusText');
+  const complaintHint = document.getElementById('complaintHint');
+  const complaintProgressWrap = document.getElementById('complaintProgressWrap');
+  const complaintProgressCurrent = document.getElementById('complaintProgressCurrent');
+  const complaintProgressTotal = document.getElementById('complaintProgressTotal');
+  const complaintProgressPercent = document.getElementById('complaintProgressPercent');
+  const complaintProgressFill = document.getElementById('complaintProgressFill');
+  const complaintQueue = document.getElementById('complaintQueue');
+  const complaintLogContainer = document.getElementById('complaintLogContainer');
+  const complaintLogCount = document.getElementById('complaintLogCount');
+  const complaintFileDrop = document.getElementById('complaintFileDrop');
+  const complaintFileInput = document.getElementById('complaintFileInput');
+  const complaintFileList = document.getElementById('complaintFileList');
+  const btnSendToComplaints = document.getElementById('btnSendToComplaints');
+
+  // confirmGate removed — bot is fully autonomous
+
+  let complaintLogEntries = 0;
+  let complaintIsPaused = false;
+
+  function getSingleSkuValue(value) {
+    const skus = parseSkus(String(value || ''));
+    return skus.length === 1 ? skus[0] : null;
+  }
+
+  function getUniqueSourceSkus(results) {
+    const out = new Set();
+    for (const r of (results || [])) {
+      const sku = String(r?.sku || '').trim();
+      if (/^\d{3,}$/.test(sku)) out.add(sku);
+    }
+    return [...out];
+  }
+
+  function applyParentSkuOverride(parentMap, skus, parentSku) {
+    if (!parentSku) return 0;
+    let count = 0;
+    for (const sku of skus) {
+      const comp = String(sku || '').trim();
+      if (!comp) continue;
+      parentMap[comp] = [parentSku];
+      count++;
+    }
+    return count;
+  }
+
+  function setComplaintParentSku(parentSku) {
+    if (!complaintParentSkuInput) return;
+    complaintParentSkuInput.value = parentSku || '';
+    complaintParentSkuInput.dispatchEvent(new Event('change'));
+  }
+
+  function closeParentSkuModal(value) {
+    if (parentSkuModal) parentSkuModal.classList.add('hidden');
+    if (parentSkuModalResolve) {
+      const resolve = parentSkuModalResolve;
+      parentSkuModalResolve = null;
+      resolve(value);
+    }
+  }
+
+  function submitParentSkuModal() {
+    const parentSku = getSingleSkuValue(parentSkuModalInput?.value || '');
+    if (!parentSku) {
+      if (parentSkuModalError) {
+        parentSkuModalError.textContent = 'Укажите ровно один SKU, минимум 3 цифры.';
+        parentSkuModalError.classList.remove('hidden');
+      }
+      return;
+    }
+    closeParentSkuModal(parentSku);
+  }
+
+  function askParentSkuForSingleSource(defaultSku) {
+    if (!parentSkuModal || !parentSkuModalInput) {
+      const answer = prompt('Ваш родительский SKU для этой сборки:', defaultSku || '');
+      if (answer === null) return Promise.resolve(null);
+      const parentSku = getSingleSkuValue(answer);
+      if (!parentSku) {
+        alert('Укажите ровно один SKU, минимум 3 цифры.');
+        return Promise.resolve(null);
+      }
+      return Promise.resolve(parentSku);
+    }
+    return new Promise(resolve => {
+      parentSkuModalResolve = resolve;
+      parentSkuModalInput.value = defaultSku || '';
+      if (parentSkuModalError) parentSkuModalError.classList.add('hidden');
+      parentSkuModal.classList.remove('hidden');
+      setTimeout(() => {
+        parentSkuModalInput.focus();
+        parentSkuModalInput.select();
+      }, 0);
+    });
+  }
+
+  if (parentSkuModalApply) parentSkuModalApply.addEventListener('click', submitParentSkuModal);
+  if (parentSkuModalCancel) parentSkuModalCancel.addEventListener('click', () => closeParentSkuModal(null));
+  if (parentSkuModalClose) parentSkuModalClose.addEventListener('click', () => closeParentSkuModal(null));
+  if (parentSkuModalInput) {
+    parentSkuModalInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitParentSkuModal();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeParentSkuModal(null);
+      }
+    });
+  }
+  if (btnCopyComplaintParentSku) {
+    btnCopyComplaintParentSku.addEventListener('click', () => {
+      const parentSku = getSingleSkuValue(complaintParentSkuInput?.value || '');
+      if (!parentSku) {
+        flashBtn(btnCopyComplaintParentSku, '—');
+        return;
+      }
+      navigator.clipboard.writeText(parentSku);
+      flashBtn(btnCopyComplaintParentSku, '✓');
+    });
+  }
+
+  // Предупреждение по количеству SKU в жалобах + сброс ошибки запуска
+  complaintSkuInput.addEventListener('input', () => {
+    const errEl = document.getElementById('complaintStartError');
+    if (errEl) errEl.classList.add('hidden');
+    const skus = parseSkus(complaintSkuInput.value);
+    complaintSkuWarning.classList.add('hidden');
+    if (skus.length > 50) {
+      complaintSkuWarning.textContent = `⚠ ${skus.length} жалоб — это займёт ~${Math.round(skus.length * 45 / 60)} мин. Антибот-паузы будут активны.`;
+      complaintSkuWarning.classList.remove('hidden');
+    } else if (skus.length > 20) {
+      complaintSkuWarning.textContent = `⚠ ${skus.length} жалоб — рекомендуем тестовый прогон сначала.`;
+      complaintSkuWarning.classList.remove('hidden');
+    }
+  });
+
+  function addComplaintLog(text) {
+    complaintLogEntries++;
+    complaintLogCount.textContent = complaintLogEntries;
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    if (text.includes('Ошибка') || text.includes('ошибка') || text.includes('failed') || text.includes('⛔')) line.classList.add('error');
+    else if (text.includes('отправлен') || text.includes('✓') || text.includes('✅') || text.includes('done') || text.includes('завершено')) line.classList.add('success');
+    line.textContent = text;
+    complaintLogContainer.appendChild(line);
+    // Прокрутка внутри лог-контейнера
+    complaintLogContainer.scrollTop = complaintLogContainer.scrollHeight;
+    // Прокрутка всего popup к лог-секции
+    const logSection = document.getElementById('complaintLogSection');
+    if (logSection) logSection.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    saveComplaintSession();
+  }
+
+  function updateComplaintProgress(current, total) {
+    complaintProgressCurrent.textContent = current;
+    complaintProgressTotal.textContent = total;
+    const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+    complaintProgressPercent.textContent = pct + '%';
+    complaintProgressFill.style.width = pct + '%';
+  }
+
+  function renderComplaintQueue(queue) {
+    complaintQueue.classList.remove('hidden');
+    complaintQueue.innerHTML = '';
+    for (const item of queue) {
+      const el = document.createElement('div');
+      el.className = 'queue-item queue-' + item.status;
+      const icon = item.status === 'done' ? '✓'
+        : item.status === 'failed' ? '✗'
+        : item.status === 'escalated' ? '🛎'
+        : item.status === 'no_violation' ? '○'
+        : item.status === 'skipped' ? '—'
+        : item.status === 'pending' ? '○' : '●';
+      el.innerHTML = `<span class="queue-icon">${icon}</span><span class="queue-sku">${esc(item.sku)}</span>`;
+      if (item.error) el.innerHTML += `<span class="queue-error">${esc(item.error)}</span>`;
+      complaintQueue.appendChild(el);
+    }
+  }
+
+  function setComplaintUiRunning() {
+    btnComplaintStart.disabled = true;
+    btnComplaintPause.disabled = false;
+    btnComplaintStop.disabled = false;
+    complaintSkuInput.disabled = true;
+    if (complaintParentSkuInput) complaintParentSkuInput.disabled = true;
+    if (btnCopyComplaintParentSku) btnCopyComplaintParentSku.disabled = true;
+    complaintMode.disabled = true;
+    complaintType.disabled = true;
+    complaintProgressWrap.classList.remove('hidden');
+    complaintStatus.classList.remove('hidden');
+    // v5.9.23: меняем текст статуса с initial «Ожидание» на «Запуск…» —
+    // первый supportProgress перепишет на «Обработка X/Y», но до этого
+    // юзер видит признак активности (раньше казалось что зависло).
+    complaintStatusIcon.textContent = '🚀';
+    complaintStatusText.textContent = 'Запуск, подготовка чата…';
+  }
+
+  function setComplaintUiStopped() {
+    complaintIsPaused = false;
+    btnComplaintStart.disabled = false;
+    btnComplaintPause.disabled = true;
+    btnComplaintPause.textContent = '⏸';
+    btnComplaintStop.disabled = true;
+    complaintSkuInput.disabled = false;
+    if (complaintParentSkuInput) complaintParentSkuInput.disabled = false;
+    if (btnCopyComplaintParentSku) btnCopyComplaintParentSku.disabled = false;
+    complaintMode.disabled = false;
+    complaintType.disabled = false;
+    complaintStatusIcon.textContent = '⏹';
+    complaintStatusText.textContent = 'Остановлено';
+    complaintHint.classList.add('hidden');
+    // confirmGate removed
+  }
+
+  // Кнопка «В жалобы» — собирает SKU конкурентов из результатов и отправляет в таб Жалобы.
+  // Сохраняет parent→competitor карту, чтобы бот мог подобрать файлы для SKU-родителя.
+  btnSendToComplaints.addEventListener('click', async () => {
+    if (!isProLicense) {
+      addLog('⛔ Жалобы доступны в PRO-версии.');
+      return;
+    }
+    const skus = new Set();
+    const parentMap = {}; // {competitorSku: [parentSku, ...]}
+    let skippedOzon = 0;
+    const skippedSellers = new Set();
+    for (const r of allResults) {
+      if (r.error || !r.sellers) continue;
+      const parentSku = String(r.sku || '').trim();
+      for (const s of r.sellers) {
+        if (!s.competitorSku) continue;
+        // Защита от жалоб на продавцов из blacklist (Ozon Беларусь и т.д.)
+        // В результатах сканирования имя продавца лежит в поле `name`
+        const sellerName = s.name || s.sellerName || '';
+        if (isBlacklistedComplaintSeller(sellerName)) {
+          skippedOzon++;
+          if (sellerName) skippedSellers.add(sellerName);
+          continue;
+        }
+        skus.add(s.competitorSku);
+        if (parentSku) {
+          if (!parentMap[s.competitorSku]) parentMap[s.competitorSku] = [];
+          if (!parentMap[s.competitorSku].includes(parentSku)) parentMap[s.competitorSku].push(parentSku);
+        }
+      }
+    }
+    if (skippedOzon > 0) {
+      const sellersHint = [...skippedSellers].slice(0, 3).join(', ');
+      const reason = ozonBlacklistDisabled
+        ? 'из вашего списка исключений в Настройках'
+        : 'Ozon-магазины и ваши исключения из Настроек';
+      addLog(`⚠ Пропущено ${skippedOzon} SKU (${sellersHint}${skippedSellers.size > 3 ? '…' : ''}) — ${reason}`);
+    }
+    if (skus.size === 0) {
+      addLog('Нет SKU конкурентов для отправки в жалобы');
+      return;
+    }
+    const sourceSkus = getUniqueSourceSkus(allResults);
+    let selectedParentSku = '';
+    if (sourceSkus.length === 1) {
+      selectedParentSku = await askParentSkuForSingleSource(sourceSkus[0]);
+      if (selectedParentSku === null) {
+        addLog('Перенос в Жалобы отменён');
+        return;
+      }
+      applyParentSkuOverride(parentMap, skus, selectedParentSku);
+    }
+    // Мержим parent-карту со storage (может быть от предыдущих сессий)
+    try {
+      const prev = await loadParentMap();
+      for (const comp of Object.keys(parentMap)) {
+        const merged = new Set([...(prev[comp] || []), ...parentMap[comp]]);
+        prev[comp] = [...merged];
+      }
+      await saveParentMap(prev);
+    } catch (_) {}
+    // v5.9.36: мержим с существующим списком (а не заменяем), чтобы можно было
+    // собирать пакет из нескольких сборок с разными parent SKU
+    const existing = parseSkus(complaintSkuInput.value);
+    const merged = new Set([...existing, ...skus]);
+    complaintSkuInput.value = [...merged].join('\n');
+    // Parent SKU поле: устанавливаем только если пустое (каждый пакет привязан через parentMap)
+    if (selectedParentSku && !getSingleSkuValue(complaintParentSkuInput?.value || '')) {
+      setComplaintParentSku(selectedParentSku);
+    }
+    // Триггерим предупреждение и сохранение
+    complaintSkuInput.dispatchEvent(new Event('input'));
+    complaintSkuInput.dispatchEvent(new Event('change'));
+    // Переключаемся на таб Жалобы
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelector('[data-tab="complaints"]').classList.add('active');
+    document.getElementById('tabComplaints').classList.add('active');
+    addLog(`${skus.size} SKU конкурентов отправлено в Жалобы`);
+    if (selectedParentSku) addLog(`Родительский SKU ${selectedParentSku} привязан к ${skus.size} SKU`);
+  });
+
+  // === Импорт CSV из истории сканирования ===
+  const btnImportCsv = document.getElementById('btnImportCsv');
+  const importCsvInput = document.getElementById('importCsvInput');
+  const importCsvHint = document.getElementById('importCsvHint');
+
+  btnImportCsv.addEventListener('click', () => { importCsvInput.click(); });
+  importCsvInput.addEventListener('change', () => {
+    const file = importCsvInput.files[0];
+    if (!file) return;
+    importCsvInput.value = '';
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result;
+      // CSV формат: "Мой SKU";"Название";"SKU конкурента";"ID продавца";"Продавец";"Цена";"Ссылка"
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      const skus = new Set();
+      for (let i = 1; i < lines.length; i++) { // пропуск заголовка
+        const cols = lines[i].split(';').map(c => c.replace(/^"|"$/g, '').trim());
+        const competitorSku = cols[2] || '';
+        if (/^\d{3,}$/.test(competitorSku)) skus.add(competitorSku);
+      }
+      if (skus.size === 0) {
+        importCsvHint.textContent = 'SKU не найдены';
+        importCsvHint.style.color = '#d32f2f';
+        importCsvHint.classList.remove('hidden');
+        setTimeout(() => importCsvHint.classList.add('hidden'), 3000);
+        return;
+      }
+      // Добавляем к существующим
+      const existing = parseSkus(complaintSkuInput.value);
+      const merged = new Set([...existing, ...skus]);
+      complaintSkuInput.value = [...merged].join('\n');
+      complaintSkuInput.dispatchEvent(new Event('input'));
+      importCsvHint.textContent = `+${skus.size} SKU`;
+      importCsvHint.style.color = '#2e7d32';
+      importCsvHint.classList.remove('hidden');
+      setTimeout(() => importCsvHint.classList.add('hidden'), 3000);
+      addComplaintLog(`Импортировано ${skus.size} SKU конкурентов из ${file.name}`);
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+
+  // Элемент для ошибки "нет seller.ozon.ru"
+  let complaintErrorEl = document.getElementById('complaintStartError');
+  if (!complaintErrorEl) {
+    complaintErrorEl = document.createElement('div');
+    complaintErrorEl.id = 'complaintStartError';
+    complaintErrorEl.className = 'complaint-start-error hidden';
+    btnComplaintStart.parentNode.insertBefore(complaintErrorEl, btnComplaintStart.nextSibling);
+  }
+  function showComplaintStartError(msg) {
+    complaintErrorEl.innerHTML = msg;
+    complaintErrorEl.classList.remove('hidden');
+  }
+  function hideComplaintStartError() {
+    complaintErrorEl.classList.add('hidden');
+  }
+
+  btnComplaintStart.addEventListener('click', async () => {
+    hideComplaintStartError();
+    const skus = parseSkus(complaintSkuInput.value);
+    if (skus.length === 0) { addComplaintLog('Нет валидных артикулов'); return; }
+    const manualParentRaw = String(complaintParentSkuInput?.value || '').trim();
+    const manualParentSku = manualParentRaw ? getSingleSkuValue(manualParentRaw) : '';
+    if (manualParentRaw && !manualParentSku) {
+      addComplaintLog('⛔ Родительский SKU должен быть одним артикулом, минимум 3 цифры.');
+      return;
+    }
+
+    if (!isProLicense) {
+      addComplaintLog('⛔ Жалобы доступны в PRO-версии. Введите код активации в Настройках.');
+      return;
+    }
+
+    // Проверяем предыдущий прогресс — если есть пересечение с текущими SKU, спрашиваем
+    let resetProgress = false;
+    try {
+      const progressResp = await new Promise(resolve =>
+        chrome.runtime.sendMessage({ action: 'supportGetProgress' }, resolve)
+      );
+      const prog = progressResp?.progress;
+      if (prog && prog.processedSkus && prog.processedSkus.length > 0) {
+        const processedSet = new Set(prog.processedSkus.map(p => p.sku));
+        const overlap = skus.filter(s => processedSet.has(s));
+        if (overlap.length > 0) {
+          const msg = `Найдено ${overlap.length} SKU из ${skus.length}, которые уже обрабатывались ранее.\n\n` +
+            `ОК — пропустить их (продолжить с неотработанных)\n` +
+            `Отмена — начать заново (все SKU будут обработаны)`;
+          resetProgress = !confirm(msg);
+        }
+      }
+    } catch (_) {}
+
+    // Проверяем, открыт ли seller.ozon.ru
+    const sellerTabs = await new Promise(resolve =>
+      chrome.tabs.query({ url: 'https://seller.ozon.ru/*' }, resolve)
+    );
+    if (sellerTabs.length === 0) {
+      showComplaintStartError(
+        '⚠ Нет открытой вкладки seller.ozon.ru<br>' +
+        'Откройте <a href="https://seller.ozon.ru/app/messenger/?group=support_v2" target="_blank" class="link-ozon">seller.ozon.ru → Поддержка</a> ' +
+        'в браузере, затем повторите запуск.'
+      );
+      return;
+    }
+
+    // Очистка
+    complaintLogContainer.innerHTML = '';
+    complaintLogEntries = 0;
+    complaintLogCount.textContent = '0';
+    complaintQueue.innerHTML = '';
+    updateComplaintProgress(0, skus.length);
+    setComplaintUiRunning();
+    if (skus.length > 100) {
+      addComplaintLog(`⚠ ${skus.length} жалоб — большой пакет. Старт может занять больше времени, антибот-паузы будут активны.`);
+    }
+
+    // Карта конкурент→родитель (для выбора per-SKU файлов)
+    const parentMap = await loadParentMap();
+    if (manualParentSku) {
+      const linkedCount = applyParentSkuOverride(parentMap, skus, manualParentSku);
+      await saveParentMap(parentMap);
+      addComplaintLog(`Родительский SKU ${manualParentSku} привязан к ${linkedCount} SKU`);
+    }
+    const activeParentSkus = getActiveParentSkus(skus, parentMap);
+    // Файлы передаём в background только как lightweight-метаданные.
+    // Base64 подтягивается лениво в момент прикрепления, иначе большие пакеты
+    // упираются в лимит сериализации chrome.runtime.sendMessage.
+    const filesData = collectComplaintFilesForSending();
+    const skuFilesData = collectSkuFilesForSending(activeParentSkus);
+    // Настройки лимитов
+    const limits = await loadComplaintLimits();
+    // v5.9.20: режим работы с доказательствами + список файлов с SKU
+    const { evidenceMode, fileSkus } = collectFileFirstForSending(activeParentSkus);
+
+    const supportStartMsg = {
+      action: 'supportStart',
+      skus,
+      mode: complaintMode.value,
+      complaintType: complaintType.value,
+      files: filesData,
+      skuFiles: skuFilesData,
+      evidenceMode,
+      fileSkus,
+      parentMap,
+      limits,
+      resetProgress
+    };
+
+    if (getApproxMessageSize(supportStartMsg) > 5 * 1024 * 1024) {
+      addComplaintLog('Ошибка: стартовый пакет слишком большой. Уменьшите количество SKU или очистите лишние доказательства в Настройках.');
+      setComplaintUiStopped();
+      return;
+    }
+
+    try {
+      chrome.runtime.sendMessage(supportStartMsg, (resp) => {
+        if (chrome.runtime.lastError) {
+          addComplaintLog('Ошибка: ' + chrome.runtime.lastError.message);
+          setComplaintUiStopped();
+          return;
+        }
+        if (!resp) {
+          addComplaintLog('Ошибка: background не ответил на запуск жалоб');
+          setComplaintUiStopped();
+          return;
+        }
+        if (resp.status === 'license_required') {
+          addComplaintLog('⛔ ' + resp.error);
+          setComplaintUiStopped();
+        } else if (resp.status === 'all_done') {
+          addComplaintLog('ℹ ' + resp.error);
+          showComplaintStartError('ℹ️ ' + resp.error);
+          setComplaintUiStopped();
+        } else if (resp.status === 'error') {
+          addComplaintLog('Ошибка: ' + resp.error);
+          // Pre-flight ошибки (multiple_tabs, stale_tab, no_tab) — выводим заметным блоком
+          if (resp.code === 'multiple_tabs' || resp.code === 'stale_tab' || resp.code === 'no_tab') {
+            showComplaintStartError('⚠️ ' + resp.error);
+          }
+          setComplaintUiStopped();
+        }
+      });
+    } catch (e) {
+      addComplaintLog('Ошибка запуска: не удалось передать задачу в background (' + (e.message || e) + ')');
+      setComplaintUiStopped();
+    }
+  });
+
+  btnComplaintPause.addEventListener('click', () => {
+    if (complaintIsPaused) {
+      chrome.runtime.sendMessage({ action: 'supportResume' });
+      complaintIsPaused = false;
+      btnComplaintPause.textContent = '⏸';
+      complaintStatusIcon.textContent = '▶';
+      complaintStatusText.textContent = 'Выполнение...';
+    } else {
+      chrome.runtime.sendMessage({ action: 'supportPause' });
+      complaintIsPaused = true;
+      btnComplaintPause.textContent = '▶';
+      complaintStatusIcon.textContent = '⏸';
+      complaintStatusText.textContent = 'На паузе';
+    }
+  });
+
+  btnComplaintStop.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ action: 'supportStop' });
+    setComplaintUiStopped();
+    // confirmGate removed
+  });
+
+  // Файлы для жалоб
+  complaintFileDrop.addEventListener('click', () => complaintFileInput.click());
+  complaintFileDrop.addEventListener('dragover', (e) => { e.preventDefault(); complaintFileDrop.classList.add('dragover'); });
+  complaintFileDrop.addEventListener('dragleave', () => complaintFileDrop.classList.remove('dragover'));
+  complaintFileDrop.addEventListener('drop', (e) => {
+    e.preventDefault();
+    complaintFileDrop.classList.remove('dragover');
+    handleComplaintFiles(e.dataTransfer.files);
+  });
+  complaintFileInput.addEventListener('change', () => {
+    handleComplaintFiles(complaintFileInput.files);
+    complaintFileInput.value = '';
+  });
+
+  // complaintFilesMeta — [{id, name, type, size, storage}] — метаданные файлов (общий пул доказательств).
+  // storage: 'local' — base64 лежит в chrome.storage.local.complaintFilesBlobs[id];
+  //          'idb'   — blob лежит в IndexedDB по id. Разделение по размеру (LARGE_FILE_THRESHOLD).
+  let complaintFilesMeta = [];
+  // complaintFilesBlobsCache — кэш base64 мелких файлов для быстрой передачи в background
+  let complaintFilesBlobsCache = {}; // {id: base64}
+
+  function genFileId() { return 'f_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+
+  async function handleComplaintFiles(fileList) {
+    for (const file of fileList) {
+      if (file.size > MAX_FILE_SIZE) {
+        addComplaintLog(`✗ ${file.name}: слишком большой (${ozgFormatSize(file.size)} > ${ozgFormatSize(MAX_FILE_SIZE)})`);
+        continue;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        addComplaintLog(`⚠ ${file.name} — ${ozgFormatSize(file.size)} (сохраняется в IndexedDB, не в обычном хранилище)`);
+      }
+      const id = genFileId();
+      const meta = { id, name: file.name, type: file.type || 'application/octet-stream', size: file.size };
+      try {
+        if (file.size >= LARGE_FILE_THRESHOLD) {
+          await ozgPutBlob(id, file, { name: meta.name, type: meta.type, size: meta.size });
+          meta.storage = 'idb';
+        } else {
+          const base64 = await ozgBlobToBase64(file);
+          complaintFilesBlobsCache[id] = base64;
+          meta.storage = 'local';
+        }
+        complaintFilesMeta.push(meta);
+      } catch (e) {
+        addComplaintLog(`✗ ${file.name}: ошибка сохранения — ${e.message || e}`);
+      }
+    }
+    await persistComplaintFiles();
+    renderComplaintFiles();
+  }
+
+  async function persistComplaintFiles() {
+    // Метаданные и мелкие blobs — в chrome.storage.local.
+    // Крупные blobs остаются в IndexedDB (по id).
+    const blobs = {};
+    for (const m of complaintFilesMeta) {
+      if (m.storage === 'local' && complaintFilesBlobsCache[m.id]) {
+        blobs[m.id] = complaintFilesBlobsCache[m.id];
+      }
+    }
+    await new Promise((resolve) => {
+      chrome.storage.local.set({
+        complaintFilesMeta,
+        complaintFilesBlobs: blobs
+      }, () => {
+        if (chrome.runtime.lastError) {
+          // QUOTA_EXCEEDED → миграция мелких файлов в IDB
+          console.warn('[OZG] persistComplaintFiles error:', chrome.runtime.lastError.message);
+          addComplaintLog('⚠ Хранилище переполнено — переношу файлы в IndexedDB...');
+          migrateSmallFilesToIdb().then(resolve);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  // Перенос всех local blobs из chrome.storage.local в IndexedDB (когда квота исчерпана)
+  async function migrateSmallFilesToIdb() {
+    for (const m of complaintFilesMeta) {
+      if (m.storage !== 'local') continue;
+      const b64 = complaintFilesBlobsCache[m.id];
+      if (!b64) continue;
+      try {
+        const resp = await fetch('data:' + (m.type || 'application/octet-stream') + ';base64,' + b64);
+        const blob = await resp.blob();
+        await ozgPutBlob(m.id, blob, { name: m.name, type: m.type, size: m.size });
+        m.storage = 'idb';
+        delete complaintFilesBlobsCache[m.id];
+      } catch (e) {
+        console.warn('[OZG] migrate failed', m.name, e);
+      }
+    }
+    await new Promise(r => chrome.storage.local.set({
+      complaintFilesMeta, complaintFilesBlobs: {}
+    }, r));
+  }
+
+  function renderComplaintFiles() {
+    if (complaintFilesMeta.length === 0) {
+      complaintFileList.classList.add('hidden');
+      return;
+    }
+    complaintFileList.classList.remove('hidden');
+    complaintFileList.innerHTML = complaintFilesMeta.map((f, i) => {
+      const sizeBadge = f.size ? `<span class="file-size">${ozgFormatSize(f.size)}</span>` : '';
+      const storageBadge = f.storage === 'idb' ? '<span class="file-storage" title="Крупный файл в IndexedDB">IDB</span>' : '';
+      return `<div class="file-item"><span class="file-name">${esc(f.name)}</span>${sizeBadge}${storageBadge}<button class="btn-close" data-idx="${i}" title="Удалить">&times;</button></div>`;
+    }).join('');
+    complaintFileList.querySelectorAll('.btn-close').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.idx, 10);
+        const m = complaintFilesMeta[idx];
+        if (!m) return;
+        if (m.storage === 'idb') { try { await ozgDeleteBlob(m.id); } catch (_) {} }
+        delete complaintFilesBlobsCache[m.id];
+        complaintFilesMeta.splice(idx, 1);
+        await persistComplaintFiles();
+        renderComplaintFiles();
+      });
+    });
+  }
+
+  // Восстановить файлы при открытии popup
+  chrome.storage.local.get(['complaintFilesMeta', 'complaintFilesBlobs', 'complaintFilesData'], async (data) => {
+    // Миграция старого формата complaintFilesData → complaintFilesMeta (одноразовая)
+    if ((!data.complaintFilesMeta || data.complaintFilesMeta.length === 0)
+        && Array.isArray(data.complaintFilesData) && data.complaintFilesData.length > 0) {
+      const migrated = [];
+      const blobs = {};
+      for (const f of data.complaintFilesData) {
+        const id = genFileId();
+        migrated.push({ id, name: f.name, type: f.type, size: null, storage: 'local' });
+        blobs[id] = f.base64;
+        complaintFilesBlobsCache[id] = f.base64;
+      }
+      complaintFilesMeta = migrated;
+      await new Promise(res => chrome.storage.local.set({
+        complaintFilesMeta: migrated,
+        complaintFilesBlobs: blobs
+      }, res));
+      chrome.storage.local.remove(['complaintFilesData']);
+    } else {
+      complaintFilesMeta = data.complaintFilesMeta || [];
+      complaintFilesBlobsCache = data.complaintFilesBlobs || {};
+    }
+    renderComplaintFiles();
+    warnMissingIdbFiles(complaintFilesMeta, 'Общие доказательства');
+  });
+
+  function makeFileMetaForMessage(m, source) {
+    return {
+      id: m.id,
+      name: m.name,
+      type: m.type || 'application/octet-stream',
+      size: m.size || 0,
+      storage: m.storage === 'idb' ? 'idb' : 'local',
+      source
+    };
+  }
+
+  function getApproxMessageSize(obj) {
+    try { return JSON.stringify(obj).length; } catch (_) { return Infinity; }
+  }
+
+  async function warnMissingIdbFiles(files, label) {
+    const missing = [];
+    for (const m of (files || [])) {
+      if (!m || m.storage !== 'idb' || !m.id) continue;
+      try {
+        const rec = await ozgGetBlob(m.id);
+        if (!rec || !rec.blob) missing.push(m.name || m.id);
+      } catch (_) {
+        missing.push(m.name || m.id);
+      }
+    }
+    if (missing.length === 0) return;
+    const names = missing.slice(0, 3).join(', ');
+    const suffix = missing.length > 3 ? ` и ещё ${missing.length - 3}` : '';
+    addComplaintLog(`⚠ ${label}: файл числится в списке, но тело файла недоступно (${names}${suffix}). Загрузите доказательство заново. Такое бывает при установке новой распакованной копии расширения с другим ID.`);
+  }
+
+  function getActiveParentSkus(skus, parentMap) {
+    const out = new Set();
+    for (const sku of skus) {
+      const ownSku = String(sku || '').trim();
+      if (ownSku) out.add(ownSku);
+      const parents = parentMap && parentMap[sku];
+      if (!Array.isArray(parents)) continue;
+      for (const p of parents) {
+        const val = String(p || '').trim();
+        if (val) out.add(val);
+      }
+    }
+    return out;
+  }
+
+  // Собрать общий пул для background без base64.
+  function collectComplaintFilesForSending() {
+    return complaintFilesMeta.map(m => makeFileMetaForMessage(m, 'common'));
+  }
+
+  async function readComplaintFilePayload(source, id) {
+    let meta = null;
+    let b64 = null;
+
+    if (source === 'common') {
+      meta = complaintFilesMeta.find(f => f.id === id);
+      if (!meta) throw new Error('Файл не найден в общем пуле');
+      if (meta.storage === 'local') b64 = complaintFilesBlobsCache[id] || null;
+    } else if (source === 'sku') {
+      for (const sku of Object.keys(skuFilesMap)) {
+        meta = (skuFilesMap[sku] || []).find(f => f.id === id);
+        if (meta) break;
+      }
+      if (!meta) throw new Error('Файл не найден в per-SKU доказательствах');
+      if (meta.storage === 'local') b64 = skuFilesBlobsCache[id] || null;
+    } else if (source === 'file_first') {
+      meta = fileSkusList.find(f => f.id === id);
+      if (!meta) throw new Error('Файл не найден в режиме файл → SKU');
+      if (meta.storage === 'local') b64 = fileSkusBlobsCache[id] || null;
+    } else {
+      throw new Error('Неизвестный источник файла');
+    }
+
+    if (meta.storage === 'idb') {
+      const rec = await ozgGetBlob(id);
+      if (rec && rec.blob) b64 = await ozgBlobToBase64(rec.blob);
+    }
+    if (!b64) throw new Error('Не удалось прочитать файл');
+    return { name: meta.name, type: meta.type || 'application/octet-stream', base64: b64 };
+  }
+
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (!msg || msg.action !== 'getComplaintFilePayload') return false;
+    readComplaintFilePayload(msg.source, msg.id)
+      .then(file => sendResponse({ ok: true, file }))
+      .catch(e => sendResponse({ ok: false, error: e.message || String(e) }));
+    return true;
+  });
+
+  // Лог toggle жалоб
+  const complaintLogSection = document.getElementById('complaintLogSection');
+  const complaintLogToggle = document.getElementById('complaintLogToggle');
+  complaintLogToggle.addEventListener('click', () => {
+    complaintLogSection.classList.toggle('collapsed');
+  });
+
+  // === Сохранение/восстановление сессии жалоб ===
+  function saveComplaintSession() {
+    const sessionData = {
+      skus: complaintSkuInput.value,
+      parentSku: complaintParentSkuInput ? complaintParentSkuInput.value : '',
+      mode: complaintMode.value,
+      complaintType: complaintType.value,
+      logs: Array.from(complaintLogContainer.children).map(el => el.textContent),
+      fileNames: complaintFilesMeta.map(f => f.name)
+    };
+    chrome.storage.local.set({ lastComplaintSession: sessionData });
+  }
+
+  // Автосохранение при изменениях
+  complaintSkuInput.addEventListener('change', saveComplaintSession);
+  if (complaintParentSkuInput) complaintParentSkuInput.addEventListener('change', saveComplaintSession);
+  complaintMode.addEventListener('change', saveComplaintSession);
+  complaintType.addEventListener('change', saveComplaintSession);
+
+  // Восстановление при открытии popup
+  chrome.storage.local.get(['lastComplaintSession'], (data) => {
+    if (!data.lastComplaintSession) return;
+    const s = data.lastComplaintSession;
+    if (s.skus) complaintSkuInput.value = s.skus;
+    if (s.parentSku && complaintParentSkuInput) complaintParentSkuInput.value = s.parentSku;
+    if (s.mode) complaintMode.value = s.mode;
+    // Миграция старых значений (v5.9.15): seller/brand → plagiat_legacy
+    if (s.complaintType) {
+      const migratedType = (s.complaintType === 'seller' || s.complaintType === 'brand')
+        ? 'plagiat_legacy'
+        : s.complaintType;
+      complaintType.value = migratedType;
+    }
+    if (s.logs && s.logs.length > 0) {
+      for (const log of s.logs) addComplaintLog(log);
+    }
+    // Файлы восстанавливаются из отдельного ключа complaintFilesMeta (см. выше)
+    // Триггерим предупреждение
+    complaintSkuInput.dispatchEvent(new Event('input'));
+    // Показываем beta-предупреждение если текущий выбранный тип — BETA
+    updateBetaWarning();
+  });
+
+  // BETA-предупреждение под селектором
+  const betaWarning = document.getElementById('betaWarning');
+  function updateBetaWarning() {
+    if (!betaWarning) return;
+    const isBeta = complaintType.value === 'content_beta' || complaintType.value === 'brand_beta';
+    betaWarning.classList.toggle('hidden', !isBeta);
+  }
+  complaintType.addEventListener('change', updateBetaWarning);
+  // начальная инициализация (если storage пустой)
+  setTimeout(updateBetaWarning, 0);
+
+  // Запрашиваем текущий статус из service worker (и из storage если SW остановлен).
+  // Восстанавливаем логи/очередь/прогресс всегда, не только при isRunning —
+  // popup может быть открыт после того как бот завершил работу или упал,
+  // и пользователю важно видеть что произошло.
+  chrome.runtime.sendMessage({ action: 'supportGetStatus' }, (resp) => {
+    if (chrome.runtime.lastError || !resp) return;
+    const hasData = (resp.queue && resp.queue.length > 0) || (resp.logs && resp.logs.length > 0);
+    if (!hasData) return;
+
+    // UI-состояние
+    if (resp.isRunning) {
+      setComplaintUiRunning();
+      if (resp.limitGateActive) {
+        // v5.9.25: gate лимита новых обращений больше не должен стопорить большие пакеты.
+        // Показываем gate только для BETA-autostop, где нужна ручная проверка пути.
+        if (resp.limitGateReason === 'beta_autostop') {
+          const title = 'BETA: серия ошибок';
+          const details = 'Путь жалобы остановлен после нескольких ошибок подряд. Проверьте чат вручную или нажмите «Продолжить», чтобы попробовать ещё.';
+          showLimitGate(title, details);
+        } else {
+          hideLimitGate();
+          chrome.runtime.sendMessage({ action: 'supportResume' });
+          complaintStatusIcon.textContent = '▶';
+          complaintStatusText.textContent = 'Выполнение...';
+        }
+      } else if (resp.isPaused) {
+        complaintIsPaused = true;
+        btnComplaintPause.textContent = '▶';
+        complaintStatusIcon.textContent = '⏸';
+        complaintStatusText.textContent = 'На паузе';
+      } else {
+        complaintStatusIcon.textContent = '▶';
+        complaintStatusText.textContent = 'Выполнение...';
+      }
+      if (resp.source === 'storage' && !resp.isPaused && !resp.limitGateActive) {
+        chrome.runtime.sendMessage({ action: 'supportRecoverAndContinue' });
+      }
+    } else {
+      // Сессия завершена — показываем итоги
+      complaintStatus.classList.remove('hidden');
+      complaintStatusIcon.textContent = '✓';
+      complaintStatusText.textContent = resp.source === 'storage' ? 'Последняя сессия' : 'Завершено';
+    }
+
+    // Очередь SKU с бейджами статусов (done/failed/pending)
+    if (resp.queue && resp.queue.length > 0) {
+      renderComplaintQueue(resp.queue);
+      updateComplaintProgress(
+        Math.min(resp.currentIndex + 1, resp.queue.length),
+        resp.queue.length
+      );
+    }
+
+    // Логи всей сессии
+    if (resp.logs && resp.logs.length > 0) {
+      complaintLogContainer.innerHTML = '';
+      complaintLogEntries = 0;
+      complaintLogCount.textContent = '0';
+      for (const log of resp.logs) addComplaintLog(log);
+    }
+  });
+
+  // === Per-SKU доказательства, лимиты, проблемные SKU, parent map ===
+
+  // storage keys:
+  //   complaintSkuFiles: { parentSku: [{id, name, type, size, storage}] } — метаданные
+  //   complaintSkuFilesBlobs: { id: base64 } — мелкие файлы (идентично общему пулу)
+  //   complaintParentMap: { competitorSku: [parentSku, ...] } — связь конкурент→родители
+  //   complaintLimits: { maxChatsPerSession, maxConsecutiveEscalations }
+  //   complaintProblems: { escalated: [{sku, error, ts}], failed: [...], noViolation: [...] }
+
+  let skuFilesMap = {};       // parentSku → [meta, ...]
+  let skuFilesBlobsCache = {}; // id → base64 (мелкие)
+  let complaintLimits = { maxChatsPerSession: 10, maxConsecutiveEscalations: 5 };
+  let complaintProblems = { escalated: [], failed: [], noViolation: [] };
+
+  async function loadSkuFiles() {
+    const d = await new Promise(r => chrome.storage.local.get(['complaintSkuFiles', 'complaintSkuFilesBlobs'], r));
+    skuFilesMap = d.complaintSkuFiles || {};
+    skuFilesBlobsCache = d.complaintSkuFilesBlobs || {};
+  }
+  async function persistSkuFiles() {
+    const blobs = {};
+    for (const sku of Object.keys(skuFilesMap)) {
+      for (const m of (skuFilesMap[sku] || [])) {
+        if (m.storage === 'local' && skuFilesBlobsCache[m.id]) blobs[m.id] = skuFilesBlobsCache[m.id];
+      }
+    }
+    await new Promise((resolve) => {
+      chrome.storage.local.set({
+        complaintSkuFiles: skuFilesMap,
+        complaintSkuFilesBlobs: blobs
+      }, () => {
+        if (chrome.runtime.lastError) {
+          console.warn('[OZG] persistSkuFiles error:', chrome.runtime.lastError.message);
+          migrateSkuSmallFilesToIdb().then(resolve);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
+  async function migrateSkuSmallFilesToIdb() {
+    for (const sku of Object.keys(skuFilesMap)) {
+      for (const m of (skuFilesMap[sku] || [])) {
+        if (m.storage !== 'local') continue;
+        const b64 = skuFilesBlobsCache[m.id];
+        if (!b64) continue;
+        try {
+          const resp = await fetch('data:' + (m.type || 'application/octet-stream') + ';base64,' + b64);
+          const blob = await resp.blob();
+          await ozgPutBlob(m.id, blob, { name: m.name, type: m.type, size: m.size });
+          m.storage = 'idb';
+          delete skuFilesBlobsCache[m.id];
+        } catch (_) {}
+      }
+    }
+    await new Promise(r => chrome.storage.local.set({
+      complaintSkuFiles: skuFilesMap, complaintSkuFilesBlobs: {}
+    }, r));
+  }
+
+  async function loadComplaintLimits() {
+    const d = await new Promise(r => chrome.storage.local.get(['complaintLimits'], r));
+    if (d.complaintLimits) complaintLimits = Object.assign(complaintLimits, d.complaintLimits);
+    return complaintLimits;
+  }
+
+  async function loadParentMap() {
+    const d = await new Promise(r => chrome.storage.local.get(['complaintParentMap'], r));
+    return d.complaintParentMap || {};
+  }
+  async function saveParentMap(map) {
+    await new Promise(r => chrome.storage.local.set({ complaintParentMap: map }, r));
+  }
+
+  async function loadProblems() {
+    const d = await new Promise(r => chrome.storage.local.get(['complaintProblems'], r));
+    complaintProblems = Object.assign({ escalated: [], failed: [], noViolation: [] }, d.complaintProblems || {});
+  }
+  async function persistProblems() {
+    await new Promise(r => chrome.storage.local.set({ complaintProblems }, r));
+  }
+
+  // Собрать per-SKU файлы для background без base64:
+  // возвращает { parentSku: [{id, name, type, size, storage, source}] }.
+  // В стартовый пакет попадают только parent SKU текущего запуска, чтобы старые
+  // доказательства из storage не раздували supportStart.
+  function collectSkuFilesForSending(activeParentSkus) {
+    const out = {};
+    for (const sku of Object.keys(skuFilesMap)) {
+      if (activeParentSkus && !activeParentSkus.has(String(sku).trim())) continue;
+      const list = skuFilesMap[sku] || [];
+      if (list.length === 0) continue;
+      const arr = list.map(m => makeFileMetaForMessage(m, 'sku'));
+      if (arr.length > 0) out[sku] = arr;
+    }
+    return out;
+  }
+
+  // === v5.9.20: режим «файл → список SKU» ===
+  // storage:
+  //   evidenceMode: 'sku_first' | 'file_first'
+  //   complaintFileSkus: [{id, name, type, size, storage, skus: ['12345', ...]}, ...]
+  //   complaintFileSkusBlobs: { id: base64 } — мелкие файлы
+
+  let evidenceMode = 'sku_first';
+  let fileSkusList = [];
+  let fileSkusBlobsCache = {};
+
+  async function loadFileFirstFiles() {
+    const d = await new Promise(r => chrome.storage.local.get(['evidenceMode', 'complaintFileSkus', 'complaintFileSkusBlobs'], r));
+    evidenceMode = d.evidenceMode === 'file_first' ? 'file_first' : 'sku_first';
+    fileSkusList = Array.isArray(d.complaintFileSkus) ? d.complaintFileSkus : [];
+    fileSkusBlobsCache = d.complaintFileSkusBlobs || {};
+  }
+  async function persistFileFirstFiles() {
+    // ВАЖНО: chrome.storage.local.set делает APPEND/UPDATE по ключам, а НЕ replace всего storage.
+    // То есть complaintSkuFiles, complaintSkuFilesBlobs и другие ключи sku_first режима
+    // ОСТАЮТСЯ нетронутыми. Переключение режима не теряет загруженные файлы — они просто
+    // лежат в параллельных ветках storage. Storage переживает обновления расширения (Chrome
+    // не чистит local storage при update, только при uninstall).
+    const blobs = {};
+    for (const m of fileSkusList) {
+      if (m.storage === 'local' && fileSkusBlobsCache[m.id]) blobs[m.id] = fileSkusBlobsCache[m.id];
+    }
+    await new Promise(r => chrome.storage.local.set({
+      evidenceMode,
+      complaintFileSkus: fileSkusList,
+      complaintFileSkusBlobs: blobs
+    }, r));
+  }
+
+  // Сборка fileSkus для background — метаданные + список SKU из textarea.
+  function collectFileFirstForSending(activeParentSkus) {
+    const arr = [];
+    if (evidenceMode !== 'file_first') return { evidenceMode, fileSkus: [] };
+    for (const m of fileSkusList) {
+      const fileSkus = Array.isArray(m.skus) ? m.skus.map(s => String(s).trim()).filter(Boolean) : [];
+      if (activeParentSkus && !fileSkus.some(s => activeParentSkus.has(s))) continue;
+      arr.push({
+        ...makeFileMetaForMessage(m, 'file_first'),
+        skus: fileSkus
+      });
+    }
+    return { evidenceMode, fileSkus: arr };
+  }
+
+  // UI: настройки лимитов
+  const limitNewChatsInput = document.getElementById('limitNewChats');
+  const limitConsecEscInput = document.getElementById('limitConsecEsc');
+  const btnSaveComplaintLimits = document.getElementById('btnSaveComplaintLimits');
+  const complaintLimitsSavedHint = document.getElementById('complaintLimitsSavedHint');
+  (async () => {
+    await loadComplaintLimits();
+    if (limitNewChatsInput) limitNewChatsInput.value = complaintLimits.maxChatsPerSession;
+    if (limitConsecEscInput) limitConsecEscInput.value = complaintLimits.maxConsecutiveEscalations;
+  })();
+  if (btnSaveComplaintLimits) {
+    btnSaveComplaintLimits.addEventListener('click', async () => {
+      const maxChats = Math.max(1, Math.min(500, parseInt(limitNewChatsInput.value, 10) || 10));
+      const maxConsec = Math.max(0, Math.min(50, parseInt(limitConsecEscInput.value, 10) || 5));
+      complaintLimits = { maxChatsPerSession: maxChats, maxConsecutiveEscalations: maxConsec };
+      limitNewChatsInput.value = maxChats;
+      limitConsecEscInput.value = maxConsec;
+      await new Promise(r => chrome.storage.local.set({ complaintLimits }, r));
+      complaintLimitsSavedHint.classList.remove('hidden');
+      setTimeout(() => complaintLimitsSavedHint.classList.add('hidden'), 2000);
+      flashBtn(btnSaveComplaintLimits, '✓');
+    });
+  }
+
+  // UI: per-SKU файлы
+  const skuFileSkuInput = document.getElementById('skuFileSkuInput');
+  const btnAddSkuFile = document.getElementById('btnAddSkuFile');
+  const skuFileInput = document.getElementById('skuFileInput');
+  const skuFilesList = document.getElementById('skuFilesList');
+
+  let pendingSkuForFiles = null;
+
+  function renderSkuFilesList() {
+    const keys = Object.keys(skuFilesMap);
+    if (keys.length === 0) {
+      skuFilesList.classList.add('hidden');
+      return;
+    }
+    skuFilesList.classList.remove('hidden');
+    skuFilesList.innerHTML = keys.map(sku => {
+      const files = skuFilesMap[sku] || [];
+      const filesHtml = files.map((f, i) => {
+        const sizeBadge = f.size ? `<span class="file-size">${ozgFormatSize(f.size)}</span>` : '';
+        const storageBadge = f.storage === 'idb' ? '<span class="file-storage" title="IndexedDB">IDB</span>' : '';
+        return `<div class="sku-file-bundle-file"><span class="file-name">${esc(f.name)}</span>${sizeBadge}${storageBadge}<button class="btn-close" data-sku="${esc(sku)}" data-idx="${i}" title="Удалить файл">&times;</button></div>`;
+      }).join('');
+      return `<div class="sku-file-bundle">
+        <div class="sku-file-bundle-header">
+          <span class="sku-file-bundle-sku">${esc(sku)}</span>
+          <span style="color:#888;font-size:10px;">${files.length} файл(ов)</span>
+          <div class="sku-file-bundle-actions">
+            <button class="btn btn-small btn-add-files-to-sku" data-sku="${esc(sku)}" title="Добавить ещё файл к этому SKU">＋</button>
+            <button class="btn btn-small btn-danger-sm btn-remove-sku" data-sku="${esc(sku)}" title="Удалить SKU и все его файлы">✕</button>
+          </div>
+        </div>
+        <div class="sku-file-bundle-files">${filesHtml}</div>
+      </div>`;
+    }).join('');
+    // Удаление одного файла
+    skuFilesList.querySelectorAll('.sku-file-bundle-file .btn-close').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const sku = btn.dataset.sku;
+        const idx = parseInt(btn.dataset.idx, 10);
+        const list = skuFilesMap[sku] || [];
+        const m = list[idx];
+        if (!m) return;
+        if (m.storage === 'idb') { try { await ozgDeleteBlob(m.id); } catch (_) {} }
+        delete skuFilesBlobsCache[m.id];
+        list.splice(idx, 1);
+        if (list.length === 0) delete skuFilesMap[sku];
+        await persistSkuFiles();
+        renderSkuFilesList();
+      });
+    });
+    // Удаление всего бандла
+    skuFilesList.querySelectorAll('.btn-remove-sku').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const sku = btn.dataset.sku;
+        if (!confirm(`Удалить все доказательства для SKU ${sku}?`)) return;
+        for (const m of (skuFilesMap[sku] || [])) {
+          if (m.storage === 'idb') { try { await ozgDeleteBlob(m.id); } catch (_) {} }
+          delete skuFilesBlobsCache[m.id];
+        }
+        delete skuFilesMap[sku];
+        await persistSkuFiles();
+        renderSkuFilesList();
+      });
+    });
+    // Добавить файлы к существующему SKU
+    skuFilesList.querySelectorAll('.btn-add-files-to-sku').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pendingSkuForFiles = btn.dataset.sku;
+        skuFileInput.click();
+      });
+    });
+  }
+
+  if (btnAddSkuFile && skuFileSkuInput && skuFileInput) {
+    btnAddSkuFile.addEventListener('click', () => {
+      const sku = (skuFileSkuInput.value || '').trim();
+      if (!/^\d{3,}$/.test(sku)) {
+        alert('Введите числовой SKU (минимум 3 цифры)');
+        return;
+      }
+      pendingSkuForFiles = sku;
+      skuFileInput.click();
+    });
+    skuFileInput.addEventListener('change', async () => {
+      const files = Array.from(skuFileInput.files || []);
+      skuFileInput.value = '';
+      const sku = pendingSkuForFiles;
+      pendingSkuForFiles = null;
+      if (!sku || files.length === 0) return;
+      if (!skuFilesMap[sku]) skuFilesMap[sku] = [];
+      for (const file of files) {
+        if (file.size > MAX_FILE_SIZE) {
+          alert(`${file.name}: слишком большой (${ozgFormatSize(file.size)} > ${ozgFormatSize(MAX_FILE_SIZE)})`);
+          continue;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          console.log(`[OZG] ${file.name} (${ozgFormatSize(file.size)}) → IndexedDB`);
+        }
+        const id = genFileId();
+        const meta = { id, name: file.name, type: file.type || 'application/octet-stream', size: file.size };
+        try {
+          if (file.size >= LARGE_FILE_THRESHOLD) {
+            await ozgPutBlob(id, file, { name: meta.name, type: meta.type, size: meta.size });
+            meta.storage = 'idb';
+          } else {
+            skuFilesBlobsCache[id] = await ozgBlobToBase64(file);
+            meta.storage = 'local';
+          }
+          skuFilesMap[sku].push(meta);
+        } catch (err) {
+          alert(`${file.name}: ошибка сохранения — ${err.message || err}`);
+        }
+      }
+      if (skuFilesMap[sku].length === 0) delete skuFilesMap[sku];
+      await persistSkuFiles();
+      renderSkuFilesList();
+      skuFileSkuInput.value = '';
+    });
+  }
+
+  loadSkuFiles().then(() => {
+    renderSkuFilesList();
+    const allSkuFiles = [];
+    for (const files of Object.values(skuFilesMap)) {
+      if (Array.isArray(files)) allSkuFiles.push(...files);
+    }
+    warnMissingIdbFiles(allSkuFiles, 'Per-SKU доказательства');
+  });
+
+  // === v5.9.20: UI режима «файл → список SKU» ===
+  const evidenceSkuFirstUI = document.getElementById('evidenceSkuFirstUI');
+  const evidenceFileFirstUI = document.getElementById('evidenceFileFirstUI');
+  const btnAddFileFirst = document.getElementById('btnAddFileFirst');
+  const fileFirstInput = document.getElementById('fileFirstInput');
+  const fileFirstList = document.getElementById('fileFirstList');
+  const evidenceModeRadios = document.querySelectorAll('input[name="evidenceMode"]');
+
+  function applyEvidenceModeUI() {
+    if (!evidenceSkuFirstUI || !evidenceFileFirstUI) return;
+    if (evidenceMode === 'file_first') {
+      evidenceSkuFirstUI.classList.add('hidden');
+      evidenceFileFirstUI.classList.remove('hidden');
+    } else {
+      evidenceSkuFirstUI.classList.remove('hidden');
+      evidenceFileFirstUI.classList.add('hidden');
+    }
+    evidenceModeRadios.forEach(r => { r.checked = r.value === evidenceMode; });
+  }
+
+  function renderFileFirstList() {
+    if (!fileFirstList) return;
+    if (fileSkusList.length === 0) {
+      fileFirstList.classList.add('hidden');
+      fileFirstList.innerHTML = '';
+      return;
+    }
+    fileFirstList.classList.remove('hidden');
+    fileFirstList.innerHTML = fileSkusList.map((m, idx) => {
+      const sizeStr = m.size ? ozgFormatSize(m.size) : '';
+      const skusStr = (m.skus || []).join('\n');
+      return `
+        <div class="file-first-bundle" data-idx="${idx}">
+          <div class="file-first-bundle-header">
+            <span class="file-first-name" title="${esc(m.name)}">${esc(m.name)}</span>
+            <span class="file-first-meta">${esc(sizeStr)}</span>
+            <button class="btn-close" data-action="remove-ff" data-idx="${idx}" title="Удалить">✕</button>
+          </div>
+          <label class="file-first-skus-label">SKU к которым применяется этот файл (по одному на строку):</label>
+          <textarea class="file-first-skus" data-idx="${idx}" placeholder="1234567890&#10;9876543210">${esc(skusStr)}</textarea>
+        </div>
+      `;
+    }).join('');
+    fileFirstList.querySelectorAll('button[data-action="remove-ff"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const i = parseInt(btn.dataset.idx, 10);
+        if (isNaN(i) || i < 0 || i >= fileSkusList.length) return;
+        const meta = fileSkusList[i];
+        if (meta.storage === 'idb') {
+          try { await ozgDeleteBlob(meta.id); } catch (_) {}
+        } else if (meta.storage === 'local') {
+          delete fileSkusBlobsCache[meta.id];
+        }
+        fileSkusList.splice(i, 1);
+        await persistFileFirstFiles();
+        renderFileFirstList();
+      });
+    });
+    fileFirstList.querySelectorAll('textarea.file-first-skus').forEach(ta => {
+      ta.addEventListener('input', async () => {
+        const i = parseInt(ta.dataset.idx, 10);
+        if (isNaN(i) || !fileSkusList[i]) return;
+        fileSkusList[i].skus = ta.value.split('\n').map(s => s.trim()).filter(Boolean);
+        await persistFileFirstFiles();
+      });
+    });
+  }
+
+  if (btnAddFileFirst && fileFirstInput) {
+    btnAddFileFirst.addEventListener('click', () => fileFirstInput.click());
+    fileFirstInput.addEventListener('change', async () => {
+      const file = fileFirstInput.files?.[0];
+      fileFirstInput.value = '';
+      if (!file) return;
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`${file.name}: слишком большой (${ozgFormatSize(file.size)} > ${ozgFormatSize(MAX_FILE_SIZE)})`);
+        return;
+      }
+      const id = genFileId();
+      const meta = { id, name: file.name, type: file.type || 'application/octet-stream', size: file.size, skus: [] };
+      try {
+        if (file.size >= LARGE_FILE_THRESHOLD) {
+          await ozgPutBlob(id, file, { name: meta.name, type: meta.type, size: meta.size });
+          meta.storage = 'idb';
+        } else {
+          fileSkusBlobsCache[id] = await ozgBlobToBase64(file);
+          meta.storage = 'local';
+        }
+        fileSkusList.push(meta);
+        await persistFileFirstFiles();
+        renderFileFirstList();
+      } catch (err) {
+        alert(`${file.name}: ошибка сохранения — ${err.message || err}`);
+      }
+    });
+  }
+
+  evidenceModeRadios.forEach(r => {
+    r.addEventListener('change', async () => {
+      if (!r.checked) return;
+      evidenceMode = r.value === 'file_first' ? 'file_first' : 'sku_first';
+      await persistFileFirstFiles();
+      applyEvidenceModeUI();
+    });
+  });
+
+  loadFileFirstFiles().then(() => {
+    applyEvidenceModeUI();
+    renderFileFirstList();
+    warnMissingIdbFiles(fileSkusList, 'Доказательства режима «файл → SKU»');
+  });
+
+  // Кнопка «В настройки доказательств» в табе Жалобы
+  const btnGoToEvidenceSettings = document.getElementById('btnGoToEvidenceSettings');
+  if (btnGoToEvidenceSettings) {
+    btnGoToEvidenceSettings.addEventListener('click', () => {
+      // Переключаем активный таб на Настройки
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      const settingsTabBtn = document.querySelector('[data-tab="settings"]');
+      const settingsTabPane = document.getElementById('tabSettings');
+      if (settingsTabBtn) settingsTabBtn.classList.add('active');
+      if (settingsTabPane) settingsTabPane.classList.add('active');
+      // Скроллим к секции «Доказательства»
+      setTimeout(() => {
+        const section = document.getElementById('evidenceSection');
+        if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    });
+  }
+
+  // === Проблемные SKU ===
+  const problemSkusBlock = document.getElementById('problemSkusBlock');
+  const problemEscalatedWrap = document.getElementById('problemEscalatedWrap');
+  const problemFailedWrap = document.getElementById('problemFailedWrap');
+  const problemNoViolationWrap = document.getElementById('problemNoViolationWrap');
+  const problemEscalatedList = document.getElementById('problemEscalatedList');
+  const problemFailedList = document.getElementById('problemFailedList');
+  const problemNoViolationList = document.getElementById('problemNoViolationList');
+  const problemEscalatedCount = document.getElementById('problemEscalatedCount');
+  const problemFailedCount = document.getElementById('problemFailedCount');
+  const problemNoViolationCount = document.getElementById('problemNoViolationCount');
+  const btnProblemSkusToggle = document.getElementById('btnProblemSkusToggle');
+
+  if (btnProblemSkusToggle) {
+    btnProblemSkusToggle.addEventListener('click', () => {
+      problemSkusBlock.classList.toggle('collapsed');
+    });
+  }
+
+  function renderProblems() {
+    const esc_ = complaintProblems.escalated || [];
+    const fail = complaintProblems.failed || [];
+    const noViolation = complaintProblems.noViolation || [];
+    if (esc_.length === 0 && fail.length === 0 && noViolation.length === 0) {
+      problemSkusBlock.classList.add('hidden');
+      return;
+    }
+    problemSkusBlock.classList.remove('hidden');
+    // escalated
+    if (esc_.length > 0) {
+      problemEscalatedWrap.classList.remove('hidden');
+      problemEscalatedCount.textContent = esc_.length;
+      problemEscalatedList.innerHTML = esc_.map(p =>
+        `<div class="problem-list-item"><span class="sku">${esc(p.sku)}</span><span class="reason">${esc(p.error || '')}</span></div>`
+      ).join('');
+    } else {
+      problemEscalatedWrap.classList.add('hidden');
+    }
+    if (noViolation.length > 0) {
+      problemNoViolationWrap.classList.remove('hidden');
+      problemNoViolationCount.textContent = noViolation.length;
+      problemNoViolationList.innerHTML = noViolation.map(p =>
+        `<div class="problem-list-item"><span class="sku">${esc(p.sku)}</span><span class="reason">${esc(p.error || '')}</span></div>`
+      ).join('');
+    } else {
+      problemNoViolationWrap.classList.add('hidden');
+    }
+    if (fail.length > 0) {
+      problemFailedWrap.classList.remove('hidden');
+      problemFailedCount.textContent = fail.length;
+      problemFailedList.innerHTML = fail.map(p =>
+        `<div class="problem-list-item"><span class="sku">${esc(p.sku)}</span><span class="reason">${esc(p.error || '')}</span></div>`
+      ).join('');
+    } else {
+      problemFailedWrap.classList.add('hidden');
+    }
+  }
+
+  function problemsDownloadXlsx(cat) {
+    const list = complaintProblems[cat] || [];
+    if (list.length === 0) return;
+    const rows = [['SKU', 'Причина', 'Время']];
+    for (const p of list) rows.push([p.sku, p.error || '', p.ts ? new Date(p.ts).toLocaleString('ru-RU') : '']);
+    const csv = rows.map(r => r.map(v => '"' + String(v || '').replace(/"/g, '""') + '"').join(';')).join('\r\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ozguard_problems_${cat}_${Date.now()}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  document.addEventListener('click', async (e) => {
+    const btnCopy = e.target.closest('.btn-problem-copy');
+    const btnRequeue = e.target.closest('.btn-problem-requeue');
+    const btnXlsx = e.target.closest('.btn-problem-xlsx');
+    const btnClear = e.target.closest('.btn-problem-clear');
+    if (btnCopy) {
+      const cat = btnCopy.dataset.cat;
+      const list = complaintProblems[cat] || [];
+      navigator.clipboard.writeText(list.map(p => p.sku).join('\n'));
+      flashBtn(btnCopy, '✓');
+    } else if (btnRequeue) {
+      const cat = btnRequeue.dataset.cat;
+      const list = complaintProblems[cat] || [];
+      if (list.length === 0) return;
+      const existing = parseSkus(complaintSkuInput.value);
+      const merged = new Set([...existing, ...list.map(p => p.sku)]);
+      complaintSkuInput.value = [...merged].join('\n');
+      complaintSkuInput.dispatchEvent(new Event('input'));
+      complaintSkuInput.dispatchEvent(new Event('change'));
+      flashBtn(btnRequeue, '✓');
+    } else if (btnXlsx) {
+      problemsDownloadXlsx(btnXlsx.dataset.cat);
+    } else if (btnClear) {
+      const cat = btnClear.dataset.cat;
+      const label = cat === 'escalated'
+        ? 'переданные оператору'
+        : (cat === 'noViolation' ? 'без нарушений' : 'ошибки');
+      if (!confirm(`Очистить список «${label}»?`)) return;
+      complaintProblems[cat] = [];
+      await persistProblems();
+      renderProblems();
+    }
+  });
+
+  loadProblems().then(renderProblems);
+
+  // Добавить проблемный SKU в storage (вызывается по supportProgress от background)
+  async function addProblemSku(cat, sku, error) {
+    complaintProblems = Object.assign({ escalated: [], failed: [], noViolation: [] }, complaintProblems || {});
+    if (!complaintProblems[cat]) complaintProblems[cat] = [];
+    // Дедупликация: если уже есть такой SKU, обновляем запись (перетираем timestamp и error)
+    const idx = complaintProblems[cat].findIndex(p => p.sku === sku);
+    const entry = { sku, error: error || '', ts: Date.now() };
+    if (idx >= 0) complaintProblems[cat][idx] = entry;
+    else complaintProblems[cat].push(entry);
+    await persistProblems();
+    renderProblems();
+  }
+
+  // === Гейт лимита обращений ===
+  const complaintLimitGate = document.getElementById('complaintLimitGate');
+  const limitGateTitle = document.getElementById('limitGateTitle');
+  const limitGateDetails = document.getElementById('limitGateDetails');
+  const btnLimitGateContinue = document.getElementById('btnLimitGateContinue');
+  const btnLimitGateStop = document.getElementById('btnLimitGateStop');
+
+  function showLimitGate(reason, details) {
+    complaintLimitGate.classList.remove('hidden');
+    limitGateTitle.textContent = reason;
+    limitGateDetails.textContent = details;
+    complaintStatusIcon.textContent = '⏸';
+    complaintStatusText.textContent = 'Ожидает подтверждения';
+  }
+  function hideLimitGate() { complaintLimitGate.classList.add('hidden'); }
+
+  if (btnLimitGateContinue) {
+    btnLimitGateContinue.addEventListener('click', () => {
+      hideLimitGate();
+      chrome.runtime.sendMessage({ action: 'supportLimitContinue' });
+    });
+  }
+  if (btnLimitGateStop) {
+    btnLimitGateStop.addEventListener('click', () => {
+      hideLimitGate();
+      chrome.runtime.sendMessage({ action: 'supportStop' });
+      setComplaintUiStopped();
+    });
+  }
+
+  // Слушатель событий от background
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (!msg) return;
+    if (msg.action === 'supportLimitReached') {
+      if ((msg.title || '').includes('Лимит обращений')) {
+        hideLimitGate();
+        chrome.runtime.sendMessage({ action: 'supportResume' });
+      } else {
+        showLimitGate(msg.title || 'Пауза', msg.details || '');
+      }
+    } else if (msg.action === 'supportProblem') {
+      // {sku, category: 'escalated' | 'failed' | 'noViolation', error}
+      if (msg.sku && msg.category) addProblemSku(msg.category, msg.sku, msg.error);
+    }
+  });
+
+  // Кнопка «📨 В жалобы» — запомнить parent→competitor связь
+  // (перекрываем предыдущий обработчик? Нет, просто расширим его через прокси-фикс ниже)
+
+  // Очистка сессии жалоб
+  const btnComplaintClear = document.getElementById('btnComplaintClear');
+  if (btnComplaintClear) {
+    btnComplaintClear.addEventListener('click', () => {
+      complaintSkuInput.value = '';
+      if (complaintParentSkuInput) complaintParentSkuInput.value = '';
+      complaintMode.value = 'auto';
+      complaintType.value = 'plagiat_legacy';
+      // Файлы НЕ очищаем — они переиспользуются между сессиями
+      // Удаление файлов — только кнопкой × на каждом файле
+      complaintLogContainer.innerHTML = '';
+      complaintLogEntries = 0;
+      complaintLogCount.textContent = '0';
+      complaintQueue.innerHTML = '';
+      complaintQueue.classList.add('hidden');
+      complaintProgressWrap.classList.add('hidden');
+      complaintStatus.classList.add('hidden');
+      complaintSkuWarning.classList.add('hidden');
+      complaintHint.classList.add('hidden');
+      // confirmGate removed
+      chrome.storage.local.remove(['lastComplaintSession', 'complaintProgress', 'activeSupportSession']);
+    });
+  }
+
+  // === Восстановление состояния сканирования при переоткрытии popup ===
+  chrome.runtime.sendMessage({ action: 'getScanStatus' }, (resp) => {
+    if (chrome.runtime.lastError || !resp) return;
+    if (resp.isRunning) {
+      setUiRunning();
+      if (resp.isPaused) {
+        isPaused = true;
+        btnPause.textContent = '▶';
+      }
+      updateProgress(resp.currentIndex + 1, resp.total);
+      if (resp.results && resp.results.length > 0) {
+        allResults = resp.results;
+        renderResults();
+      }
+      if (resp.logs && resp.logs.length > 0) {
+        for (const log of resp.logs) addLog(log);
+      }
+    }
+  });
+
+  // === ПАКЕТНЫЙ СБОР (XLSX) ===
+
+  // Клик по зоне → открывает файловый диалог
+  batchDrop.addEventListener('click', (e) => {
+    // Не открывать файловый диалог при клике на чекбоксы, кнопки фильтра и прочие интерактивные элементы
+    const isInteractiveBatchTarget =
+      e.target.closest('.batch-filter') ||
+      e.target.closest('.batch-history-wrap') ||
+      e.target.closest('#batchWarning') ||
+      e.target.closest('#batchFilename') ||
+      e.target.closest('#batchInfo') ||
+      e.target.tagName === 'INPUT' ||
+      e.target.tagName === 'BUTTON' ||
+      e.target.tagName === 'LABEL' ||
+      e.target.tagName === 'A';
+    if (isInteractiveBatchTarget) return;
+    batchFileInput.click();
+  });
+  batchDrop.addEventListener('dragover', (e) => { e.preventDefault(); batchDrop.classList.add('dragover'); });
+  batchDrop.addEventListener('dragleave', () => { batchDrop.classList.remove('dragover'); });
+  batchDrop.addEventListener('drop', (e) => {
+    e.preventDefault();
+    batchDrop.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleBatchFile(file);
+  });
+  batchFileInput.addEventListener('change', () => {
+    const file = batchFileInput.files[0];
+    if (file) handleBatchFile(file);
+    batchFileInput.value = '';
+  });
+
+  let batchItems = []; // {sku, name, status}[] из последнего XLSX
+  let batchSourceName = '';
+  let batchUploadHistory = [];
+
+  loadBatchUploadHistory();
+
+  btnBatchHistory.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (btnBatchHistory.disabled) return;
+    renderBatchHistoryMenu();
+    batchHistoryMenu.classList.toggle('hidden');
+  });
+
+  batchHistoryMenu.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const itemBtn = e.target.closest('.batch-history-item');
+    if (!itemBtn) return;
+    const idx = Number(itemBtn.dataset.index);
+    const entry = batchUploadHistory[idx];
+    if (entry) applyBatchHistoryEntry(entry);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.batch-history-wrap')) {
+      batchHistoryMenu.classList.add('hidden');
+    }
+  });
+
+  function normalizeBatchSkus(list) {
+    if (!Array.isArray(list)) return [];
+    return list.map(s => String(s).trim()).filter(s => /^\d{3,}$/.test(s));
+  }
+
+  function normalizeBatchHistory(rawHistory) {
+    if (!Array.isArray(rawHistory)) return [];
+    return rawHistory.map((entry) => {
+      const skus = normalizeBatchSkus(entry?.skus);
+      if (skus.length === 0) return null;
+      return {
+        id: String(entry.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7))),
+        sourceName: String(entry.sourceName || 'XLSX').slice(0, 120),
+        createdAt: entry.createdAt || new Date().toISOString(),
+        skus,
+        appliedStatuses: Array.isArray(entry.appliedStatuses) ? entry.appliedStatuses.map(String).filter(Boolean).slice(0, 12) : [],
+        totalCount: Number(entry.totalCount) || skus.length,
+        appliedCount: Number(entry.appliedCount) || skus.length
+      };
+    }).filter(Boolean).slice(0, BATCH_HISTORY_LIMIT);
+  }
+
+  function loadBatchUploadHistory() {
+    chrome.storage.local.get([BATCH_HISTORY_KEY], (data) => {
+      batchUploadHistory = normalizeBatchHistory(data[BATCH_HISTORY_KEY]);
+      renderBatchHistoryMenu();
+    });
+  }
+
+  function formatBatchHistoryDate(value) {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function formatBatchStatuses(statuses) {
+    const list = Array.isArray(statuses) ? statuses.filter(Boolean) : [];
+    if (list.length === 0) return '';
+    if (list.length <= 2) return list.join(', ');
+    return `${list.slice(0, 2).join(', ')} +${list.length - 2}`;
+  }
+
+  function renderBatchHistoryMenu() {
+    const hasHistory = batchUploadHistory.length > 0;
+    btnBatchHistory.disabled = !hasHistory;
+    btnBatchHistory.title = hasHistory ? 'Показать последние пакетные загрузки' : 'История появится после применения XLSX';
+
+    if (!hasHistory) {
+      batchHistoryMenu.innerHTML = '<div class="batch-history-empty">История пока пустая</div>';
+      batchHistoryMenu.classList.add('hidden');
+      return;
+    }
+
+    batchHistoryMenu.innerHTML = batchUploadHistory.map((entry, idx) => {
+      const dateText = formatBatchHistoryDate(entry.createdAt);
+      const statusesText = formatBatchStatuses(entry.appliedStatuses);
+      const meta = `${entry.appliedCount || entry.skus.length} SKU${dateText ? ' · ' + dateText : ''}`;
+      return `<button type="button" class="batch-history-item" data-index="${idx}">
+        <div class="batch-history-name">${esc(entry.sourceName)}</div>
+        <div class="batch-history-meta">${esc(meta)}</div>
+        ${statusesText ? `<div class="batch-history-statuses">${esc(statusesText)}</div>` : ''}
+      </button>`;
+    }).join('');
+  }
+
+  function saveBatchUploadHistory({ sourceName, skus, appliedStatuses, totalCount }) {
+    const cleanSkus = normalizeBatchSkus(skus);
+    if (cleanSkus.length === 0) return;
+
+    const entry = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      sourceName: sourceName || 'XLSX',
+      createdAt: new Date().toISOString(),
+      skus: cleanSkus,
+      appliedStatuses: Array.isArray(appliedStatuses) ? appliedStatuses.filter(Boolean) : [],
+      totalCount: Number(totalCount) || cleanSkus.length,
+      appliedCount: cleanSkus.length
+    };
+    const entrySkus = entry.skus.join('\n');
+    const withoutDuplicate = batchUploadHistory.filter(item => {
+      return !(item.sourceName === entry.sourceName && item.skus.join('\n') === entrySkus);
+    });
+    batchUploadHistory = [entry, ...withoutDuplicate].slice(0, BATCH_HISTORY_LIMIT);
+    chrome.storage.local.set({ [BATCH_HISTORY_KEY]: batchUploadHistory }, () => {
+      renderBatchHistoryMenu();
+    });
+  }
+
+  function applyBatchHistoryEntry(entry) {
+    const skus = normalizeBatchSkus(entry.skus);
+    if (skus.length === 0) {
+      addLog('История XLSX пуста или повреждена');
+      return;
+    }
+    skuInput.value = skus.join('\n');
+    batchFilename.textContent = entry.sourceName || 'XLSX из истории';
+    batchFilename.classList.remove('hidden');
+    batchInfo.textContent = `Из истории: ${skus.length} SKU`;
+    batchInfo.classList.remove('hidden');
+
+    const statusesText = formatBatchStatuses(entry.appliedStatuses);
+    batchWarning.innerHTML = `✅ Загружено из истории: ${skus.length} SKU`;
+    if (statusesText) batchWarning.innerHTML += `<br>Статусы: ${esc(statusesText)}`;
+    batchWarning.classList.remove('hidden');
+    batchHistoryMenu.classList.add('hidden');
+    addLog(`Из истории XLSX импортировано ${skus.length} SKU — ${entry.sourceName || 'XLSX'}`);
+  }
+
+  async function handleBatchFile(file) {
+    if (!file.name.match(/\.xlsx?$/i)) {
+      addLog('Ошибка: нужен файл .xlsx');
+      return;
+    }
+
+    batchSourceName = file.name;
+    addLog(`Загружен: ${file.name}`);
+    batchFilename.textContent = file.name;
+    batchFilename.classList.remove('hidden');
+    batchInfo.classList.add('hidden');
+    batchWarning.classList.add('hidden');
+
+    try {
+      const items = await parseXlsxItems(file);
+      if (items.length === 0) {
+        addLog('В файле не найдены числовые SKU');
+        batchInfo.textContent = 'SKU не найдены. Проверьте что это шаблон «Цены товаров» из OZON.';
+        batchInfo.classList.remove('hidden');
+        return;
+      }
+
+      batchItems = items;
+      batchInfo.textContent = `Найдено ${items.length} товаров`;
+      batchInfo.classList.remove('hidden');
+
+      // Показываем фильтр по статусам
+      renderBatchFilter(items);
+
+    } catch (e) {
+      addLog(`Ошибка парсинга XLSX: ${e.message}`);
+      batchInfo.textContent = 'Ошибка чтения файла: ' + e.message;
+      batchInfo.classList.remove('hidden');
+    }
+  }
+
+  function renderBatchFilter(items) {
+    // Собираем уникальные статусы
+    const statusMap = {};
+    for (const item of items) {
+      const st = item.status || 'Без статуса';
+      if (!statusMap[st]) statusMap[st] = [];
+      statusMap[st].push(item);
+    }
+    const statuses = Object.keys(statusMap).sort();
+
+    let html = '<div class="batch-filter">';
+    html += '<div class="batch-filter-title">Фильтр по статусу:</div>';
+    for (const st of statuses) {
+      const count = statusMap[st].length;
+      const id = 'batchSt_' + st.replace(/\s+/g, '_');
+      const checked = (st === 'Продается') ? 'checked' : '';
+      html += `<label class="batch-filter-item"><input type="checkbox" class="batch-status-cb" value="${esc(st)}" ${checked}> ${esc(st)} <span class="batch-filter-count">(${count})</span></label>`;
+    }
+    html += '<div class="batch-filter-actions">';
+    html += '<button id="btnBatchSelectAll" class="btn btn-small">Все</button>';
+    html += '<button id="btnBatchApply" class="btn btn-small btn-primary">Применить</button>';
+    html += '</div></div>';
+
+    batchWarning.innerHTML = html;
+    batchWarning.classList.remove('hidden');
+
+    // Обработчики
+    document.getElementById('btnBatchSelectAll').addEventListener('click', () => {
+      batchWarning.querySelectorAll('.batch-status-cb').forEach(cb => cb.checked = true);
+    });
+    document.getElementById('btnBatchApply').addEventListener('click', () => {
+      const selected = new Set();
+      batchWarning.querySelectorAll('.batch-status-cb:checked').forEach(cb => selected.add(cb.value));
+      const filtered = batchItems.filter(item => selected.has(item.status || 'Без статуса'));
+      if (filtered.length === 0) {
+        addLog('Нет товаров с выбранными статусами');
+        return;
+      }
+      skuInput.value = filtered.map(i => i.sku).join('\n');
+      addLog(`Импортировано ${filtered.length} SKU (из ${batchItems.length}) — статусы: ${[...selected].join(', ')}`);
+      batchWarning.innerHTML = `✅ Выбрано ${filtered.length} из ${batchItems.length} товаров`;
+      if (filtered.length > 100) {
+        batchWarning.innerHTML += `<br>⚠ Рекомендуем задержку 3-5 сек для ${filtered.length} SKU`;
+      }
+      saveBatchUploadHistory({
+        sourceName: batchSourceName || 'XLSX',
+        skus: filtered.map(i => i.sku),
+        appliedStatuses: [...selected],
+        totalCount: batchItems.length
+      });
+    });
+  }
+
+  // Парсинг XLSX с извлечением статуса
+  async function parseXlsxItems(file) {
+    const buf = await file.arrayBuffer();
+    const entries = await parseZip(buf);
+    const sharedStringsXml = entries['xl/sharedStrings.xml'];
+    const sharedStrings = [];
+    if (sharedStringsXml) {
+      const ssText = new TextDecoder().decode(sharedStringsXml);
+      const tMatches = ssText.matchAll(/<t[^>]*>([^<]*)<\/t>/g);
+      for (const m of tMatches) sharedStrings.push(m[1]);
+    }
+    let sheetFile = 'xl/worksheets/sheet2.xml';
+    const workbookXml = entries['xl/workbook.xml'];
+    if (workbookXml) {
+      const wbText = new TextDecoder().decode(workbookXml);
+      const sheetMatches = [...wbText.matchAll(/<sheet[^>]*name="([^"]*)"[^>]*sheetId="(\d+)"[^>]*r:id="([^"]*)"/g)];
+      for (const sm of sheetMatches) {
+        if (sm[1].includes('Товары') || sm[1].includes('цен') || sm[1].includes('price')) {
+          const rIdMatch = sm[3].match(/\d+/);
+          if (rIdMatch) sheetFile = `xl/worksheets/sheet${rIdMatch[0]}.xml`;
+        }
+      }
+    }
+    const sheetData = entries[sheetFile];
+    if (!sheetData) {
+      for (const key of Object.keys(entries)) {
+        if (key.match(/xl\/worksheets\/sheet\d+\.xml/)) {
+          const text = new TextDecoder().decode(entries[key]);
+          if (text.includes('SKU') || text.includes('Товары')) {
+            return extractRowsFromSheet(text, sharedStrings);
+          }
+        }
+      }
+      throw new Error('Лист с данными не найден');
+    }
+    return extractRowsFromSheet(new TextDecoder().decode(sheetData), sharedStrings);
+  }
+
+  // Минимальный XLSX парсер (ZIP → XML → значения колонки B)
+  async function parseXlsxSkus(file) {
+    const buf = await file.arrayBuffer();
+    const entries = await parseZip(buf);
+
+    // Найти sharedStrings.xml (для строковых значений)
+    const sharedStringsXml = entries['xl/sharedStrings.xml'];
+    const sharedStrings = [];
+    if (sharedStringsXml) {
+      const ssText = new TextDecoder().decode(sharedStringsXml);
+      const tMatches = ssText.matchAll(/<t[^>]*>([^<]*)<\/t>/g);
+      for (const m of tMatches) sharedStrings.push(m[1]);
+    }
+
+    // Найти лист "Товары и цены" — обычно sheet2.xml
+    // Сначала проверяем workbook.xml для имён листов
+    let sheetFile = 'xl/worksheets/sheet2.xml'; // по умолчанию
+    const workbookXml = entries['xl/workbook.xml'];
+    if (workbookXml) {
+      const wbText = new TextDecoder().decode(workbookXml);
+      const sheetMatches = [...wbText.matchAll(/<sheet[^>]*name="([^"]*)"[^>]*sheetId="(\d+)"[^>]*r:id="([^"]*)"/g)];
+      for (const sm of sheetMatches) {
+        if (sm[1].includes('Товары') || sm[1].includes('цен') || sm[1].includes('price')) {
+          // Определить номер листа из r:id (rId1 → sheet1, rId2 → sheet2...)
+          const rIdMatch = sm[3].match(/\d+/);
+          if (rIdMatch) {
+            sheetFile = `xl/worksheets/sheet${rIdMatch[0]}.xml`;
+          }
+        }
+      }
+    }
+
+    const sheetData = entries[sheetFile];
+    if (!sheetData) {
+      // Пробуем все листы
+      for (const key of Object.keys(entries)) {
+        if (key.match(/xl\/worksheets\/sheet\d+\.xml/)) {
+          const data = entries[key];
+          const text = new TextDecoder().decode(data);
+          if (text.includes('SKU') || text.includes('Товары')) {
+            return extractSkusFromSheet(text, sharedStrings);
+          }
+        }
+      }
+      throw new Error('Лист с данными не найден');
+    }
+
+    const sheetText = new TextDecoder().decode(sheetData);
+    return extractSkusFromSheet(sheetText, sharedStrings);
+  }
+
+  // Извлекает строки с данными: {sku, name, status} из колонок B, C, D
+  function extractRowsFromSheet(xml, sharedStrings) {
+    const rows = {};
+    // Парсим ячейки колонок A-Z
+    const cellRegex = /<c\s+r="([A-Z]+)(\d+)"([^>]*)>(?:<f>[^<]*<\/f>)?<v>([^<]*)<\/v><\/c>/g;
+    let match;
+    while ((match = cellRegex.exec(xml)) !== null) {
+      const col = match[1];
+      const row = parseInt(match[2], 10);
+      if (row < 4) continue;
+      const attrs = match[3];
+      let value = match[4];
+      if (attrs.includes('t="s"')) {
+        const idx = parseInt(value, 10);
+        value = sharedStrings[idx] || value;
+      }
+      if (!rows[row]) rows[row] = {};
+      rows[row][col] = value.trim();
+    }
+    const items = [];
+    for (const [, cells] of Object.entries(rows)) {
+      const sku = (cells['B'] || '').trim();
+      if (!/^\d{3,}$/.test(sku)) continue;
+      items.push({
+        sku,
+        name: (cells['C'] || '').substring(0, 80),
+        status: cells['D'] || ''
+      });
+    }
+    return items;
+  }
+
+  // Обратная совместимость — только SKU
+  function extractSkusFromSheet(xml, sharedStrings) {
+    return extractRowsFromSheet(xml, sharedStrings).map(r => r.sku);
+  }
+
+  // Минимальный ZIP-парсер для XLSX
+  async function parseZip(buffer) {
+    const view = new DataView(buffer);
+    const entries = {};
+    const bytes = new Uint8Array(buffer);
+
+    // Находим End of Central Directory
+    let eocdOffset = -1;
+    for (let i = bytes.length - 22; i >= 0; i--) {
+      if (view.getUint32(i, true) === 0x06054b50) {
+        eocdOffset = i;
+        break;
+      }
+    }
+    if (eocdOffset < 0) throw new Error('Не ZIP-файл');
+
+    const cdOffset = view.getUint32(eocdOffset + 16, true);
+    const cdCount = view.getUint16(eocdOffset + 10, true);
+
+    let pos = cdOffset;
+    for (let i = 0; i < cdCount; i++) {
+      if (view.getUint32(pos, true) !== 0x02014b50) break;
+      const method = view.getUint16(pos + 10, true);
+      const compSize = view.getUint32(pos + 20, true);
+      const uncompSize = view.getUint32(pos + 24, true);
+      const nameLen = view.getUint16(pos + 28, true);
+      const extraLen = view.getUint16(pos + 30, true);
+      const commentLen = view.getUint16(pos + 32, true);
+      const localOffset = view.getUint32(pos + 42, true);
+      const name = new TextDecoder().decode(bytes.slice(pos + 46, pos + 46 + nameLen));
+
+      // Читаем данные из Local File Header
+      const lfhPos = localOffset;
+      if (view.getUint32(lfhPos, true) === 0x04034b50) {
+        const lfNameLen = view.getUint16(lfhPos + 26, true);
+        const lfExtraLen = view.getUint16(lfhPos + 28, true);
+        const dataStart = lfhPos + 30 + lfNameLen + lfExtraLen;
+        const rawData = bytes.slice(dataStart, dataStart + compSize);
+
+        if (method === 0) {
+          // Stored (не сжато)
+          entries[name] = rawData;
+        } else if (method === 8) {
+          // Deflate
+          try {
+            const ds = new DecompressionStream('deflate-raw');
+            const writer = ds.writable.getWriter();
+            const reader = ds.readable.getReader();
+            writer.write(rawData);
+            writer.close();
+            const chunks = [];
+            let totalLen = 0;
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              chunks.push(value);
+              totalLen += value.length;
+            }
+            const result = new Uint8Array(totalLen);
+            let offset = 0;
+            for (const chunk of chunks) {
+              result.set(chunk, offset);
+              offset += chunk.length;
+            }
+            entries[name] = result;
+          } catch (e) {
+            // Пропускаем файлы которые не удалось распаковать
+          }
+        }
+      }
+
+      pos += 46 + nameLen + extraLen + commentLen;
+    }
+
+    return entries;
+  }
+
+  // ====================================================================
+  // === Проверка обновлений расширения =================================
+  // ====================================================================
+  // Запрашивает с codefic.ru последнюю версию + ссылку на скачивание.
+  // Кэш в storage на 6 часов. Если latest > current — подсвечивает версию и
+  // показывает баннер «Доступна новая версия» со ссылкой.
+  // Пользователь может скрыть баннер (запоминается в storage до следующего
+  // обновления с сервера, где latest изменится).
+  (function versionCheck() {
+    const VERSION_API = 'https://codefic.ru/api/extension-version';
+    // Страница установки/скачивания на сайте — единая точка входа для пользователя.
+    // Используется как fallback если сервер не прислал download_url ИЛИ прислал битую ссылку
+    // (например прямой .zip который 404-ит). На #install — инструкция + актуальная кнопка скачивания.
+    const INSTALL_PAGE = 'https://codefic.ru/#install';
+    const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 часов
+    const versionBadge = document.getElementById('versionBadge');
+    const updateBanner = document.getElementById('updateBanner');
+    const updateLatestVersion = document.getElementById('updateLatestVersion');
+    const updateDownloadLink = document.getElementById('updateDownloadLink');
+    const updateBannerClose = document.getElementById('updateBannerClose');
+
+    if (!versionBadge || !updateBanner) return;
+
+    const currentVersion = chrome.runtime.getManifest().version;
+    versionBadge.textContent = 'v' + currentVersion;
+
+    // Определяет безопасный URL для открытия: если сервер вернул прямой .zip (часто 404-ит)
+    // или пустое значение — используем install-страницу. Принимаем только http(s) URL.
+    function resolveDownloadUrl(url) {
+      if (!url || typeof url !== 'string') return INSTALL_PAGE;
+      const trimmed = url.trim();
+      if (!/^https?:\/\//i.test(trimmed)) return INSTALL_PAGE;
+      if (/\.zip(\?|#|$)/i.test(trimmed)) return INSTALL_PAGE;
+      return trimmed;
+    }
+
+    // Сравнение семвер-строк "5.9.7" vs "5.9.6"
+    function isNewer(latest, current) {
+      const a = String(latest || '').split('.').map(n => parseInt(n, 10) || 0);
+      const b = String(current || '').split('.').map(n => parseInt(n, 10) || 0);
+      const len = Math.max(a.length, b.length);
+      for (let i = 0; i < len; i++) {
+        const av = a[i] || 0, bv = b[i] || 0;
+        if (av > bv) return true;
+        if (av < bv) return false;
+      }
+      return false;
+    }
+
+    function showUpdate(latest, downloadUrl, dismissedVersion) {
+      const safeUrl = resolveDownloadUrl(downloadUrl);
+      versionBadge.classList.add('has-update');
+      versionBadge.title = `Доступна версия ${latest} — скачать`;
+      // Клик на бейдж версии открывает install-страницу (инструкция + скачивание)
+      versionBadge.style.cursor = 'pointer';
+      versionBadge.onclick = () => { window.open(safeUrl, '_blank'); };
+      // Баннер показываем только если юзер ещё не скрыл именно ЭТУ версию
+      if (dismissedVersion !== latest) {
+        updateLatestVersion.textContent = 'v' + latest;
+        updateDownloadLink.href = safeUrl;
+        updateBanner.classList.remove('hidden');
+      }
+    }
+
+    async function fetchLatestVersion() {
+      try {
+        const resp = await fetch(VERSION_API, { method: 'GET', cache: 'no-cache' });
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        if (!data || !data.version) return null;
+        return {
+          version: String(data.version).trim(),
+          downloadUrl: data.download_url || data.downloadUrl || null,
+          releaseNotes: data.release_notes || data.releaseNotes || null,
+          checkedAt: Date.now()
+        };
+      } catch (e) { return null; }
+    }
+
+    async function check() {
+      const stored = await new Promise(resolve =>
+        chrome.storage.local.get(['extensionVersionCache', 'dismissedUpdateVersion'], resolve)
+      );
+      const dismissed = stored.dismissedUpdateVersion || null;
+      const cache = stored.extensionVersionCache;
+
+      let latestInfo = cache;
+      // Используем кэш если он свежий
+      if (!cache || !cache.checkedAt || Date.now() - cache.checkedAt > CHECK_INTERVAL_MS) {
+        const fresh = await fetchLatestVersion();
+        if (fresh) {
+          latestInfo = fresh;
+          chrome.storage.local.set({ extensionVersionCache: fresh });
+        }
+      }
+
+      if (latestInfo && latestInfo.version && isNewer(latestInfo.version, currentVersion)) {
+        showUpdate(latestInfo.version, latestInfo.downloadUrl, dismissed);
+      }
+    }
+
+    updateBannerClose.addEventListener('click', () => {
+      updateBanner.classList.add('hidden');
+      // Запоминаем что юзер скрыл баннер для текущей latest-версии.
+      // Когда сервер отдаст новую — баннер снова покажется.
+      chrome.storage.local.get(['extensionVersionCache'], (data) => {
+        const v = data.extensionVersionCache?.version;
+        if (v) chrome.storage.local.set({ dismissedUpdateVersion: v });
+      });
+    });
+
+    check();
+  })();
+
+})();

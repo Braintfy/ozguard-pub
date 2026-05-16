@@ -1,1 +1,4344 @@
-!function(){"use strict";const e=[79,90,71,45,77,65,83,84,82,45,70,73,82,65,89,45,65,68,77,73,78];function t(t){return t===e.map(e=>String.fromCharCode(e)).join("")}async function a(){try{const e=await chrome.storage.sync.get(["deviceFingerprint"]);if(e.deviceFingerprint)return await chrome.storage.local.set({deviceFingerprint:e.deviceFingerprint}),e.deviceFingerprint}catch(e){}try{const e=await chrome.storage.local.get(["deviceFingerprint"]);if(e.deviceFingerprint)return await chrome.storage.sync.set({deviceFingerprint:e.deviceFingerprint}),e.deviceFingerprint}catch(e){}try{const e=await chrome.tabs.query({url:"https://www.ozon.ru/*"});if(e.length>0){const t=await chrome.scripting.executeScript({target:{tabId:e[0].id},func:()=>localStorage.getItem("__ozg_fp"),world:"MAIN"}),a=t?.[0]?.result;if(a)return await chrome.storage.sync.set({deviceFingerprint:a}),await chrome.storage.local.set({deviceFingerprint:a}),a}}catch(e){}const e="fp_"+crypto.randomUUID();return await chrome.storage.sync.set({deviceFingerprint:e}),await chrome.storage.local.set({deviceFingerprint:e}),n(e),e}async function n(e){try{const t=await chrome.tabs.query({url:"https://www.ozon.ru/*"});t.length>0&&await chrome.scripting.executeScript({target:{tabId:t[0].id},func:e=>{try{localStorage.setItem("__ozg_fp",e)}catch(e){}},args:[e],world:"MAIN"})}catch(e){}}async function s(e,t){try{const a=await fetch("https://codefic.ru/api/license",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:e,...t})});return await a.json()}catch(e){return{error:"network_error",message:e.message}}}function r(e){if(!e)return"unknown";const t=String(e).toLowerCase();return t.includes("not found")||"invalid_key"===t?"invalid_key":t.includes("revoked")?"revoked":t.includes("expired")?"expired":t.includes("limit reached")||"max_activations"===t?"max_activations":t.includes("not activated on this device")||"not_activated_here"===t?"not_activated_here":t.includes("missing")||"missing_params"===t?"missing_params":t.includes("too many requests")?"rate_limited":t}const i={invalid_key:"Неверный код. Проверьте его в письме или в личном кабинете.",revoked:"Код отозван. Свяжитесь с поддержкой codefic.ru.",expired:"Срок действия подписки истёк. Продлите в личном кабинете.",max_activations:"Лимит устройств исчерпан. Деактивируйте ключ на другом устройстве или напишите в поддержку для расширения лимита.",not_activated_here:"Ключ не привязан к этому устройству. Нажмите «Активировать» ещё раз — мы привяжем текущий браузер.",missing_params:"Ошибка параметров запроса.",rate_limited:"Слишком много запросов. Подождите минуту и попробуйте снова.",network_error:"Нет подключения к серверу codefic.ru. Проверьте интернет/VPN.",unknown:"Ошибка активации. Попробуйте позже или напишите в поддержку."};function o(e,t){return"max_activations"===e&&t?.max?`Лимит устройств (${t.max}) исчерпан. Деактивируйте ключ на другом устройстве или напишите в поддержку codefic.ru для расширения лимита.`:i[e]||i.unknown}async function c(){const e=await chrome.storage.local.get(["licenseCode","licenseType","licenseExpiresAt","licenseVerifiedAt","licenseActivatedAt","licenseLastError","trialStatus","trialExpiresAt","trialCheckedAt"]);if(!e.licenseCode){const t=await async function(e){const t=Date.now();if(e.trialStatus&&e.trialCheckedAt&&t-e.trialCheckedAt<36e5){if("active"===e.trialStatus&&e.trialExpiresAt){const a=Math.max(0,Math.ceil((new Date(e.trialExpiresAt)-t)/864e5));return a>0?{isPro:!0,code:null,type:"trial",expiresAt:e.trialExpiresAt,daysLeft:a,isTrial:!0}:(await chrome.storage.local.set({trialStatus:"expired",trialCheckedAt:t}),{isPro:!1,code:null,trialExpired:!0,canActivateTrial:!1})}if("expired"===e.trialStatus)return{isPro:!1,code:null,trialExpired:!0,canActivateTrial:!1};if("none"===e.trialStatus)return{isPro:!1,code:null,canActivateTrial:!0}}return async function(){const e=await a();n(e);const t=await s("trial_validate",{fingerprint:e}),r=Date.now();if("network_error"===t.error){const e=await chrome.storage.local.get(["trialStatus","trialExpiresAt"]);if("active"===e.trialStatus&&e.trialExpiresAt){const t=Math.max(0,Math.ceil((new Date(e.trialExpiresAt)-r)/864e5));if(t>0)return{isPro:!0,code:null,type:"trial",expiresAt:e.trialExpiresAt,daysLeft:t,isTrial:!0}}return{isPro:!1,code:null,canActivateTrial:!1}}if(t.valid){const e=t.days_left??Math.max(0,Math.ceil((new Date(t.expires_at)-r)/864e5));return await chrome.storage.local.set({trialStatus:"active",trialExpiresAt:t.expires_at,trialCheckedAt:r}),{isPro:!0,code:null,type:"trial",expiresAt:t.expires_at,daysLeft:e,isTrial:!0}}return t.can_activate?(await chrome.storage.local.set({trialStatus:"none",trialCheckedAt:r}),{isPro:!1,code:null,canActivateTrial:!0}):(await chrome.storage.local.set({trialStatus:"expired",trialCheckedAt:r}),{isPro:!1,code:null,trialExpired:!0,canActivateTrial:!1})}()}(e);return e.licenseLastError&&(t.lastError=e.licenseLastError),t}if(t(e.licenseCode))return{isPro:!0,code:e.licenseCode,type:"lifetime",activatedAt:e.licenseActivatedAt||null,expiresAt:null,daysLeft:null};const r=e.licenseVerifiedAt?new Date(e.licenseVerifiedAt):null,i=new Date;if("monthly"===e.licenseType&&e.licenseExpiresAt&&new Date(e.licenseExpiresAt)<i)return{isPro:!1,code:e.licenseCode,error:"expired",type:e.licenseType,expiresAt:e.licenseExpiresAt,lastError:e.licenseLastError||null};if(r&&(i-r)/864e5>7)return{isPro:!1,code:e.licenseCode,error:"verification_needed",type:e.licenseType,lastError:e.licenseLastError||null};(!r||i-r>864e5)&&l(e.licenseCode).catch(()=>{});const o="lifetime"===e.licenseType?null:e.licenseExpiresAt?Math.max(0,Math.ceil((new Date(e.licenseExpiresAt)-i)/864e5)):null;return{isPro:!0,code:e.licenseCode,type:e.licenseType||"lifetime",activatedAt:e.licenseActivatedAt||null,expiresAt:e.licenseExpiresAt||null,daysLeft:o,lastError:e.licenseLastError||null}}async function l(e){if(t(e))return;const n=await a(),i=await s("validate",{key:e,fingerprint:n});if(i.valid)return void await chrome.storage.local.set({licenseVerifiedAt:(new Date).toISOString(),licenseType:i.type,licenseExpiresAt:i.expires_at||null,licenseLastError:null});const c=r(i.error);if("not_activated_here"===c)try{const t=navigator?.userAgent||"Chrome Extension",a=await s("activate",{key:e,fingerprint:n,browser:t});if(a.success)return void await chrome.storage.local.set({licenseVerifiedAt:(new Date).toISOString(),licenseType:a.type,licenseExpiresAt:a.expires_at||null,licenseActivatedAt:(new Date).toISOString(),licenseLastError:null});const i=r(a.error);return void await chrome.storage.local.set({licenseLastError:{code:i,message:o(i,a),at:Date.now()}})}catch(e){return}"expired"!==c&&"revoked"!==c&&"invalid_key"!==c||(await chrome.storage.local.remove(["licenseCode","licenseType","licenseExpiresAt","licenseVerifiedAt","licenseActivatedAt"]),await chrome.storage.local.set({licenseLastError:{code:c,message:o(c,i),at:Date.now()}}))}async function u(){const e=await chrome.storage.local.get(["licenseCode"]);e.licenseCode&&await l(e.licenseCode)}u(),chrome.alarms.create("licenseCheck",{periodInMinutes:720}),chrome.alarms.create("supportWatchdog",{periodInMinutes:1}),chrome.alarms.onAlarm.addListener(e=>{"licenseCheck"===e.name&&u(),"supportWatchdog"===e.name&&async function(){if(!(d.queue&&d.queue.length>0)&&await b()&&d.isRunning&&!d.isPaused){const e=d.sellerTabId||await $();e&&(d.sellerTabId=e,Y(e,"watchdog-restore"))}if(!d.isRunning||d.isPaused)return void(d.watchdogWarned=!1);const e=Date.now(),t=e-(d.lastActivityTs||e);if(!(t<18e4)){if(!d.watchdogWarned){d.watchdogWarned=!0,k(`⏱ [WATCHDOG] Нет активности ${Math.round(t/6e4)} мин. Если зависло — скопируйте лог и отправьте в поддержку: t.me/firadex`);try{const e=d.sellerTabId;if(e){const t=await P(e);t?(k(`[WATCHDOG-DOM] phase=${t.phase} msgs=${t.chatMsgCount} input=${t.hasInput} fileInput=${t.hasFileInput} sendBtn=${t.hasSendButton}`),k(`[WATCHDOG-DOM] last bot: ${t.lastBotMsg||"—"}`),k(`[WATCHDOG-DOM] last user: ${t.lastUserMsg||"—"}`)):k("[WATCHDOG] Связь с вкладкой потеряна. Убедитесь что seller.ozon.ru открыта и нажмите «Обновить».")}}catch(e){}}if(t>=36e4){k(`⛔ [WATCHDOG] ${Math.round(t/6e4)} мин без активности — ставлю паузу. Проверьте чат вручную и нажмите «Продолжить» или «Стоп».`),d.isPaused=!0,d.watchdogWarned=!1,re({action:"supportNeedAction",message:`Бот не отвечает ${Math.round(t/6e4)} мин. Проверьте чат seller.ozon.ru — возможно Ozon заблокировал чат или поменял интерфейс. Скопируйте лог и пришлите в t.me/firadex.`});try{await O()}catch(e){}}}}()});let d={isRunning:!1,isPaused:!1,mode:"dry",queue:[],currentIndex:0,files:[],skuFiles:{},evidenceMode:"sku_first",fileSkus:[],parentMap:{},complaintType:"plagiat_legacy",logs:[],sellerTabId:null,session:null,lastPhase:null,phaseRepeatCount:0,maxPhaseRepeats:4,newChatsOpened:0,consecutiveEscalations:0,limits:{maxChatsPerSession:10,maxConsecutiveEscalations:5},limitGateAllowance:0,limitGateActive:!1,consecutiveFailed:0,betaAutostopLimit:5,navClickRetries:{},lastActivityTs:0,watchdogWarned:!1,consecutiveAttachFails:0,attachFailAdviceShown:!1,limitGateReason:null},p=!1,h=0,f=0;const g=1e3;let m=null;function w(){return{isRunning:d.isRunning,isPaused:d.isPaused,mode:d.mode,queue:d.queue?d.queue.map(e=>({sku:e.sku,status:e.status,step:e.step||null,error:e.error||null,chatId:e.chatId||null,parentSku:e.parentSku||null,parentSkus:Array.isArray(e.parentSkus)?e.parentSkus.slice():null,_counted:!!e._counted,_needsNextEvidence:!!e._needsNextEvidence,_evidenceUsedIdx:"number"==typeof e._evidenceUsedIdx?e._evidenceUsedIdx:void 0,_evidenceResendCount:"number"==typeof e._evidenceResendCount?e._evidenceResendCount:void 0,_parentTryIdx:"number"==typeof e._parentTryIdx?e._parentTryIdx:void 0})):[],currentIndex:d.currentIndex||0,files:Array.isArray(d.files)?d.files:[],skuFiles:d.skuFiles&&"object"==typeof d.skuFiles?d.skuFiles:{},evidenceMode:d.evidenceMode||"sku_first",fileSkus:Array.isArray(d.fileSkus)?d.fileSkus:[],parentMap:d.parentMap&&"object"==typeof d.parentMap?d.parentMap:{},complaintType:d.complaintType||"plagiat_legacy",logs:(d.logs||[]).slice(-500),sellerTabId:d.sellerTabId||null,session:d.session||null,sessionId:d.session?.id||null,newChatsOpened:d.newChatsOpened||0,consecutiveEscalations:d.consecutiveEscalations||0,consecutiveFailed:d.consecutiveFailed||0,limits:d.limits||{maxChatsPerSession:10,maxConsecutiveEscalations:5},limitGateAllowance:d.limitGateAllowance||d.limits?.maxChatsPerSession||10,limitGateActive:!!d.limitGateActive,limitGateReason:d.limitGateReason||null,betaAutostopLimit:d.betaAutostopLimit||5,consecutiveAttachFails:d.consecutiveAttachFails||0,attachFailAdviceShown:!!d.attachFailAdviceShown,escalatedRetry:d._escalatedRetry||0,chatSoftLimitNoticeAt:d._chatSoftLimitNoticeAt||null,updatedAt:Date.now()}}async function y(){try{await chrome.storage.local.set({activeSupportSession:w()})}catch(e){}}function S(){m||(m=setTimeout(()=>{m=null;try{chrome.storage.local.set({activeSupportSession:w()})}catch(e){}},1e3))}function k(e){const t=`[${(new Date).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}] ${e}`;return d.logs.push(t),re({action:"supportLog",text:t}),console.log("[OZG-Support]",e),S(),t}async function b(){if(d.queue&&d.queue.length>0)return!0;try{const e=(await chrome.storage.local.get(["activeSupportSession"])).activeSupportSession;return!!(e&&e.isRunning&&Array.isArray(e.queue)&&0!==e.queue.length)&&(d={isRunning:!0,isPaused:!!e.isPaused,mode:e.mode||"auto",queue:e.queue,currentIndex:Math.max(0,Math.min(parseInt(e.currentIndex,10)||0,e.queue.length)),files:Array.isArray(e.files)?e.files:[],skuFiles:e.skuFiles&&"object"==typeof e.skuFiles?e.skuFiles:{},evidenceMode:"file_first"===e.evidenceMode?"file_first":"sku_first",fileSkus:Array.isArray(e.fileSkus)?e.fileSkus:[],parentMap:e.parentMap&&"object"==typeof e.parentMap?e.parentMap:{},complaintType:"content_beta"===e.complaintType||"brand_beta"===e.complaintType||"plagiat_legacy"===e.complaintType?e.complaintType:"plagiat_legacy",logs:Array.isArray(e.logs)?e.logs.slice(-500):[],sellerTabId:e.sellerTabId||null,session:e.session||(e.sessionId?{id:e.sessionId,startedAt:null}:null),lastPhase:null,phaseRepeatCount:0,maxPhaseRepeats:4,newChatsOpened:e.newChatsOpened||0,consecutiveEscalations:e.consecutiveEscalations||0,limits:e.limits||{maxChatsPerSession:10,maxConsecutiveEscalations:5},limitGateAllowance:e.limitGateAllowance||e.limits?.maxChatsPerSession||10,limitGateActive:!!e.limitGateActive,limitGateReason:e.limitGateReason||null,consecutiveFailed:e.consecutiveFailed||0,betaAutostopLimit:e.betaAutostopLimit||5,navClickRetries:{},lastActivityTs:Date.now(),watchdogWarned:!1,consecutiveAttachFails:e.consecutiveAttachFails||0,attachFailAdviceShown:!!e.attachFailAdviceShown,_escalatedRetry:e.escalatedRetry||0,_chatSoftLimitNoticeAt:e.chatSoftLimitNoticeAt||null},k("[RESTORE] Активная сессия жалоб восстановлена после сна service worker"),!0)}catch(e){return console.log("[OZG-Support] restoreActiveSupportSession:",e.message),!1}}function v(e){const t=`[${(new Date).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}] ${e}`;d.logs.push(t),re({action:"supportLog",text:t}),console.log("[OZG-Support]",e),d.lastActivityTs=Date.now(),d.watchdogWarned=!1,S();const a=Date.now();if(d.sellerTabId&&a-f>g){f=a;try{chrome.tabs.sendMessage(d.sellerTabId,{_ozguard:!0,action:"updatePanel",params:{log:t,current:d.currentIndex+1,total:d.queue.length}},()=>{chrome.runtime.lastError})}catch(e){}}}async function $(){const e=await chrome.tabs.query({url:"https://seller.ozon.ru/*"}),t=e.find(e=>e.url&&e.url.includes("group=support_v2"));if(t)return d.sellerTabId=t.id,t.id;const a=e.find(e=>e.url&&e.url.includes("/app/messenger")&&!e.url.includes("group=customers"));if(a)return d.sellerTabId=a.id,a.id;if(e.length>0)return d.sellerTabId=e[0].id,e[0].id;try{v("Вкладка seller.ozon.ru не найдена — открываю автоматически...");const e=await chrome.tabs.create({url:"https://seller.ozon.ru/app/messenger/?group=support_v2",active:!1});return await he(e.id),await ee(3e3),d.sellerTabId=e.id,e.id}catch(e){return v(`Не удалось открыть seller.ozon.ru: ${e.message}`),null}}const _=5,A=1e4;let I=[];function x(){I=[]}async function C(e){try{return await chrome.scripting.executeScript({target:{tabId:e,allFrames:!1},files:["content/support-automation.js"]}),x(),!0}catch(e){console.log("[OZG-Support] Ошибка инъекции:",e.message);const t=function(){const e=Date.now();return I.push(e),I=I.filter(t=>e-t<A),I.length}();if(t>=_&&d.isRunning){d.isRunning=!1,d.isPaused=!1,v(`⛔ Critical: ${t} ошибок инъекции за ${A/1e3}с — аварийная остановка`),re({action:"supportNeedAction",message:"Не удалось получить доступ к вкладке seller.ozon.ru. ЗАКРОЙТЕ ВСЕ старые вкладки seller.ozon.ru, откройте новую и нажмите «Начать» снова."});try{O()}catch(e){}}return!1}}async function T(e){let t;try{t=await chrome.tabs.get(e)}catch(a){v("⚠ Вкладка закрыта — ищу заново...");const n=await $();if(!n)return v("❌ Не удалось найти или открыть seller.ozon.ru"),!1;d.sellerTabId=n,t=await chrome.tabs.get(n),e=n}const a=t.url||"";if(a.includes("/signin")||a.includes("/login")||a.includes("passport.ozon.ru"))return v("⚠ Требуется авторизация на seller.ozon.ru — войдите в аккаунт"),re({action:"supportNeedAction",message:"Войдите в аккаунт seller.ozon.ru и нажмите «Обновить»"}),!1;if(!a.includes("group=support_v2")&&(!a.includes("/app/messenger")||a.includes("group=")||a.includes("&id="))){v("Переход на чат поддержки (support_v2)..."),await chrome.tabs.update(e,{url:"https://seller.ozon.ru/app/messenger/?group=support_v2"}),await he(e),await ee(5e3);const t=(await chrome.tabs.get(e)).url||"";if(t.includes("/signin")||t.includes("/login")||t.includes("passport.ozon.ru"))return v("⚠ Требуется авторизация на seller.ozon.ru"),re({action:"supportNeedAction",message:"Войдите в аккаунт seller.ozon.ru и нажмите «Обновить»"}),!1}return await C(e),await ee(2e3),{ok:!0,tabId:e}}function R(e,t,a){return new Promise(n=>{chrome.tabs.sendMessage(e,{_ozguard:!0,action:t,params:a},async s=>{if(chrome.runtime.lastError)return console.log("[OZG-Support] Нет связи, инжектирую...",chrome.runtime.lastError.message),await C(e)?(await ee(2e3),void chrome.tabs.sendMessage(e,{_ozguard:!0,action:t,params:a},e=>{if(chrome.runtime.lastError)return console.log("[OZG-Support] Повторная ошибка связи:",chrome.runtime.lastError.message),void n(null);n(e)})):void n(null);n(s)})})}async function M(e){return await R(e,"getState")}async function P(e){return await R(e,"debugDOM")}async function O(){try{const e={id:d.session?.id||Date.now().toString(36),startedAt:d.session?.startedAt||(new Date).toISOString(),completedAt:d.isRunning?null:(new Date).toISOString(),mode:d.mode,complaintType:d.complaintType,queue:d.queue.map(e=>({sku:e.sku,status:e.status,chatId:e.chatId||null,error:e.error||null})),logs:d.logs.slice(-500)};let t=(await chrome.storage.local.get(["supportHistory"])).supportHistory||[];const a=t.findIndex(t=>t.id===e.id);a>=0?t[a]=e:t.unshift(e),t.length>10&&(t=t.slice(0,10));const n=d.queue.filter(e=>"done"===e.status||"failed"===e.status||"skipped"===e.status||"escalated"===e.status||"no_violation"===e.status).map(e=>({sku:e.sku,status:e.status}));await chrome.storage.local.set({supportHistory:t,complaintProgress:{sessionId:e.id,processedSkus:n,updatedAt:Date.now()}})}catch(e){}}const E=52428800;function U(e){const t=e.parentSkus&&Array.isArray(e.parentSkus)&&e.parentSkus.length>0?e.parentSkus:e.parentSku?[e.parentSku]:[],a=Array.from(new Set([...t.map(e=>String(e||"").trim()).filter(Boolean),String(e.sku||"").trim()].filter(Boolean))),n=d.evidenceMode||"sku_first",s=[],r=new Set;if("file_first"===n&&Array.isArray(d.fileSkus)&&d.fileSkus.length>0){for(const e of d.fileSkus){const t=Array.isArray(e.skus)?e.skus.map(e=>String(e).trim()):[];if(0===t.length)continue;if(!a.some(e=>t.includes(String(e).trim())))continue;const n=e.id||(e.name||"")+"|"+(e.size||0);r.has(n)||(r.add(n),s.push(e))}if(s.length>0)return{files:s,source:"file_first"}}else{for(const e of a){const t=d.skuFiles&&d.skuFiles[e];if(Array.isArray(t)&&0!==t.length)for(const e of t){const t=e.id||(e.name||"")+"|"+(e.size||0);r.has(t)||(r.add(t),s.push(e))}}if(s.length>0)return{files:s,source:"parent"}}return Array.isArray(d.files)&&d.files.length>0?{files:d.files.slice(),source:"common"}:{files:[],source:"none"}}function L(e){const t=d.complaintType;v("content_beta"===t||"brand_beta"===t?`[BETA] ${e}`:e)}async function z(){const e=d.newChatsOpened,t=d.limitGateAllowance;if(e>=t&&e>=(d._chatSoftLimitNoticeAt||t)){const t=Math.max(1,d.limits.maxChatsPerSession||50);d._chatSoftLimitNoticeAt=e+t,v(`ℹ Создано ${e} новых обращений. Автопауза лимита отключена, бот продолжает работу с антибот-паузами.`)}return!0}function F(e){d.newChatsOpened++,v(`[chat-counter] Новое обращение открыто (${d.newChatsOpened}/${d.limitGateAllowance}) — ${e||""}`)}function N(e,t,a){re({action:"supportProblem",category:e,sku:t,error:a})}async function D(e,t,a,n,s={}){const r=s.status||"failed",i=s.category||r,o=!!s.recoverChat;if(s.logMessage&&v(s.logMessage),t&&(t.status=r,t.step="completed",t.error=n,i&&N(i,t.sku,t.error)),d.currentIndex=Math.max(d.currentIndex,a+1),function(e){d.lastPhase=null,d.phaseRepeatCount=0,d._staleWaitCount=0,e&&(delete e._needsNextEvidence,delete e._evidenceUsedIdx,delete e._evidenceResendCount,delete e._parentTryIdx)}(t),re({action:"supportProgress",current:a+1,total:d.queue.length,item:t}),await O(),o&&d.isRunning&&d.currentIndex<d.queue.length){if(v(s.recoverLogMessage||"Открываю новую страницу чатов для следующего SKU после ошибки текущего обращения..."),!await q(e,"восстановление после ошибки текущего обращения"))return await G("Не удалось открыть новую страницу чатов после ошибки текущего SKU"),!1}else await se(2e3);return!0}async function G(e){d.isPaused=!0,d.lastPhase=null,d.phaseRepeatCount=0,d._staleWaitCount=0,v(`⛔ ${e}. Ставлю паузу, чтобы следующий SKU не ушёл в старое обращение.`),re({action:"supportNeedAction",message:`${e}. Проверьте seller.ozon.ru и нажмите «Продолжить».`}),await O(),await y()}async function q(e,t){let a=e||d.sellerTabId;try{a&&await chrome.tabs.get(a)}catch(e){a=null}if(a||(v(`⚠ Вкладка потерялась (${t||"переход к чатам"}) — ищу seller.ozon.ru заново...`),a=await $()),!a)return v("❌ Не удалось найти или открыть вкладку seller.ozon.ru"),null;try{return d.sellerTabId=a,await chrome.tabs.update(a,{url:"https://seller.ozon.ru/app/messenger/?group=support_v2"}),await he(a),await ee(4e3),await C(a),await ee(2e3),a}catch(e){return v(`Ошибка перехода к чатам (${t||"support_v2"}): ${e.message}`),null}}async function j(e,t){try{const a=await P(e),n=(a?.lastBotMsg||"").toLowerCase();return{handed:n.includes("направил")||n.includes("направили")||n.includes("коллегам")||n.includes("рассмотрит")||n.includes("оператор")||n.includes("создайте новое обращение"),confirmed:n.includes("скрыли товар")&&n.includes(t.sku),botMsg:n}}catch(e){return{handed:!1,confirmed:!1,botMsg:""}}}async function K(e,t){return await R(e,"clickButton",t)}async function B(e,t){return await R(e,"sendText",t)}async function W(e,t,a,n){return await R(e,"attachFile",{name:t,base64:a,type:n})}async function H(e){const t=await e.arrayBuffer(),a=new Uint8Array(t);let n="";for(let e=0;e<a.length;e+=32768){const t=a.subarray(e,e+32768);n+=String.fromCharCode.apply(null,t)}return btoa(n)}async function Z(e){if(e?.base64)return e;if(!e?.id)throw new Error("Файл без id — обновите доказательства в popup");if((Number(e.size)||0)>E)throw new Error(`Файл больше безопасного лимита ${Math.round(E/1024/1024)} MB — сожмите видео или загрузите меньший файл`);if("local"===(e.storage||"local")){const a="sku"===(t=e.source||"common")?"complaintSkuFilesBlobs":"file_first"===t?"complaintFileSkusBlobs":"complaintFilesBlobs";try{const t=await chrome.storage.local.get([a]),n=t?.[a]?.[e.id];if(n){if(Math.round(.75*n.length)>E)throw new Error(`Файл больше безопасного лимита ${Math.round(E/1024/1024)} MB — сожмите видео или загрузите меньший файл`);return{...e,base64:n,type:e.type||"application/octet-stream"}}}catch(e){if((e?.message||"").includes("больше безопасного лимита"))throw e}}var t;if("idb"===e.storage)try{const t=await async function(e){const t=await new Promise((e,t)=>{const a=indexedDB.open("ozguard-files",1);a.onupgradeneeded=()=>{const e=a.result;e.objectStoreNames.contains("files")||e.createObjectStore("files")},a.onsuccess=()=>e(a.result),a.onerror=()=>t(a.error)});return await new Promise((a,n)=>{const s=t.transaction("files","readonly").objectStore("files").get(e);s.onsuccess=()=>{t.close(),a(s.result||null)},s.onerror=()=>{t.close(),n(s.error)}})}(e.id);if(t&&t.blob){if((Number(t.size||t.blob.size)||0)>E)throw new Error(`Файл больше безопасного лимита ${Math.round(E/1024/1024)} MB — сожмите видео или загрузите меньший файл`);return{...e,name:t.name||e.name,type:t.type||e.type||"application/octet-stream",base64:await H(t.blob)}}}catch(e){if((e?.message||"").includes("больше безопасного лимита"))throw e}const a=await async function(e){return await new Promise(t=>{let a=!1;const n=e=>{a||(a=!0,clearTimeout(s),t(e))},s=setTimeout(()=>n({ok:!1,error:"Таймаут чтения файла. Откройте popup OZGuard и повторите запуск."}),12e4);try{chrome.runtime.sendMessage({action:"getComplaintFilePayload",source:e.source||"common",id:e.id},e=>{chrome.runtime.lastError?n({ok:!1,error:"Откройте popup OZGuard, чтобы расширение могло прочитать крупный файл из IndexedDB"}):e&&e.ok&&e.file?.base64?n({ok:!0,file:e.file}):n({ok:!1,error:e?.error||"Не удалось прочитать файл"})})}catch(e){n({ok:!1,error:e.message||String(e)})}})}(e);if(a.ok)return{...e,...a.file,type:a.file.type||e.type||"application/octet-stream"};throw new Error(a.error||"Не удалось прочитать файл")}const J=20,V=50;function Y(e,t){if(!d.isRunning||d.isPaused)return!1;const a=e||d.sellerTabId;if(!a)return!1;if(p)return console.log(`[OZG-Support] support loop already running (${t||"unknown"})`),!1;d.sellerTabId=a;const n=++h;return p=!0,console.log(`[OZG-Support] support loop start (${t||"manual"}, token=${n})`),async function(e,t){const a=d.queue?d.queue.length:100,n=J*a+V;let s=0,r=d.currentIndex;for(let a=0;a<n;a++){if(t&&t!==h)return;if(!d.isRunning||d.isPaused)return;if(await ee(50),t&&t!==h)return;const a=await Q(e);if("done"===a||"stop"===a||"wait"===a)return;if(d.sellerTabId&&(e=d.sellerTabId),d.currentIndex!==r?(r=d.currentIndex,s=0):s++,s>=J){const t=d.currentIndex,a=d.queue[t];a?await D(e,a,t,"Зацикливание",{recoverChat:!0,logMessage:`⛔ Зацикливание на SKU ${a.sku}: ${J} итераций без прогресса — пропускаю`}):(v(`⛔ Зацикливание на SKU ${t}: ${J} итераций без прогресса — пропускаю`),d.currentIndex++),r=d.currentIndex,s=0}}v("⛔ Превышен общий лимит итераций ("+n+") — аварийная остановка"),d.isRunning=!1,re({action:"supportNeedAction",message:"Аварийная остановка: превышен лимит итераций"}),await O()}(a,n).catch(async e=>{v(`⛔ Ошибка цикла жалоб: ${e.message}`);try{await O()}catch(e){}}).finally(()=>{h===n&&(p=!1,console.log(`[OZG-Support] support loop finished (token=${n})`))}),!0}async function Q(e){if(!d.isRunning||d.isPaused)return"stop";const t=d.currentIndex-1;if(t>=0&&t<d.queue.length){const e=d.queue[t];if(e&&!e._counted&&("failed"===e.status||"done"===e.status||"escalated"===e.status||"no_violation"===e.status)&&(e._counted=!0,"failed"===e.status?d.consecutiveFailed=(d.consecutiveFailed||0)+1:d.consecutiveFailed=0,!await async function(){const e=d.complaintType;return"content_beta"!==e&&"brand_beta"!==e||!(d.consecutiveFailed>=(d.betaAutostopLimit||5))||(d.limitGateActive||(d.limitGateActive=!0,d.limitGateReason="beta_autostop",d.isPaused=!0,L(`⛔ AUTOSTOP: ${d.consecutiveFailed} SKU подряд в failed на BETA-пути`),re({action:"supportLimitReached",title:`BETA: ${d.consecutiveFailed} ошибок подряд`,details:`Режим BETA (${"content_beta"===e?"Использование моего контента":"Использование моего бренда"}) остановлен — ${d.consecutiveFailed} SKU подряд завершились ошибкой. Возможно путь в чате Ozon изменился. Проверьте вручную или переключитесь на «Плагиат моих карточек». Нажмите «Продолжить» чтобы попробовать ещё, «Остановить» чтобы прервать.`}),await O()),!1)}()))return"wait"}const a=d.currentIndex;if(a>=d.queue.length)return d.isRunning=!1,v("✅ Все жалобы обработаны"),re({action:"supportComplete",queue:d.queue}),await O(),"done";const n=d.queue[a];if("done"===n.status||"failed"===n.status||"skipped"===n.status||"escalated"===n.status||"no_violation"===n.status)return n._counted||(n._counted=!0,"failed"===n.status?d.consecutiveFailed=(d.consecutiveFailed||0)+1:"done"!==n.status&&"escalated"!==n.status&&"no_violation"!==n.status||(d.consecutiveFailed=0)),d.currentIndex++,d._escalatedRetry=0,d.navClickRetries={},re({action:"supportProgress",current:a+1,total:d.queue.length,item:n}),"continue";L(`[${a+1}/${d.queue.length}] Обработка SKU ${n.sku}`),re({action:"supportProgress",current:a+1,total:d.queue.length,item:n});try{const t=(await chrome.tabs.get(e)).url||"";if(t.includes("/signin")||t.includes("/login")||t.includes("passport.ozon.ru"))return v("⚠ Сессия истекла — требуется авторизация на seller.ozon.ru"),n.status="waiting",re({action:"supportNeedAction",message:"Сессия истекла. Войдите в аккаунт seller.ozon.ru и нажмите «Обновить»"}),"wait";t.includes("seller.ozon.ru")?(t.includes("group=customers")||t.includes("/app/messenger")&&t.includes("&id=")&&!t.includes("group=support"))&&(v("⚠ Обнаружен чат покупателя — переключаюсь на поддержку..."),await chrome.tabs.update(e,{url:"https://seller.ozon.ru/app/messenger/?group=support_v2"}),await he(e),await ee(5e3),await C(e),await ee(2e3)):(v("⚠ Вкладка ушла с seller.ozon.ru — возвращаю на чат поддержки..."),await chrome.tabs.update(e,{url:"https://seller.ozon.ru/app/messenger/?group=support_v2"}),await he(e),await ee(5e3),await C(e),await ee(2e3))}catch(t){v("⚠ Вкладка недоступна — ищу заново...");const a=await $();if(!a)return v("❌ Не удалось найти seller.ozon.ru"),n.status="waiting",re({action:"supportNeedAction",message:"Вкладка seller.ozon.ru закрыта. Откройте и нажмите «Обновить»"}),"wait";d.sellerTabId=a,e=a,await C(e),await ee(2e3)}let s=await M(e);if(!s){v("Нет связи — пробую перейти на чаты...");try{const t=await T(e);t?.tabId&&(e=t.tabId),s=await M(e)}catch(e){}if(!s)return v("Нет связи с seller.ozon.ru — откройте чат поддержки вручную"),n.status="waiting",re({action:"supportNeedAction",message:"Нет связи со страницей. Откройте seller.ozon.ru → Сообщения → Поддержка и нажмите «Обновить»"}),"wait"}const r=s.phase;v(`Фаза: ${r}, кнопки: [${(s.buttons||[]).slice(0,5).join(", ")}]`);const i=("ready_for_next"===r||"item_completed"===r)&&!n.step||"waiting_attachment"===r&&"evidence_insufficient"===s.detail,o="in_progress"===r?12:d.maxPhaseRepeats;if(r!==d.lastPhase||i)r!==d.lastPhase&&(d.lastPhase=r,d.phaseRepeatCount=1);else if(d.phaseRepeatCount++,d.phaseRepeatCount>=o){const t=await P(e);if(t&&(v(`[LOOP-DEBUG] URL: ${t.url}`),v(`[LOOP-DEBUG] Chat quick-replies: [${t.chatQuickReplies?.slice(0,10).join(", ")}]`),v(`[LOOP-DEBUG] Std buttons: [${t.allButtonTexts?.slice(0,10).join(", ")}]`),v(`[LOOP-DEBUG] Scored: [${t.quickReplyTexts?.slice(0,5).join(", ")}]`),v(`[LOOP-DEBUG] Бот: ${t.lastBotMsg||"нет"} | Юзер: ${t.lastUserMsg||"нет"}`),v(`[LOOP-DEBUG] chatContainer: ${t.hasChatContainer}, input: ${t.hasInput}, fileInput: ${t.hasFileInput}, sendBtn: ${t.hasSendButton}, botAfterUser: ${t.lastBotAfterLastUser}`)),"waiting_attachment"===r){const t=`Зацикливание на фазе ${r}`;return await D(e,n,a,t,{recoverChat:!0,logMessage:`⛔ ${t}: завершаю только SKU ${n.sku} и продолжаю пакет`}),"continue"}if("unknown"===r||"has_buttons"===r||"no_chat"===r||"faq_page"===r||"input_ready"===r){const e=(t?.chatQuickReplies?.slice(0,6)||[]).join(", ")||(t?.allButtonTexts?.slice(0,6)||[]).join(", ")||"—",a=(t?.lastBotMsg||"—").substring(0,100);return v(`⛔ ИНТЕРФЕЙС OZON ИЗМЕНИЛСЯ или чат в неизвестном состоянии: фаза «${r}» повторилась ${d.phaseRepeatCount} раз. Бот не распознал ни одной знакомой кнопки/сообщения.`),v(`[INTERFACE-CHANGE] Видимые кнопки: ${e}`),v(`[INTERFACE-CHANGE] Последнее сообщение Ozon: «${a}»`),n.status="failed",n.error=`Интерфейс Ozon не распознан на фазе ${r}`,N("failed",n.sku,n.error),d.isRunning=!1,re({action:"supportNeedAction",message:`Похоже, Ozon изменил интерфейс жалоб: бот завис на «${r}» (нет знакомых кнопок). Видимые кнопки: ${e}. Проверьте чат вручную, попробуйте другой тип жалобы или сообщите в t.me/firadex.`}),await O(),"wait"}return v(`⛔ Зацикливание: фаза «${r}» повторилась ${d.phaseRepeatCount} раз — остановка`),n.status="failed",n.error=`Зацикливание на фазе ${r}`,N("failed",n.sku,n.error),d.isRunning=!1,re({action:"supportNeedAction",message:`Зацикливание на фазе «${r}». Проверьте чат вручную.`}),await O(),"wait"}if("dry"===d.mode){if(0===a){const e=d.complaintType;let t;t="content_beta"===e?"Поддержка → Новое обращение → Товары и Цены → Контроль качества → Нарушение правил площадки → Использование моих фото, видео, текста":"brand_beta"===e?"Поддержка → Новое обращение → Товары и Цены → Контроль качества → Нарушение правил площадки → Использование моего бренда":"Поддержка → Новое обращение → Личный кабинет → Кабинет бренда → Жалоба → Плагиат → Использование моих фото, видео, текста",L(`[DRY] Навигация: ${t}`)}return L(`[DRY] Ввод артикула: ${n.sku}`),d.files.length>0&&L(`[DRY] Прикрепление + отправка ${d.files.length} файлов`),L("[DRY] Ожидание → «Пожаловаться на другой товар»"),n.status="done",d.currentIndex++,re({action:"supportProgress",current:a+1,total:d.queue.length,item:n}),await se(500),"continue"}if(!n.step&&0===U(n).files.length)return await D(e,n,a,"Нет файлов для прикрепления",{logMessage:`✗ SKU ${n.sku}: нет файлов (parent=${n.parentSku||"—"}). Пропускаю до ввода артикула.`}),"continue";if("no_chat"===r){if(!await z())return"wait";v("Ожидаю загрузку чата (5с)..."),await ee(5e3);const t=await M(e);if(t&&"no_chat"!==t.phase)return v(`Чат загрузился: фаза ${t.phase}`),"continue";const a=await P(e);a&&(v(`[DEBUG] URL: ${a.url}, кнопок: ${a.allButtonCount}, input: ${a.hasInput}`),a.allButtonTexts?.length>0&&v(`[DEBUG] Кнопки: [${a.allButtonTexts.slice(0,10).join(", ")}]`)),v('Ищу кнопку "Поддержка"...');const n=await K(e,["поддержка"]);v(n?.ok?'"Поддержка" кликнута':`"Поддержка" не найдена: ${n?.error||""}`),await se(3e3),v("Создаю новое обращение...");const s=await async function(e){return await R(e,"clickNewChat")}(e);if(!s?.ok){v("«Новое обращение» не найдена — пробую кнопку «Помощь»...");const t=await R(e,"clickFaqButton");return t?.ok?(v(`Кнопка «${t.text}» нажата, ожидаю виджет (3с)...`),await ee(3e3),"continue"):(v("Кнопки не найдены"),re({action:"supportNeedAction",message:"Откройте новый чат поддержки вручную: нажмите «Помощь» → «Не нашли ответ на свой вопрос?»"}),"wait")}return F("через no_chat"),v("Новое обращение создано, ожидаю загрузку (4с)..."),await ee(4e3),"continue"}if("faq_page"===r){const t=s.faqType||"unknown";if(v(`Обнаружена FAQ-фаза (${t}: ${s.faqText||""})`),"faq_no_button"===t||"messenger_no_chat"===t)return v("Кнопки не найдены, жду загрузку (3с)..."),await ee(3e3),"continue";if("help_trigger"===t){v("Нажимаю плавающую кнопку «Помощь»...");const t=await R(e,"clickFaqButton");return t?.ok?(v("Кнопка «Помощь» нажата, ожидаю виджет FAQ (3с)..."),await ee(3e3)):(v(`Не удалось нажать «Помощь»: ${t?.error||""}`),await ee(2e3)),"continue"}v("Нажимаю «Не нашли ответ на свой вопрос?»...");const a=await R(e,"clickFaqButton");return a?.ok?(v(`Кнопка FAQ нажата (${a.type}: ${a.text}), ожидаю чат (5с)...`),await ee(5e3),"continue"):(v(`Не удалось нажать кнопку FAQ: ${a?.error||"неизвестная ошибка"}`),re({action:"supportNeedAction",message:"Нажмите «Не нашли ответ на свой вопрос?» вручную в виджете помощи"}),"wait")}if("direction_selection"===r||"category_selection"===r||"complaint_type"===r||"complaint_detail"===r||"complaint_subtype"===r){const t=await async function(e,t,a){const n=function(e,t){const a="content_beta"===t||"brand_beta"===t;switch(e){case"direction_selection":return a?{patterns:["товары и цены"],label:"Товары и Цены"}:{patterns:["личный кабинет"],label:"Личный кабинет"};case"category_selection":return a?{patterns:["контроль качества"],label:"Контроль качества"}:{patterns:["кабинет бренда"],label:"Кабинет бренда"};case"complaint_type":return a?{patterns:["нарушение правил площадки"],label:"Нарушение правил площадки другим продавцом"}:{patterns:["жалоба на товар/продавца","жалоба на товар","жалоба"],label:"Жалоба на товар/продавца"};case"complaint_subtype":return{patterns:["плагиат","копирование","нарушение интеллект"],label:"Плагиат карточек товара"};case"complaint_detail":return"brand_beta"===t?{patterns:["использование моего бренда"],label:"Использование моего бренда"}:{patterns:["использование моих фото, видео, текста","использование моих","фото, видео, текст"],label:"Использование моих фото, видео, текста"};default:return null}}(t,d.complaintType);if(!n)return null;const{patterns:s,label:r}=n,i=t,o=d.navClickRetries[i]||0,c=a.buttons||[];if(!s.some(e=>c.some(t=>t.includes(e)))){if(L(`⚠ Кнопка «${r}» НЕ найдена в меню (${c.length} кнопок: [${c.slice(0,6).join(", ")}...])`),d.navClickRetries[i]=o+1,d.navClickRetries[i]>=3){const e=c.slice(0,6).join(", ")||"—";L(`⛔ ИНТЕРФЕЙС OZON ИЗМЕНИЛСЯ: кнопка «${r}» не найдена в меню после 3 проверок. Путь жалоб «${d.complaintType}» больше не работает.`),re({action:"supportNeedAction",message:`Похоже, Ozon изменил интерфейс жалоб: на шаге «${t}» нет кнопки «${r}». Видимые кнопки: ${e}. Проверьте чат вручную, попробуйте другой тип жалобы или сообщите в t.me/firadex.`}),d.navClickRetries[i]=0,d.isPaused=!0;try{await y()}catch(e){}return"wait"}return await ee(3e3),"continue"}await se(800+1200*Math.random()),L(`Клик «${r}» (фаза ${t}, путь ${d.complaintType})...`);const l=await K(e,s);return l?.ok?(d.navClickRetries[i]=0,L(`✓ «${r}» кликнута`),await se(2500+1500*Math.random()),"continue"):(L(`⚠ Клик «${r}» неуспешен (${l?.error||""}), retry ${o+1}/3`),d.navClickRetries[i]=o+1,d.navClickRetries[i]>=3&&(L(`✗ Кнопка «${r}» не кликается после 3 попыток — остановка навигации`),d.navClickRetries[i]=0),await ee(3e3),"continue")}(e,r,s);if(t)return t}if("waiting_parent_article"===r){const t="not_found"===(s.detail||""),r=Array.isArray(n.parentSkus)&&n.parentSkus.length>0?n.parentSkus:n.parentSku?[n.parentSku]:[];if(0===r.length)return await D(e,n,a,"Ozon просит ваш SKU перед SKU нарушителя — у задачи нет parent SKU",{recoverChat:!0,logMessage:`✗ SKU ${n.sku}: Ozon добавил этап «пришлите свой SKU». В задаче нет родителя — используйте «В жалобы» из вкладки Сканирование, чтобы привязать ваш товар к SKU конкурента.`}),"continue";if(t&&"parent_sent"===n.step){const t=n._parentTryIdx||0,s=r[t]||"?";if(n._parentTryIdx=t+1,n._parentTryIdx>=r.length){const t=r.slice(0,n._parentTryIdx).join(", ");return await D(e,n,a,`Ozon не нашёл ни один parent SKU (${t}) в вашем магазине`,{recoverChat:!0,logMessage:`✗ SKU ${n.sku}: Ozon не нашёл [${t}] в вашем магазине. Проверьте, что parent SKU действительно ваш товар.`}),"continue"}v(`⚠ Ozon не нашёл parent ${s} в магазине. Пробую следующего родителя: ${r[n._parentTryIdx]}`),n.step=null}if("parent_sent"===n.step&&!t)return v("Parent SKU уже отправлен, ожидаю проверку Ozon (5с)..."),await ee(5e3),"continue";const i=n._parentTryIdx||0,o=r[i];if(!o)return await D(e,n,a,"Список parent SKU исчерпан",{recoverChat:!0,logMessage:`✗ SKU ${n.sku}: исчерпан список parent SKU [${r.join(", ")}]`}),"continue";await se(1e3+1500*Math.random()),v(`Отправляю свой (parent) SKU ${o}${r.length>1?` (родитель ${i+1}/${r.length})`:""}...`);const c=await B(e,o);return c?.ok?(n.step="parent_sent",v(`Parent SKU ${o} отправлен ✓ (ожидаю проверку Ozon)`),await se(4e3+2e3*Math.random()),"continue"):(await D(e,n,a,"Не удалось отправить parent SKU",{recoverChat:!0,logMessage:`Не удалось отправить parent SKU ${o}: ${c?.error||"unknown"}`}),"continue")}if("waiting_article"===r||"input_ready"===r){if("article_sent"===n.step||"file_sent"===n.step||"completed"===n.step)return v("Артикул уже отправлен, ожидаю следующую фазу (5с)..."),await ee(5e3),"continue";if("input_ready"===r&&!n.step){const t=await P(e),a=(t?.lastBotMsg||"").toLowerCase(),n=a.includes("скопируйте")||a.includes("артикул")||a.includes("пришлите только")||a.includes("введите")||a.includes("пришлите одно")||a.includes("значение артикула")||a.includes("номер товара")||a.includes("укажите товар")||a.includes("sku")||a.includes("номер артикула")||a.includes("отправьте артикул");if(n&&v(`[SMART] Бот запросил артикул: «${a.substring(0,80)}...»`),!n&&d.phaseRepeatCount<3)return v(`[SMART] input_ready без запроса артикула (попытка ${d.phaseRepeatCount}/3), бот: «${a.substring(0,80)}» — жду 3с...`),await ee(3e3),"continue";n||v(`[SMART] Fallback: отправляю артикул (бот-текст: «${a.substring(0,60)}»)`)}await se(1e3+1500*Math.random()),v(`Отправляю артикул ${n.sku}...`);const t=await B(e,n.sku);return t?.ok?(n.step="article_sent",v(`Артикул ${n.sku} отправлен ✓`),await se(4e3+2e3*Math.random()),"continue"):(await D(e,n,a,"Не удалось ввести артикул",{recoverChat:!0,logMessage:`Не удалось отправить артикул: ${t?.error||"unknown"}`}),"continue")}if("waiting_attachment"===r){const t="evidence_insufficient"===(s.detail||"");if(t&&"file_sent"===n.step)v(`📩 Бот запросил дополнительные доказательства для SKU ${n.sku}`),n._evidenceUsedIdx=n._evidenceUsedIdx||0,n._needsNextEvidence=!0,n.step="article_sent";else if("file_sent"===n.step){const t=await P(e);if("[FILE]"===t?.lastUserMsg||!(d.phaseRepeatCount<3))return v("Файл уже отправлен, ожидаю ответ бота (5с)..."),await ee(5e3),"continue";v("Файл не появился в чате, повторяю отправку..."),n.step="article_sent"}const r=U(n);if(0===r.files.length)return await D(e,n,a,"Нет файлов для прикрепления",{recoverChat:!0,logMessage:`✗ SKU ${n.sku}: нет файлов (parent=${n.parentSku||"—"}). Помечаю failed.`}),"continue";let i;if(t){const t=n._evidenceUsedIdx||0;if(t>=r.files.length){const t="content_beta"===d.complaintType,s=2;if(n._evidenceResendCount=n._evidenceResendCount||0,!(t&&r.files.length>0&&n._evidenceResendCount<s)){const r=t?`Ozon повторно запросил доказательства после ${s} контрольных повторов файла`:"Бот запросил доп. доказательства, но файлы исчерпаны";return await D(e,n,a,r,{recoverChat:!0,logMessage:`⚠ SKU ${n.sku}: ${r}. Помечаю failed и перехожу к следующему SKU.`}),"continue"}i=[r.files[r.files.length-1]],n._evidenceResendCount++,v(`🔁 [Мой контент] Файлы исчерпаны (${r.files.length}/${r.files.length}). Повторно отправляю последний файл (попытка ${n._evidenceResendCount}/${s})`)}else i=[r.files[t]],v(`Прикрепляю ДОПОЛНИТЕЛЬНЫЙ файл (${t+1}/${r.files.length}, источник: ${r.source})`)}else i=r.files.slice(),n._evidenceUsedIdx=0,n._evidenceResendCount=0,v(`Прикрепляю ${i.length} файл(ов) (источник: ${r.source}, parent=${n.parentSku||"—"})`);let o=!1,c=null;for(let a=0;a<i.length;a++){const s=i[a],l=t?r.files.length:i.length,u=`${t?(n._evidenceUsedIdx||0)+1:a+1}/${l}`;let p;try{p=await Z(s)}catch(e){v(`[${u}] Ошибка чтения файла ${s.name||s.id||"document"}: ${e.message||e}`);continue}await se(2e3+2e3*Math.random());const h=p.base64&&p.base64.length>6291456,f=p.base64?Math.round(.75*p.base64.length/1024):0,g=await P(e),m=g?.chatMsgCount||0;v(`[${u}] Прикрепляю${h?" КРУПНЫЙ файл (видео/HD)":""}: ${p.name||s.name||"document"} (${f} КБ, тип ${p.type||"?"}, baseline ${m})...`);const w=Date.now(),y=await W(e,p.name,p.base64,p.type),S=Date.now()-w;if(y?.ok){if(v(`[${u}] Файл прикреплён${y.sent?" и отправлен ✓":" ⚠ НЕ отправлен (файл остался в поле ввода)"} за ${S}мс`),!y.sent){v(`[${u}] Пробую отправить файл повторно...`);let t=!1;for(let a=0;a<3;a++){const n=await R(e,"clickSend");if(await ee(h?5e3:3e3),n?.ok){const n=await P(e);if(n&&(n.chatMsgCount||0)>m){t=!0,v(`[${u}] ✓ Файл отправлен после повторного клика (попытка ${a+1})`);break}}a<2&&(v(`[${u}] Повтор отправки (${a+2}/3)...`),await ee(3e3+3e3*a))}if(!t){v(`[${u}] ⚠ Файл так и не ушёл из поля ввода после 3 попыток`),c=await P(e),a<i.length-1&&await ee(2e3);continue}}let t=!1,s=15;h&&(s=f>=51200?90:f>=10240?60:30);const r=["скрыли товар","нарушение подтвердилось","нарушение рассмотрено","рассмотрим","получили ваш","направил","направили","проверим","жалобу рассмотр","пожаловаться на другой",n.sku];let l=null;for(let a=0;a<s;a++){if(await ee(1e3),!d.isRunning||d.isPaused)return"stop";const a=await P(e);if(!a)continue;l=a;const n=(a.chatMsgCount||0)>m,s=(a.chatMsgCount||0)>=m+2,i=(a.lastBotMsg||"").toLowerCase(),o=n&&r.some(e=>i.includes(e));if("[FILE]"===a.lastUserMsg||o||s){t=!0;break}if(n&&a.lastMsgIsMine){t=!0;break}}t?(v(`[${u}] ✓ Файл в чате`),o=!0,n._evidenceUsedIdx=(n._evidenceUsedIdx||0)+1):(c=l,v(`[${u}] ⚠ Файл не появился в чате за ${s}с (msgs ${m}→${l?.chatMsgCount??"?"}, last user: «${l?.lastUserMsg||"—"}», last bot: «${(l?.lastBotMsg||"—").slice(0,80)}») — пробую следующий`)),a<i.length-1&&await ee(3e3+2e3*Math.random())}else v(`[${u}] Ошибка прикрепления: ${y?.error||"неизвестная ошибка"} (за ${S}мс)`)}return o?(d.consecutiveAttachFails=0,n.step="file_sent",await se(5e3),"continue"):(d.consecutiveAttachFails=(d.consecutiveAttachFails||0)+1,c&&v(`[ATTACH-DIAG] hasFileInput=${c.hasFileInput} hasInput=${c.hasInput} hasSendBtn=${c.hasSendButton} viewport=${c.viewportWidth}px`),1===d.consecutiveAttachFails&&v("💡 Возможные причины: файл слишком большой / неподдерживаемый формат / Ozon временно ограничил приём файлов в чате"),d.consecutiveAttachFails>=5&&!d.attachFailAdviceShown&&(v(`⚠ ${d.consecutiveAttachFails} SKU подряд: файлы прикрепляются, но НЕ ПОЯВЛЯЮТСЯ в чате. Это не эскалация — это проблема с загрузкой файлов. Возможно: Ozon antispam (сделайте паузу 30 мин), браузер тротлит фоновую вкладку (не сворачивайте), либо изменился интерфейс Ozon. Скопируйте лог и пришлите в t.me/firadex.`),d.attachFailAdviceShown=!0),await D(e,n,a,"Ни один файл не удалось прикрепить",{recoverChat:!0,logMessage:`✗ SKU ${n.sku}: ни один из ${r.files.length} файлов не прошёл — failed`}),"continue")}if("in_progress"===r){const e=s.detail||"";return"file_sent_waiting"===e?(n.step="file_sent",v("Файл отправлен — ожидаю ответ бота (5с)...")):"article_sent_waiting"===e?(n.step="article_sent",v("Артикул отправлен — ожидаю ответ бота (5с)...")):v("Бот обрабатывает — ожидаю (5с)..."),await ee(5e3),"continue"}if("no_violation"===r){if(!n.step){v(`[SMART] Новый SKU ${n.sku} видит старый чат «без нарушений» — открываю новое обращение...`);const t=await q(e,"старый no_violation перед новым SKU");return t?(e=t,d.lastPhase=null,d.phaseRepeatCount=0,d._staleWaitCount=0,"continue"):(await G("Не удалось открыть новое обращение после ответа Ozon «без нарушений»"),"wait")}return d.consecutiveFailed=0,d.consecutiveEscalations=0,await D(e,n,a,"Ozon не нашёл нарушений",{status:"no_violation",category:"noViolation",recoverChat:!0,recoverLogMessage:"Открываю новую страницу чатов для следующего SKU после ответа «без нарушений»...",logMessage:`○ SKU ${n.sku}: Ozon не нашёл нарушений — перехожу к следующему SKU`}),"continue"}if("chat_escalated"===r){if(v("⚠ Чат эскалирован оператору"),n&&"completed"!==n.step){const t=await j(e,n);if(t.confirmed)n.status="done",n.step="completed",v(`SKU ${n.sku} — обработан ✓ (принят перед эскалацией)`),d.consecutiveEscalations=0;else if(t.handed)n.status="escalated",n.step="completed",n.error="Передано оператору — ожидает ручной обработки",N("escalated",n.sku,n.error),v(`SKU ${n.sku} — уже передан оператору (escalated)`),d.consecutiveEscalations++,d.consecutiveFailed=0;else{const t="Пожалуйста рассмотрите жалобу";await se(1500+1e3*Math.random());const s=await B(e,t);s?.ok?(v(`Отправлено оператору: «${t}» ✓`),await ee(3e3)):v(`Не удалось написать оператору: ${s?.error||"поле ввода недоступно"}`);const r=await j(e,n);if(!r.handed&&!r.confirmed)return d._escalatedRetry=(d._escalatedRetry||0)+1,d._escalatedRetry<3?(v(`⚠ Handoff не подтверждён (попытка ${d._escalatedRetry}/3) — остаюсь в чате, жду 10с`),await ne(1e4)?"continue":"stop"):(v(`✗ SKU ${n.sku}: 3 попытки не подтвердили handoff — помечаю failed БЕЗ создания нового чата`),n.status="failed",n.step="completed",n.error="Handoff не подтверждён после 3 попыток",N("failed",n.sku,n.error),d._escalatedRetry=0,d.currentIndex++,re({action:"supportProgress",current:a+1,total:d.queue.length,item:n}),d.lastPhase=null,d.phaseRepeatCount=0,await O(),"continue");r.confirmed?(n.status="done",n.step="completed",v(`SKU ${n.sku} — обработан ✓ (подтверждён после просьбы)`),d.consecutiveEscalations=0):(n.status="escalated",n.step="completed",n.error="Передано оператору — ожидает ручной обработки",N("escalated",n.sku,n.error),v(`SKU ${n.sku} — передан оператору (escalated)`),d.consecutiveEscalations++,d.consecutiveFailed=0)}d._escalatedRetry=0,d.currentIndex++,re({action:"supportProgress",current:a+1,total:d.queue.length,item:n}),await O(),await y()}if(!await async function(){const e=d.limits.maxConsecutiveEscalations;if(0===e){const e=2e4+15e3*Math.random();return!!await ae(e,{label:`⏱ Длинная антибот-пауза при эскалациях подряд ${d.consecutiveEscalations}`,logEveryMs:1e4})}if(d.consecutiveEscalations>=e){const e=2e4+15e3*Math.random();if(!await ae(e,{label:`⚠ ${d.consecutiveEscalations} эскалаций подряд — ручная остановка отключена, делаю антибот-паузу и продолжаю`,logEveryMs:1e4}))return!1}return!0}())return"wait";if(!await z())return"wait";v("Открываю новую страницу чатов для следующего SKU...");const t=await q(e,"после chat_escalated");return t?(e=t,F("после chat_escalated"),d.lastPhase=null,d.phaseRepeatCount=0,d._staleWaitCount=0,await O(),"continue"):(await G("Не удалось открыть новую страницу чатов после передачи оператору"),"wait")}if("item_completed"===r||"ready_for_next"===r){if(!n.step){d._staleWaitCount||(d._staleWaitCount=0),d._staleWaitCount++;const t=5;if(d._staleWaitCount<=t){v(`[SMART] Новый SKU ${n.sku} — чат в фазе ${r}, кликаю «Пожаловаться на другой» (${d._staleWaitCount}/${t})...`);const a=await K(e,["пожаловаться на другой"]);if(a?.ok){v("[SMART] Кнопка цикла кликнута, жду переход..."),await ee(5e3);const t=await M(e);if(t&&"ready_for_next"!==t.phase&&"item_completed"!==t.phase)return v(`[SMART] Переход успешен → фаза: ${t.phase}`),d._staleWaitCount=0,d.lastPhase=null,d.phaseRepeatCount=0,"continue";v("[SMART] Фаза не сменилась, повторю..."),await ee(3e3)}else v("[SMART] Кнопка цикла не найдена — жду 3с..."),await ee(3e3);return"continue"}if(!await z())return"wait";v(`[SMART] ${d._staleWaitCount} попыток не сменили фазу — открываю новый чат...`),d._staleWaitCount=0;const a=await q(e,"fallback после ready_for_next");return a?(e=a,d.lastPhase=null,d.phaseRepeatCount=0,"continue"):(await G("Не удалось начать новую жалобу — кнопка цикла не работает"),"wait")}if("article_sent"===n.step||"file_sent"===n.step){const t=await P(e),a=t?.lastBotMsg||"";if(!(a.includes(n.sku)||a.includes("скрыли товар")||a.includes("нарушение подтвердилось")||a.includes("пожаловаться на другой"))&&"item_completed"!==r)return v(`[SMART] SKU ${n.sku} не подтверждён в ответе бота — жду (5с)...`),await ee(5e3),"continue"}if(d._staleWaitCount=0,n.status="done",n.step="completed",d.currentIndex++,v(`SKU ${n.sku} — жалоба обработана ✓`),re({action:"supportProgress",current:a+1,total:d.queue.length,item:n}),await O(),d.currentIndex<d.queue.length){const t=7e3+8e3*Math.random();if(v(`Антибот-пауза ${Math.round(t/1e3)}с...`),!await ne(t))return"stop";if("ready_for_next"===r||(s.buttons||[]).some(e=>e.includes("пожаловаться"))){if(!d.isRunning||d.isPaused)return"stop";v("Нажимаю «Пожаловаться на другой товар»...");const t=await K(e,["пожаловаться на другой"]);if(!t?.ok){if(v("Кнопка цикла не найдена — жду обновления (5с)..."),!await ne(5e3))return"stop";const t=await K(e,["пожаловаться на другой"]);if(!t?.ok)return v("Кнопка цикла не найдена повторно"),re({action:"supportNeedAction",message:"Нажмите «Пожаловаться на другой товар» вручную"}),"wait"}if(v("[SMART] Жду обновление страницы после клика «Пожаловаться на другой»..."),!await ne(4e3))return"stop";const a=await M(e);if(a&&("ready_for_next"===a.phase||"item_completed"===a.phase)&&(v("[SMART] Страница ещё не обновилась — доп. ожидание 5с..."),!await ne(5e3)))return"stop"}}return d.lastPhase=null,d.phaseRepeatCount=0,"continue"}if("has_buttons"===r){v(`Неизвестные кнопки: [${(s.buttons||[]).slice(0,8).join(", ")}]`);const t=["личный кабинет","кабинет бренда","качество","жалоба","плагиат","использование моих","использование моего бренда","нарушение правил площадки","нарушение","товары и цены","контроль качества","пожаловаться","поддержка"];for(const a of t)if((s.buttons||[]).some(e=>e.includes(a))){v(`Найдена знакомая кнопка «${a}», пробую кликнуть...`);const t=await K(e,[a]);if(t?.ok)return await se(2500),"continue"}v("Знакомых кнопок нет — пробую кнопку «Помощь»...");const a=await R(e,"clickFaqButton");return a?.ok?(v(`Кнопка «${a.text}» нажата, ожидаю виджет (3с)...`),await ee(3e3),"continue"):(v("Жду обновление чата (5с)..."),await ee(5e3),"continue")}if("unknown"===r)return v("Состояние неопределённо, ожидаю (5с)..."),await ee(5e3),"continue";v(`⛔ Необработанная фаза: ${r}`),v(`Кнопки: [${(s.buttons||[]).join(", ")}]`),d.isRunning=!1,re({action:"supportNeedAction",message:`Неожиданное состояние чата (${r}). Проверьте страницу вручную.`}),await O()}let X={isRunning:!1,isPaused:!1,skus:[],currentIndex:0,results:[],config:{},logs:[],workerTabId:null,workerWindowId:null,hiddenTabId:null,hiddenTabCreated:!1};function ee(e){return new Promise(t=>setTimeout(t,e))}async function te(){try{d.sellerTabId?await chrome.tabs.get(d.sellerTabId):await chrome.runtime.getPlatformInfo()}catch(e){try{await chrome.runtime.getPlatformInfo()}catch(e){}}await y()}async function ae(e,t={}){const a=h,n=t.heartbeatMs||(e>=1e4?4e3:0),s=t.logEveryMs||0,r=t.label||"",i=Date.now()+Math.max(0,e);let o=Date.now(),c=s?Date.now()+s:1/0;for(r&&v(`${r}: ${Math.round(e/1e3)}с`),await te();Date.now()<i;){if(await ee(Math.min(250,Math.max(1,i-Date.now()))),!d.isRunning||d.isPaused)return!1;if(a&&a!==h)return!1;const e=Date.now();n&&e>=o&&(o=e+n,await te()),s&&e>=c&&(c=e+s,v(`${r||"Антибот-пауза"}: осталось ${Math.max(1,Math.ceil((i-e)/1e3))}с`))}return await te(),r&&v("Антибот-пауза завершена"),!0}async function ne(e){if(e>=1e4)return await ae(e);const t=h,a=Math.max(1,Math.ceil(e/250));for(let e=0;e<a;e++){if(await ee(250),!d.isRunning||d.isPaused)return!1;if(t&&t!==h)return!1}return!0}function se(e){const t=.3*e,a=e+(Math.random()*t*2-t);return ee(Math.round(a))}function re(e){try{chrome.runtime.sendMessage(e)}catch(e){}if(e&&("supportProgress"===e.action||"supportComplete"===e.action||"supportNeedAction"===e.action))try{S()}catch(e){}}function ie(e){const t=`[${(new Date).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}] ${e}`;if(X.logs.push(t),re({action:"scanLog",text:t}),X.workerTabId)try{chrome.tabs.sendMessage(X.workerTabId,{action:"scanPanelUpdate",log:t,current:X.currentIndex+1,total:X.skus.length})}catch(e){}console.log("[OZG]",e)}async function oe(e,t){const a=await chrome.scripting.executeScript({target:{tabId:e},func:async e=>{const t=[`/api/entrypoint-api.bx/page/json/v2?url=${encodeURIComponent(e)}`,`/api/composer-api.bx/page/json/v2?url=${encodeURIComponent(e)}`],a={Accept:"application/json","x-o3-app-name":"ozonapp_web","x-o3-app-version":"1.0.0","sec-fetch-dest":"empty","sec-fetch-mode":"cors","sec-fetch-site":"same-origin"};for(const e of t)try{const t=await fetch(e,{method:"GET",credentials:"include",headers:a});if(!t.ok)continue;const n=await t.json();if(n&&(n.widgetStates||n.modal||n.content))return{error:null,data:n}}catch(e){continue}return{error:"Все API вернули пусто",data:null}},args:[t],world:"MAIN"}),n=a?.[0]?.result;return n&&!n.error&&n.data?ce(n.data):[]}function ce(e){const t=[],a=e.widgetStates||{};for(const[e,n]of Object.entries(a)){let e;try{e="string"==typeof n?JSON.parse(n):n}catch(e){continue}if(e.sellers&&Array.isArray(e.sellers))for(const a of e.sellers){const e=a.name||"";if(!e)continue;const n=String(a.id||""),s=String(a.sku||""),r=a.link||(n?`https://www.ozon.ru/seller/${n}/`:""),i=a.productLink||(s?`https://www.ozon.ru/product/${s}/`:"");let o="";try{if(null!=a.price){const e=JSON.stringify(a.price).match(/(\d[\d\s\u00a0]*)\s*₽/);if(e)o=e[1].replace(/[\s\u00a0]/g,"");else{const e=[a.price?.price,a.price?.cardPrice,a.price?.originalPrice,a.price?.value,a.price?.amount,a.price?.text,"string"==typeof a.price?a.price:null,"number"==typeof a.price?a.price:null];for(const t of e){if(null==t)continue;const e=String(t).match(/(\d[\d\s\u00a0.,]*)/);if(e&&e[1].replace(/[\s\u00a0]/g,"").length>=2){o=e[1].replace(/[\s\u00a0]/g,"");break}}}}}catch(e){}t.push({name:e.trim(),sellerId:n,price:o,competitorSku:s,url:r,productLink:i})}}return t}async function le(e,t,a){const n=await async function(e,t){const a=`/product/${e}/`,n=await chrome.scripting.executeScript({target:{tabId:t},func:async(e,t)=>{const a=[`/api/entrypoint-api.bx/page/json/v2?url=${encodeURIComponent(t)}`,`/api/composer-api.bx/page/json/v2?url=${encodeURIComponent(t)}`],n={Accept:"application/json","x-o3-app-name":"ozonapp_web","x-o3-app-version":"1.0.0","sec-fetch-dest":"empty","sec-fetch-mode":"cors","sec-fetch-site":"same-origin"};for(const e of a)try{const t=await fetch(e,{method:"GET",credentials:"include",headers:n});if(!t.ok)continue;const a=await t.json();if(a&&a.widgetStates&&Object.keys(a.widgetStates).length>0)return{data:a,error:null,method:"direct-"+(e.includes("entrypoint")?"entry":"composer")}}catch(e){continue}try{const s=`/api/entrypoint-api.bx/page/json/v2?url=${encodeURIComponent("/search/?text="+e+"&from_global=true")}`,r=await fetch(s,{method:"GET",credentials:"include",headers:n});if(r.ok){const s=await r.json();if(s&&s.widgetStates){const r=s.widgetStates;for(const[s,i]of Object.entries(r))try{const s="string"==typeof i?JSON.parse(i):i,r=JSON.stringify(s).match(new RegExp('/product/[^"]*'+e+'[^"]*',"i"));if(r){const e=r[0].split("?")[0];for(const s of a){const a=s.replace(encodeURIComponent(t),encodeURIComponent(e));try{const e=await fetch(a,{method:"GET",credentials:"include",headers:n});if(!e.ok)continue;const t=await e.json();if(t&&t.widgetStates&&Object.keys(t.widgetStates).length>0)return{data:t,error:null,method:"search-api"}}catch(e){continue}}}}catch(e){}}}}catch(e){}return{data:null,error:"API не вернул данные",method:null}},args:[e,a],world:"MAIN"}),s=n?.[0]?.result;return s?.data?.widgetStates?(ie(`API прямой: ${Object.keys(s.data.widgetStates).length} виджетов (${s.method})`),s.data):null}(e,t);if(!n)return null;if(!function(e,t){const a=e.widgetStates||{},n=Object.keys(a).some(e=>e.toLowerCase().includes("productheading")||e.toLowerCase().includes("product_heading"));if(!n)return!1;if(JSON.stringify(a).substring(0,5e4).includes(t))return!0;if(e.seo?.url&&e.seo.url.includes(t))return!0;const s=e.seo?.title||"";return!s.includes("купить на OZON")&&!s.includes("купить на Ozon")&&n}(n,e))return ie(`⚠ SKU ${e}: OZON вернул категорию вместо товара (нет в наличии?) — пропуск`),{sku:e,sellers:[],productName:"",error:"Товар не найден или не в наличии"};const s=we(n);let r=[];if(s.otherSellersCount>0&&s.modalLink)r=await oe(t,s.modalLink);else if(s.otherSellersCount>0){const a=function(e,t){const a=e.widgetStates||{};for(const[e,n]of Object.entries(a))try{const e="string"==typeof n?n:JSON.stringify(n),a=e.match(/"product_id"\s*:\s*(\d+)/);if(a)return a[1];if(e.match(new RegExp('"id"\\s*:\\s*'+t)))return t}catch(e){}return t}(n,e);if(a){const e=`/modal/otherOffersFromSellers?product_id=${a}`;r=await oe(t,e)}}return n.sellers&&n.sellers.length>0&&0===r.length&&(r=n.sellers),{sku:e,sellers:Se(r,a),productName:s.productName,error:null}}async function ue(){if(X.workerTabId)try{const e=await chrome.tabs.get(X.workerTabId);if(e&&e.url&&e.url.includes("ozon.ru"))return X.workerTabId}catch(e){X.workerTabId=null,X.workerWindowId=null}ie("Создаю рабочее окно OZON...");const e=await chrome.windows.create({url:"https://www.ozon.ru/",focused:!1,type:"normal",width:1200,height:800,left:0,top:0});X.workerTabId=e.tabs[0].id,X.workerWindowId=e.id,await he(X.workerTabId),await ee(2e3);try{await chrome.scripting.executeScript({target:{tabId:X.workerTabId},files:["content/scan-panel.js"]})}catch(e){}return X.workerTabId}async function de(){if(X.workerTabId)try{await chrome.scripting.executeScript({target:{tabId:X.workerTabId},files:["content/scan-panel.js"]})}catch(e){}}async function pe(){if(X.workerWindowId)try{await chrome.windows.remove(X.workerWindowId)}catch(e){}else if(X.workerTabId)try{await chrome.tabs.remove(X.workerTabId)}catch(e){}X.workerTabId=null,X.workerWindowId=null}function he(e){return new Promise((t,a)=>{const n=setTimeout(()=>{chrome.tabs.onUpdated.removeListener(s),t()},2e4);function s(a,r){a===e&&"complete"===r.status&&(clearTimeout(n),chrome.tabs.onUpdated.removeListener(s),t())}chrome.tabs.get(e,e=>{if(chrome.runtime.lastError)return clearTimeout(n),a(new Error("Вкладка не найдена")),"continue";"complete"===e.status?(clearTimeout(n),t()):chrome.tabs.onUpdated.addListener(s)})})}async function fe(e){try{await chrome.scripting.executeScript({target:{tabId:e},func:()=>{const e=200+600*Math.random();window.scrollTo({top:e,behavior:"smooth"});const t=100+Math.random()*(window.innerWidth-200),a=100+Math.random()*(window.innerHeight-200);document.dispatchEvent(new MouseEvent("mousemove",{clientX:t,clientY:a,bubbles:!0}));const n=document.elementFromPoint(t,a);n&&(n.dispatchEvent(new MouseEvent("mouseenter",{clientX:t,clientY:a,bubbles:!0})),n.dispatchEvent(new MouseEvent("mouseover",{clientX:t,clientY:a,bubbles:!0}))),setTimeout(()=>{window.scrollTo({top:.3*e,behavior:"smooth"})},300+500*Math.random())},world:"MAIN"})}catch(e){}}async function ge(e){try{await chrome.scripting.executeScript({target:{tabId:e},func:()=>{window.__ozguard={widgetStates:{},seo:null,layout:[],widgetCount:0,callCount:0,ready:!1,method:"",urls:[]}},world:"MAIN"})}catch(e){}}async function me(e){const t=await ue(),a=`https://www.ozon.ru/search/?text=${encodeURIComponent(e)}&from_global=true`;ie(`Ищу SKU ${e}...`),await chrome.tabs.update(t,{url:a}),await he(t),await de(),await se(3e3),await fe(t),await se(800);let n=await chrome.tabs.get(t),s=n.url||"";s.includes("/product/")&&(ie("Редирект на товар, возвращаюсь к поиску..."),await chrome.tabs.update(t,{url:a}),await he(t),await de(),await se(3e3),await fe(t),await se(600));const r=await async function(e,t){const a=await chrome.scripting.executeScript({target:{tabId:e},func:e=>{const t=document.querySelectorAll('a[href*="/product/"]');let a=null,n=null;for(const s of t){const t=s.getAttribute("href")||"";if(!t.includes("/product/")||t.length<15)continue;const r=t.split("?")[0];if(n||(n=r),r.includes(e)){a=r;break}}return a||n||null},args:[t],world:"MAIN"});return a?.[0]?.result||null}(t,e);if(!r)throw new Error(`Товар по SKU ${e} не найден на OZON`);if(ie(`Найден: ${r.substring(0,55)}`),await ge(t),ie("SPA-переход на товар..."),await chrome.scripting.executeScript({target:{tabId:t},func:e=>{const t=e.split("?")[0],a=document.querySelectorAll('a[href*="/product/"]');for(const e of a){const a=(e.getAttribute("href")||"").split("?")[0];if(a===t||a.includes(t)||t.includes(a))return e.removeAttribute("target"),e.click(),"continue"}const n=document.createElement("a");n.href=e,n.style.display="none",document.body.appendChild(n),n.click(),n.remove()},args:[r],world:"MAIN"}),await se(3e3),await fe(t),await se(500),n=await chrome.tabs.get(t),s=n.url||"",!s.includes("/product/")){ie("SPA не сработала, пробую прямой переход..."),await ge(t);const e=r.startsWith("http")?r:"https://www.ozon.ru"+r;await chrome.tabs.update(t,{url:e}),await he(t),await de(),await se(3e3),await fe(t)}n=await chrome.tabs.get(t),s=n.url||"";const i=new URL(s).pathname;if(ie(`На странице: ${i}`),!s.includes(e))return ie(`⚠ SKU ${e} не найден в URL — возможно OZON показал другой товар, пропускаю`),{widgetStates:{},url:s,skuMismatch:!0};await se(1200),ie("Запрашиваю данные через API...");const o=await chrome.scripting.executeScript({target:{tabId:t},func:async e=>{const t=[`/api/entrypoint-api.bx/page/json/v2?url=${encodeURIComponent(e)}`,`/api/composer-api.bx/page/json/v2?url=${encodeURIComponent(e)}`];for(const e of t)try{const t=await fetch(e,{method:"GET",credentials:"include",headers:{Accept:"application/json","x-o3-app-name":"ozonapp_web","x-o3-app-version":"1.0.0","sec-fetch-dest":"empty","sec-fetch-mode":"cors","sec-fetch-site":"same-origin"}});if(!t.ok){const t=await new Promise(t=>{const a=new XMLHttpRequest;a.open("GET",e,!0),a.setRequestHeader("Accept","application/json"),a.setRequestHeader("x-o3-app-name","ozonapp_web"),a.withCredentials=!0,a.onload=function(){if(200===a.status)try{t({data:JSON.parse(a.responseText),error:null,status:a.status})}catch(e){t({data:null,error:"JSON parse",status:a.status})}else t({data:null,error:`HTTP ${a.status}`,status:a.status})},a.onerror=()=>t({data:null,error:"network error",status:0}),a.send()});if(t.data&&t.data.widgetStates)return{data:t.data,error:null,method:"xhr-"+e.substring(5,20)};continue}const a=await t.json();if(a&&a.widgetStates)return{data:a,error:null,method:"fetch-"+e.substring(5,20)}}catch(e){continue}try{const e=document.getElementById("__next")||document.getElementById("app")||document.getElementById("root");if(e){const t=Object.keys(e).find(e=>e.startsWith("__reactFiber")||e.startsWith("__reactInternalInstance"));if(t){let a=e[t],n=0;for(;a&&n<20;){const e=a.memoizedState||a.stateNode?.state;if(e&&"object"==typeof e){let t=e;for(;t;){if(t.memoizedState&&"object"==typeof t.memoizedState){const e=t.memoizedState;if(e.widgetStates)return{data:e,error:null,method:"react-fiber"}}t=t.next}}a=a.child||a.sibling||a.return,n++}}}}catch(e){}const a=[],n=document.querySelectorAll('a[href*="/seller/"]'),s=new Set;for(const e of n){const t=e.getAttribute("href")||"";if(t.includes("/info/")||t.includes("/reviews"))continue;const n=t.match(/\/seller\/([^/?#]+)/);if(!n||s.has(n[1]))continue;s.add(n[1]);const r=n[1].match(/(\d+)$/),i=e.textContent.trim();i&&i.length>1&&a.push({name:i,sellerId:r?r[1]:"",url:"https://www.ozon.ru"+t})}return{data:null,sellers:a,error:"API вернул пусто или 403",diag:{url:location.href,title:document.title,bodyLen:document.body?.innerHTML?.length||0,dataWidgets:document.querySelectorAll("[data-widget]").length,sellerLinks:n.length,allWidgetNames:[...document.querySelectorAll("[data-widget]")].map(e=>e.getAttribute("data-widget")).slice(0,30)}}},args:[i],world:"MAIN"}),c=o?.[0]?.result;if(c?.data?.widgetStates){const e=c.data.widgetStates;return ie(`API OK: ${Object.keys(e).length} виджетов (${c.method})`),c.data}if(c?.sellers?.length>0)return ie(`DOM: ${c.sellers.length} продавцов`),{widgetStates:{},sellers:c.sellers};if(c?.diag){const e=c.diag;ie(`ДИАГ: body=${e.bodyLen}b, data-widget=${e.dataWidgets}, seller-links=${e.sellerLinks}`),e.allWidgetNames?.length>0&&ie(`DOM виджеты: ${e.allWidgetNames.join(", ")}`)}throw ie(`Ошибка API: ${c?.error||"нет результата"}`),new Error("Не удалось получить данные товара")}function we(e){const t=function(e){const t=e.widgetStates||{};for(const[e,a]of Object.entries(t))if(e.toLowerCase().includes("productheading")||e.toLowerCase().includes("product_heading"))try{const e="string"==typeof a?JSON.parse(a):a;if(e.title)return e.title;if(e.name)return e.name}catch(e){}return e.seo?.title?e.seo.title:""}(e),a=e.widgetStates||{};let n=0,s="",r="";for(const[e,t]of Object.entries(a)){const a=e.toLowerCase();let i;try{i="string"==typeof t?JSON.parse(t):t}catch(e){continue}if((a.includes("bestseller")||a.includes("best_seller"))&&(i.count&&(n=parseInt(i.count,10)||0),i.modalLink&&(s=i.modalLink)),a.includes("currentseller")||a.includes("current_seller")){const e=JSON.stringify(i);if(e.match(/\/seller\/([^"/?]+)/)){if(e.match(/"title"[^}]*"text"\s*:\s*"([^"]+)"/),i.header?.subtitle?.components)for(const e of i.header.subtitle.components)if(e.text&&"Подписаться"!==e.text&&!e.text.includes("SIZE_")){r=e.text;break}!r&&i.header?.subtitle?.text&&"Подписаться"!==i.header.subtitle.text&&(r=i.header.subtitle.text)}}}return{productName:t,otherSellersCount:n,modalLink:s,currentSellerName:r}}async function ye(e,t){ie("Загружаю список продавцов...");const a=await chrome.scripting.executeScript({target:{tabId:e},func:async e=>{const t=[`/api/entrypoint-api.bx/page/json/v2?url=${encodeURIComponent(e)}`,`/api/composer-api.bx/page/json/v2?url=${encodeURIComponent(e)}`];for(const e of t)try{const t=await fetch(e,{method:"GET",credentials:"include",headers:{Accept:"application/json","x-o3-app-name":"ozonapp_web","x-o3-app-version":"1.0.0","sec-fetch-dest":"empty","sec-fetch-mode":"cors","sec-fetch-site":"same-origin"}});if(!t.ok)continue;const a=await t.json();if(a&&(a.widgetStates||a.modal||a.content||a.items))return{error:null,data:a,method:e.includes("entrypoint")?"entrypoint":"composer"}}catch(e){continue}return{error:"Все API вернули пусто",data:null}},args:[t],world:"MAIN"}),n=a?.[0]?.result;if(!n||n.error||!n.data)return ie(`Modal ошибка: ${n?.error||"нет данных"}`),[];ie(`Modal OK (${n.method})`);const s=ce(n.data);return ie(`Modal: ${s.length} продавцов`),s}function Se(e,t){const a=new Set,n=[],s=(t.excludeSellers||[]).map(e=>e.toLowerCase().trim()).filter(Boolean);for(const t of e){const e=t.sellerId||t.name.toLowerCase();if(a.has(e))continue;a.add(e);const r=t.name.toLowerCase();s.some(e=>r.includes(e))||n.push(t)}return n}async function ke(){for(;X.isPaused&&X.isRunning;)await ee(500)}async function be(e,t,a){try{const n={id:Date.now().toString(36)+Math.random().toString(36).substr(2,5),date:(new Date).toISOString(),skusCount:a.length,skus:a,sellersFound:e.reduce((e,t)=>e+(t.sellers?t.sellers.length:0),0),excludeSellers:t.excludeSellers||[],results:e,logs:X.logs.slice()};let s=(await chrome.storage.local.get(["scanHistory"])).scanHistory||[];s.unshift(n),s.length>10&&(s=s.slice(0,10)),await chrome.storage.local.set({scanHistory:s}),ie("Сессия сохранена")}catch(e){console.error("[OZG] saveToHistory:",e)}}chrome.runtime.onMessage.addListener((e,n,i)=>{if("getLicenseStatus"===e.action)return c().then(e=>i(e)),!0;if("activateTrial"===e.action)return async function(){const e=await a(),t=navigator?.userAgent||"Chrome Extension",n=await s("trial_activate",{fingerprint:e,browser:t});if("network_error"===n.error)return{success:!1,error:"Нет подключения к серверу. Проверьте интернет."};if(!n.success)return"Trial already used"===n.error?(await chrome.storage.local.set({trialStatus:"expired",trialCheckedAt:Date.now()}),{success:!1,error:"Пробный период уже использован"}):{success:!1,error:n.error||"Ошибка активации триала"};const r=n.days_left??7;return await chrome.storage.local.set({trialStatus:"active",trialExpiresAt:n.expires_at,trialCheckedAt:Date.now()}),{success:!0,type:"trial",expiresAt:n.expires_at,daysLeft:r}}().then(e=>i(e)),!0;if("activateLicense"===e.action)return async function(e){if(!e||"string"!=typeof e||e.trim().length<5)return{success:!1,error:"Введите код активации"};const n=e.trim().toUpperCase();if(t(n))return await chrome.storage.local.set({licenseCode:n,licenseType:"lifetime",licenseExpiresAt:null,licenseActivatedAt:(new Date).toISOString(),licenseVerifiedAt:(new Date).toISOString()}),{success:!0,type:"lifetime",expiresAt:null,daysLeft:null};const i=await a(),c=navigator?.userAgent||"Chrome Extension",l=await s("activate",{key:n,fingerprint:i,browser:c});if("network_error"===l.error){const e=o("network_error",l);return await chrome.storage.local.set({licenseLastError:{code:"network_error",message:e,at:Date.now()}}),{success:!1,code:"network_error",error:e}}if(!l.success){const e=r(l.error),t=o(e,l);return await chrome.storage.local.set({licenseLastError:{code:e,message:t,at:Date.now()}}),{success:!1,code:e,error:t}}return await chrome.storage.local.set({licenseCode:n,licenseType:l.type,licenseExpiresAt:l.expires_at||null,licenseActivatedAt:(new Date).toISOString(),licenseVerifiedAt:(new Date).toISOString(),licenseLastError:null}),{success:!0,type:l.type,expiresAt:l.expires_at,daysLeft:l.days_left}}(e.code).then(e=>i(e)),!0;if("deactivateLicense"===e.action)return async function(){const e=await chrome.storage.local.get(["licenseCode"]);if(e.licenseCode&&!t(e.licenseCode)){const t=await a();await s("deactivate",{key:e.licenseCode,fingerprint:t})}return await chrome.storage.local.remove(["licenseCode","licenseType","licenseExpiresAt","licenseVerifiedAt","licenseActivatedAt","licenseLastError"]),{success:!0}}().then(e=>i(e)),!0;if("startScan"===e.action)return X.isRunning?(i({status:"already_running"}),!0):(l=e.skus||[],u=e.config,X={isRunning:!0,isPaused:!1,skus:l,currentIndex:0,results:[],config:u||{},logs:[],workerTabId:X.workerTabId,workerWindowId:X.workerWindowId},ie(`Старт: ${X.skus.length} SKU`),async function(){const{skus:e,config:t}=X,a=e.length,n=await async function(){try{return(await chrome.storage.local.get(["delayMs"])).delayMs||2e3}catch(e){return 2e3}}(),s="fast"===(t.scanMode||"fast");if(s)try{const e=await chrome.tabs.query({url:"https://www.ozon.ru/*"});if(e.length>0)X.hiddenTabId=e[0].id,X.hiddenTabCreated=!1;else{ie("Создаю скрытый таб OZON...");const e=await chrome.tabs.create({url:"https://www.ozon.ru/",active:!1});await he(e.id),await ee(2e3),X.hiddenTabId=e.id,X.hiddenTabCreated=!0}ie("Быстрый режим: API-запросы без навигации")}catch(s){return ie("Не удалось подготовить таб — переключаюсь на визуальный режим"),async function(e,t,a,n){try{await ue(),ie("Рабочее окно готово (fallback визуальный)")}catch(e){return ie("Ошибка: не удалось открыть окно OZON"),X.isRunning=!1,void re({action:"scanComplete",results:[]})}for(let s=X.currentIndex;s<a&&X.isRunning&&(await ke(),X.isRunning);s++){X.currentIndex=s;const r=e[s];let i;ie(`[${s+1}/${a}] SKU ${r} (визуальный)`);try{const e=await me(r);if(e.skuMismatch)i={sku:r,sellers:[],productName:"",error:"SKU не совпал"};else{const a=we(e);let n=[];if(a.otherSellersCount>0&&a.modalLink)n=await ye(X.workerTabId,a.modalLink);else if(a.otherSellersCount>0){const e=await chrome.tabs.get(X.workerTabId),t=new URL(e.url).pathname.match(/(\d+)\/?$/);t&&(n=await ye(X.workerTabId,`/modal/otherOffersFromSellers?product_id=${t[1]}`))}const s=Se(n,t);ie(`→ ${s.length} конкурентов`),i={sku:r,sellers:s,productName:a.productName,error:null}}}catch(e){ie(`Ошибка: ${e.message}`),i={sku:r,sellers:[],productName:"",error:e.message},X.workerTabId=null,X.workerWindowId=null}if(X.results.push(i),re({action:"scanProgress",current:s+1,total:a,...i}),s<a-1&&X.isRunning&&(await se(n),X.workerTabId&&await fe(X.workerTabId),a>=50&&(s+1)%20==0)){const e=10+Math.round(10*Math.random());ie(`Антибот: пауза ${e} сек`),await ee(1e3*e)}}X.isRunning=!1,await be(X.results,t,e);const s=X.results.reduce((e,t)=>e+(t.sellers?t.sellers.length:0),0);re({action:"scanComplete",results:X.results}),ie(`Завершено: ${s} конкурентов по ${e.length} SKU`),await ee(1e3),await pe()}(e,t,a,n)}else try{await ue(),ie("Рабочее окно готово (визуальный режим)")}catch(e){return ie("Ошибка: не удалось открыть окно OZON"),X.isRunning=!1,void re({action:"scanComplete",results:[]})}let r=0;for(let i=X.currentIndex;i<a&&X.isRunning&&(await ke(),X.isRunning);i++){X.currentIndex=i;const o=e[i];ie(`[${i+1}/${a}] SKU ${o}`);let c=null;if(s&&r<3)try{c=await le(o,X.hiddenTabId,t),c?(ie(`⚡ ${c.sellers.length} конкурентов`+(c.productName?` (${c.productName.substring(0,40)})`:"")),r=0):(r++,ie(`API не вернул данные (попытка ${r}/3), пробую визуальный...`))}catch(e){r++,ie(`Быстрый запрос ошибка: ${e.message} (${r}/3)`)}if(!c){if(!X.workerTabId)try{await ue()}catch(e){ie(`Ошибка: ${e.message}`),c={sku:o,sellers:[],productName:"",error:e.message},X.results.push(c),re({action:"scanProgress",current:i+1,total:a,...c});continue}try{const e=await me(o);if(e.skuMismatch)c={sku:o,sellers:[],productName:"",error:"SKU не совпал — OZON перенаправил на другой товар"};else{const a=we(e);ie(`Продавцов на карточке: ${a.otherSellersCount}`);let n=[];if(a.otherSellersCount>0&&a.modalLink)n=await ye(X.workerTabId,a.modalLink);else if(a.otherSellersCount>0){const e=await chrome.tabs.get(X.workerTabId),t=new URL(e.url).pathname.match(/(\d+)\/?$/);if(t){const e=`/modal/otherOffersFromSellers?product_id=${t[1]}`;n=await ye(X.workerTabId,e)}}const s=Se(n,t);ie(`→ ${s.length} конкурентов`+(a.productName?` (${a.productName.substring(0,40)})`:"")),c={sku:o,sellers:s,productName:a.productName,error:null}}}catch(e){ie(`Ошибка: ${e.message}`),c={sku:o,sellers:[],productName:"",error:e.message},X.workerTabId=null,X.workerWindowId=null}}if(X.results.push(c),re({action:"scanProgress",current:i+1,total:a,...c}),i<a-1&&X.isRunning){const e=s&&0===r?600:n;if(await se(e),!s&&X.workerTabId&&await fe(X.workerTabId),a>=50&&(i+1)%20==0){const e=s?3+Math.round(5*Math.random()):10+Math.round(10*Math.random());ie(`Антибот: пауза ${e} сек (${i+1}/${a})`),await ee(1e3*e)}}}X.isRunning=!1,await be(X.results,X.config,X.skus);const i=X.results.reduce((e,t)=>e+(t.sellers?t.sellers.length:0),0);if(re({action:"scanComplete",results:X.results}),ie(`Завершено: ${i} конкурентов по ${e.length} SKU`),await ee(1e3),await pe(),X.hiddenTabCreated&&X.hiddenTabId)try{await chrome.tabs.remove(X.hiddenTabId)}catch(e){}X.hiddenTabId=null,X.hiddenTabCreated=!1}(),i({status:"started"}),!0);var l,u;if("getScanStatus"===e.action)return i({isRunning:X.isRunning,isPaused:X.isPaused,currentIndex:X.currentIndex,total:X.skus?X.skus.length:0,results:X.results||[],logs:X.logs||[]}),!0;if("pauseScan"===e.action)return X.isPaused=!0,ie("Пауза"),i({status:"paused"}),!0;if("resumeScan"===e.action)return X.isPaused=!1,ie("Возобновлено"),i({status:"resumed"}),!0;if("stopScan"===e.action)return X.isRunning=!1,X.isPaused=!1,ie("Остановлено"),X.results.length>0&&be(X.results,X.config,X.skus),pe(),i({status:"stopped"}),!0;if("getHistory"===e.action)return chrome.storage.local.get(["scanHistory"],e=>i({history:e.scanHistory||[]})),!0;if("deleteHistorySession"===e.action)return chrome.storage.local.get(["scanHistory"],t=>{const a=(t.scanHistory||[]).filter(t=>t.id!==e.sessionId);chrome.storage.local.set({scanHistory:a},()=>i({status:"deleted"}))}),!0;if("clearHistory"===e.action)return chrome.storage.local.set({scanHistory:[]},()=>i({status:"cleared"})),!0;if("supportStart"===e.action)return d.isRunning?(i({status:"already_running"}),!0):(c().then(async t=>{if(await b(),d.isRunning)return void i({status:"already_running"});if(!t.isPro)return i({status:"license_required",error:"Жалобы доступны в PRO-версии"}),"continue";const a=e.skus||[];if(0===a.length)return void i({status:"error",error:"Нет SKU"});let n={};if(!e.resetProgress)try{const e=(await chrome.storage.local.get(["complaintProgress"])).complaintProgress;if(e&&e.processedSkus&&e.processedSkus.length>0)for(const t of e.processedSkus)n[t.sku]=t.status}catch(e){}re({action:"supportLog",text:`[${(new Date).toLocaleTimeString("ru-RU")}] 🔍 Проверяю вкладки seller.ozon.ru...`});const s=await async function(){const e=await chrome.tabs.query({url:"https://seller.ozon.ru/*"});if(0===e.length)try{const e=await chrome.tabs.create({url:"https://seller.ozon.ru/app/messenger/?group=support_v2",active:!1});return await he(e.id),await ee(3e3),{ok:!0,tabId:e.id}}catch(e){return{ok:!1,code:"no_tab",error:"Не удалось открыть seller.ozon.ru. Откройте вручную и повторите."}}if(e.length>1)return{ok:!1,code:"multiple_tabs",error:`Открыто ${e.length} вкладок seller.ozon.ru. Закройте все, оставьте только ОДНУ вкладку с чатом поддержки и нажмите «Начать» снова.`};const t=e[0];try{return await chrome.scripting.executeScript({target:{tabId:t.id,allFrames:!1},func:()=>!0}),{ok:!0,tabId:t.id}}catch(e){return{ok:!1,code:"stale_tab",error:"Старая вкладка seller.ozon.ru несовместима с обновлённым расширением. Закройте её, откройте новую (Ctrl+T → seller.ozon.ru) и нажмите «Начать» снова."}}}();if(!s.ok)return re({action:"supportLog",text:`[${(new Date).toLocaleTimeString("ru-RU")}] ⚠ Pre-flight: ${s.error}`}),void i({status:"error",error:s.error,code:s.code});re({action:"supportLog",text:`[${(new Date).toLocaleTimeString("ru-RU")}] ✓ Вкладка seller.ozon.ru найдена (id=${s.tabId})`});let r=s.tabId;re({action:"supportLog",text:`[${(new Date).toLocaleTimeString("ru-RU")}] 🔍 Проверяю что вкладка на чате поддержки...`});const o=await T(r);if(!o?.ok)return re({action:"supportLog",text:`[${(new Date).toLocaleTimeString("ru-RU")}] ⚠ Не удалось перейти на чат поддержки`}),void i({status:"error",error:"Не удалось перейти в чат поддержки. Откройте чат вручную: seller.ozon.ru → Сообщения → Поддержка"});re({action:"supportLog",text:`[${(new Date).toLocaleTimeString("ru-RU")}] ✓ Чат поддержки готов`}),r=o.tabId||d.sellerTabId,x();const c=a.map(e=>{const t=n[e];return"done"===t||"failed"===t||"skipped"===t||"escalated"===t||"no_violation"===t?{sku:e,status:t,step:"completed",chatId:null,error:"failed"===t?"ранее не удалось":"escalated"===t?"ранее передано оператору":"no_violation"===t?"ранее не нашли нарушений":null}:{sku:e,status:"pending",step:null,chatId:null,error:null}}),l=c.findIndex(e=>"pending"===e.status),u=-1===l?c.length:l,p=e.limits||{},h={maxChatsPerSession:Math.max(1,Math.min(500,parseInt(p.maxChatsPerSession,10)||10)),maxConsecutiveEscalations:Math.max(0,Math.min(50,parseInt(p.maxConsecutiveEscalations,10)||5))},f=e.parentMap&&"object"==typeof e.parentMap?e.parentMap:{};for(const e of c){const t=f[e.sku];Array.isArray(t)&&t.length>0&&(e.parentSku=t[0],e.parentSkus=t.slice())}if(d={isRunning:!0,isPaused:!1,mode:e.mode||"dry",queue:c,currentIndex:-1===l?c.length:l,files:e.files||[],skuFiles:e.skuFiles&&"object"==typeof e.skuFiles?e.skuFiles:{},evidenceMode:"file_first"===e.evidenceMode?"file_first":"sku_first",fileSkus:Array.isArray(e.fileSkus)?e.fileSkus:[],parentMap:f,complaintType:"content_beta"===e.complaintType||"brand_beta"===e.complaintType||"plagiat_legacy"===e.complaintType?e.complaintType:"plagiat_legacy",logs:[],sellerTabId:r,session:{id:Date.now().toString(36),startedAt:(new Date).toISOString()},lastPhase:null,phaseRepeatCount:0,maxPhaseRepeats:4,newChatsOpened:0,consecutiveEscalations:0,limits:h,limitGateAllowance:h.maxChatsPerSession,limitGateActive:!1,limitGateReason:null,consecutiveFailed:0,betaAutostopLimit:5,navClickRetries:{},lastActivityTs:Date.now(),watchdogWarned:!1,consecutiveAttachFails:0,attachFailAdviceShown:!1},await chrome.storage.local.remove(["activeSupportSession"]),u>0&&v(`Пропуск ${u} ранее обработанных SKU`),-1===l)return v("Все SKU уже обработаны — нажмите «Очистить» для сброса прогресса"),d.isRunning=!1,void i({status:"all_done",error:"Все SKU из списка уже были обработаны ранее. Нажмите «Очистить» для сброса прогресса."});v(`Старт: ${c.length-u} жалоб (из ${c.length}), режим ${d.mode}`),await y(),i({status:"started"}),Y(r,"supportStart")}),!0);if("supportPause"===e.action)return(async()=>{await b(),d.isPaused=!0,h++,p=!1,v("Пауза"),await y(),i({status:"paused"})})(),!0;if("supportResume"===e.action)return(async()=>{await b(),d.isPaused=!1,v("Возобновлено");const e=d.sellerTabId||await $();e&&(d.sellerTabId=e,Y(e,"supportResume")),await y(),i({status:"resumed"})})(),!0;if("supportLimitContinue"===e.action){if(d.limitGateActive){const e=d.limits.maxChatsPerSession;d.limitGateAllowance=d.newChatsOpened+e,d.limitGateActive=!1,d.limitGateReason=null,d.isPaused=!1,d.consecutiveEscalations=0,v(`▶ Подтверждено — разрешено ещё ${e} обращений (до ${d.limitGateAllowance})`),d.sellerTabId&&Y(d.sellerTabId,"supportLimitContinue")}return i({status:"limit_continued"}),!0}return"supportResetProgress"===e.action?(chrome.storage.local.remove(["complaintProgress"],()=>i({status:"reset"})),!0):"supportGetProgress"===e.action?(chrome.storage.local.get(["complaintProgress"],e=>{i({progress:e.complaintProgress||null})}),!0):"supportStop"===e.action?((async()=>{await b(),d.isRunning=!1,d.isPaused=!1,h++,p=!1,v("Остановлено"),await O(),await y(),i({status:"stopped"})})(),!0):"supportGetStatus"===e.action?((async()=>{if(d.queue&&d.queue.length>0)i({isRunning:d.isRunning,isPaused:d.isPaused,mode:d.mode,queue:d.queue,currentIndex:d.currentIndex,logs:d.logs,newChatsOpened:d.newChatsOpened||0,consecutiveEscalations:d.consecutiveEscalations||0,limitGateActive:!!d.limitGateActive,limitGateReason:d.limitGateReason||null,source:"memory"});else{const e=(await chrome.storage.local.get(["activeSupportSession"])).activeSupportSession;i(e?{isRunning:!!e.isRunning,isPaused:!!e.isPaused,mode:e.mode,queue:e.queue||[],currentIndex:e.currentIndex||0,logs:e.logs||[],sessionId:e.sessionId,newChatsOpened:e.newChatsOpened||0,consecutiveEscalations:e.consecutiveEscalations||0,limitGateActive:!!e.limitGateActive,limitGateReason:e.limitGateReason||null,source:"storage"}:{isRunning:!1,isPaused:!1,mode:null,queue:[],currentIndex:0,logs:[],source:"none"})}})(),!0):"supportRecoverAndContinue"===e.action?((async()=>{if(await b(),!d.isRunning)return void i({ok:!1,error:"Нет активной сессии"});if(d.isPaused)return void i({ok:!1,paused:!0});const e=d.sellerTabId||await $();e?(d.sellerTabId=e,Y(e,"supportRecoverAndContinue"),i({ok:!0})):i({ok:!1,error:"seller.ozon.ru не найден"})})(),!0):"supportRefresh"===e.action?((async()=>{await b();const e=d.sellerTabId||await $();e?(d.sellerTabId=e,d.isRunning&&!d.isPaused&&Y(e,"supportRefresh"),i({ok:!0})):i({ok:!1,error:"seller.ozon.ru не найден"})})(),!0):"supportGetHistory"===e.action?(chrome.storage.local.get(["supportHistory"],e=>i({history:e.supportHistory||[]})),!0):"testApi"!==e.action||((async()=>{try{const e=await chrome.tabs.query({url:"https://www.ozon.ru/*"});if(0===e.length)return i({status:"error",message:"Откройте ozon.ru в любой вкладке и авторизуйтесь, затем повторите"}),"continue";const t=e[0].id,a=e[0].url||"",n=await chrome.scripting.executeScript({target:{tabId:t},func:()=>({hasInterceptor:void 0!==window.__ozguard,hasCookies:document.cookie.length>0,pageTitle:document.title||""}),world:"MAIN"}),s=n?.[0]?.result;if(!s)return i({status:"error",message:"Не удалось проверить вкладку"}),"continue";const r=[];s.hasInterceptor?r.push("перехватчик активен"):r.push("перехватчик НЕ загружен (обновите страницу ozon.ru)"),s.hasCookies?r.push("cookies есть"):r.push("cookies отсутствуют");const o=s.hasInterceptor&&s.hasCookies;i({status:o?"ok":"error",message:o?`Готово. ${r.join(", ")}`:`Проблема: ${r.join(", ")}`,widgets:[`Вкладка: ${a.substring(0,80)}`,...r]})}catch(e){i({status:"error",message:e.message})}})(),!0)})}();
+(function() {
+  'use strict';
+
+  // === Константы ===
+  const DEFAULT_DELAY_MS = 2000;
+  const FAST_DELAY_MS = 600;  // Задержка между SKU в быстром режиме
+  const MAX_HISTORY_SESSIONS = 10;
+  const TAB_READY_TIMEOUT_MS = 20000;
+  const DATA_POLL_INTERVAL_MS = 1000;
+  const DATA_POLL_MAX_SECONDS = 20;
+  const STABLE_POLLS_NEEDED = 3; // Виджеты не растут 3 секунды = загрузка завершена
+
+  // === Лицензия PRO (серверная валидация) ===
+  const LICENSE_API = 'https://codefic.ru/api/license';
+  const VERIFY_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24ч
+  const OFFLINE_GRACE_DAYS = 7;
+
+  const _mk = [79,90,71,45,77,65,83,84,82,45,70,73,82,65,89,45,65,68,77,73,78];
+  function _dmk() { return _mk.map(c => String.fromCharCode(c)).join(''); }
+  function _isMK(k) { return k === _dmk(); }
+
+  // Fingerprint устройства — UUID, переживает переустановку расширения
+  // Стратегия: chrome.storage.sync → localStorage сайта ozon.ru (MAIN world) → новый UUID
+  async function getDeviceFingerprint() {
+    // 1. Из sync storage (привязан к Google-аккаунту)
+    try {
+      const syncData = await chrome.storage.sync.get(['deviceFingerprint']);
+      if (syncData.deviceFingerprint) {
+        await chrome.storage.local.set({ deviceFingerprint: syncData.deviceFingerprint });
+        return syncData.deviceFingerprint;
+      }
+    } catch (e) {}
+
+    // 2. Из local storage (быстрый доступ)
+    try {
+      const localData = await chrome.storage.local.get(['deviceFingerprint']);
+      if (localData.deviceFingerprint) {
+        await chrome.storage.sync.set({ deviceFingerprint: localData.deviceFingerprint });
+        return localData.deviceFingerprint;
+      }
+    } catch (e) {}
+
+    // 3. Из localStorage сайта ozon.ru (переживает удаление расширения!)
+    try {
+      const tabs = await chrome.tabs.query({ url: 'https://www.ozon.ru/*' });
+      if (tabs.length > 0) {
+        const results = await chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          func: () => localStorage.getItem('__ozg_fp'),
+          world: 'MAIN'
+        });
+        const savedFp = results?.[0]?.result;
+        if (savedFp) {
+          await chrome.storage.sync.set({ deviceFingerprint: savedFp });
+          await chrome.storage.local.set({ deviceFingerprint: savedFp });
+          return savedFp;
+        }
+      }
+    } catch (e) {}
+
+    // 4. Генерируем новый и сохраняем везде
+    const fp = 'fp_' + crypto.randomUUID();
+    await chrome.storage.sync.set({ deviceFingerprint: fp });
+    await chrome.storage.local.set({ deviceFingerprint: fp });
+    // Сохраняем в localStorage ozon.ru (переживёт переустановку)
+    persistFingerprintToSite(fp);
+    return fp;
+  }
+
+  // Сохранить fingerprint в localStorage сайта ozon.ru (MAIN world)
+  async function persistFingerprintToSite(fp) {
+    try {
+      const tabs = await chrome.tabs.query({ url: 'https://www.ozon.ru/*' });
+      if (tabs.length > 0) {
+        await chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          func: (fp) => { try { localStorage.setItem('__ozg_fp', fp); } catch(e) {} },
+          args: [fp],
+          world: 'MAIN'
+        });
+      }
+    } catch (e) {}
+  }
+
+  async function licenseApiCall(action, body) {
+    try {
+      const resp = await fetch(LICENSE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...body })
+      });
+      return await resp.json();
+    } catch (e) {
+      return { error: 'network_error', message: e.message };
+    }
+  }
+
+  // Сервер шлёт человеческие строки ('License not found', 'Activation limit reached', ...),
+  // расширение оперирует короткими кодами. Маппим и то и другое.
+  function normalizeLicenseError(raw) {
+    if (!raw) return 'unknown';
+    const s = String(raw).toLowerCase();
+    if (s.includes('not found') || s === 'invalid_key') return 'invalid_key';
+    if (s.includes('revoked')) return 'revoked';
+    if (s.includes('expired')) return 'expired';
+    if (s.includes('limit reached') || s === 'max_activations') return 'max_activations';
+    if (s.includes('not activated on this device') || s === 'not_activated_here') return 'not_activated_here';
+    if (s.includes('missing') || s === 'missing_params') return 'missing_params';
+    if (s.includes('too many requests')) return 'rate_limited';
+    return s;
+  }
+
+  const LICENSE_ERROR_MESSAGES = {
+    invalid_key: 'Неверный код. Проверьте его в письме или в личном кабинете.',
+    revoked: 'Код отозван. Свяжитесь с поддержкой codefic.ru.',
+    expired: 'Срок действия подписки истёк. Продлите в личном кабинете.',
+    max_activations: 'Лимит устройств исчерпан. Деактивируйте ключ на другом устройстве или напишите в поддержку для расширения лимита.',
+    not_activated_here: 'Ключ не привязан к этому устройству. Нажмите «Активировать» ещё раз — мы привяжем текущий браузер.',
+    missing_params: 'Ошибка параметров запроса.',
+    rate_limited: 'Слишком много запросов. Подождите минуту и попробуйте снова.',
+    network_error: 'Нет подключения к серверу codefic.ru. Проверьте интернет/VPN.',
+    unknown: 'Ошибка активации. Попробуйте позже или напишите в поддержку.'
+  };
+
+  function licenseErrorMessage(code, result) {
+    if (code === 'max_activations' && result?.max) {
+      return `Лимит устройств (${result.max}) исчерпан. Деактивируйте ключ на другом устройстве или напишите в поддержку codefic.ru для расширения лимита.`;
+    }
+    return LICENSE_ERROR_MESSAGES[code] || LICENSE_ERROR_MESSAGES.unknown;
+  }
+
+  async function getLicenseStatus() {
+    const data = await chrome.storage.local.get([
+      'licenseCode', 'licenseType', 'licenseExpiresAt',
+      'licenseVerifiedAt', 'licenseActivatedAt', 'licenseLastError',
+      'trialStatus', 'trialExpiresAt', 'trialCheckedAt'
+    ]);
+
+    // Приоритет: ключ > триал
+    if (!data.licenseCode) {
+      const t = await getTrialStatus(data);
+      if (data.licenseLastError) t.lastError = data.licenseLastError;
+      return t;
+    }
+
+    // Оффлайн-режим
+    if (_isMK(data.licenseCode)) {
+      return {
+        isPro: true, code: data.licenseCode,
+        type: 'lifetime', activatedAt: data.licenseActivatedAt || null,
+        expiresAt: null, daysLeft: null
+      };
+    }
+
+    const verifiedAt = data.licenseVerifiedAt ? new Date(data.licenseVerifiedAt) : null;
+    const now = new Date();
+
+    // Месячный ключ: проверяем локальный срок
+    if (data.licenseType === 'monthly' && data.licenseExpiresAt) {
+      if (new Date(data.licenseExpiresAt) < now) {
+        return { isPro: false, code: data.licenseCode, error: 'expired',
+          type: data.licenseType, expiresAt: data.licenseExpiresAt,
+          lastError: data.licenseLastError || null };
+      }
+    }
+
+    // Оффлайн grace period
+    if (verifiedAt) {
+      const daysSinceVerify = (now - verifiedAt) / 86400000;
+      if (daysSinceVerify > OFFLINE_GRACE_DAYS) {
+        return { isPro: false, code: data.licenseCode, error: 'verification_needed',
+          type: data.licenseType,
+          lastError: data.licenseLastError || null };
+      }
+    }
+
+    // Фоновая проверка (не блокирует)
+    if (!verifiedAt || (now - verifiedAt) > VERIFY_INTERVAL_MS) {
+      backgroundVerify(data.licenseCode).catch(() => {});
+    }
+
+    const daysLeft = data.licenseType === 'lifetime' ? null :
+      data.licenseExpiresAt ? Math.max(0, Math.ceil((new Date(data.licenseExpiresAt) - now) / 86400000)) : null;
+
+    return {
+      isPro: true,
+      code: data.licenseCode,
+      type: data.licenseType || 'lifetime',
+      activatedAt: data.licenseActivatedAt || null,
+      expiresAt: data.licenseExpiresAt || null,
+      daysLeft,
+      lastError: data.licenseLastError || null
+    };
+  }
+
+  // === Триал ===
+  async function getTrialStatus(data) {
+    const now = Date.now();
+
+    // Есть кеш триала и проверен < 1 часа назад — используем кеш
+    if (data.trialStatus && data.trialCheckedAt && (now - data.trialCheckedAt) < 3600000) {
+      if (data.trialStatus === 'active' && data.trialExpiresAt) {
+        const daysLeft = Math.max(0, Math.ceil((new Date(data.trialExpiresAt) - now) / 86400000));
+        if (daysLeft > 0) {
+          return { isPro: true, code: null, type: 'trial', expiresAt: data.trialExpiresAt, daysLeft, isTrial: true };
+        }
+        // Истёк — обновляем кеш
+        await chrome.storage.local.set({ trialStatus: 'expired', trialCheckedAt: now });
+        return { isPro: false, code: null, trialExpired: true, canActivateTrial: false };
+      }
+      if (data.trialStatus === 'expired') {
+        return { isPro: false, code: null, trialExpired: true, canActivateTrial: false };
+      }
+      if (data.trialStatus === 'none') {
+        return { isPro: false, code: null, canActivateTrial: true };
+      }
+    }
+
+    // Проверяем на сервере
+    return backgroundTrialCheck();
+  }
+
+  async function backgroundTrialCheck() {
+    const fp = await getDeviceFingerprint();
+    persistFingerprintToSite(fp); // Поддерживаем fp в localStorage сайта
+    const result = await licenseApiCall('trial_validate', { fingerprint: fp });
+    const now = Date.now();
+
+    if (result.error === 'network_error') {
+      // Оффлайн — используем кеш как есть
+      const data = await chrome.storage.local.get(['trialStatus', 'trialExpiresAt']);
+      if (data.trialStatus === 'active' && data.trialExpiresAt) {
+        const daysLeft = Math.max(0, Math.ceil((new Date(data.trialExpiresAt) - now) / 86400000));
+        if (daysLeft > 0) return { isPro: true, code: null, type: 'trial', expiresAt: data.trialExpiresAt, daysLeft, isTrial: true };
+      }
+      return { isPro: false, code: null, canActivateTrial: false };
+    }
+
+    if (result.valid) {
+      const daysLeft = result.days_left ?? Math.max(0, Math.ceil((new Date(result.expires_at) - now) / 86400000));
+      await chrome.storage.local.set({ trialStatus: 'active', trialExpiresAt: result.expires_at, trialCheckedAt: now });
+      return { isPro: true, code: null, type: 'trial', expiresAt: result.expires_at, daysLeft, isTrial: true };
+    }
+
+    if (result.can_activate) {
+      await chrome.storage.local.set({ trialStatus: 'none', trialCheckedAt: now });
+      return { isPro: false, code: null, canActivateTrial: true };
+    }
+
+    // Триал использован и истёк
+    await chrome.storage.local.set({ trialStatus: 'expired', trialCheckedAt: now });
+    return { isPro: false, code: null, trialExpired: true, canActivateTrial: false };
+  }
+
+  async function activateTrial() {
+    const fp = await getDeviceFingerprint();
+    const browser = navigator?.userAgent || 'Chrome Extension';
+    const result = await licenseApiCall('trial_activate', { fingerprint: fp, browser });
+
+    if (result.error === 'network_error') {
+      return { success: false, error: 'Нет подключения к серверу. Проверьте интернет.' };
+    }
+    if (!result.success) {
+      if (result.error === 'Trial already used') {
+        await chrome.storage.local.set({ trialStatus: 'expired', trialCheckedAt: Date.now() });
+        return { success: false, error: 'Пробный период уже использован' };
+      }
+      return { success: false, error: result.error || 'Ошибка активации триала' };
+    }
+
+    const daysLeft = result.days_left ?? 7;
+    await chrome.storage.local.set({
+      trialStatus: 'active',
+      trialExpiresAt: result.expires_at,
+      trialCheckedAt: Date.now()
+    });
+    return { success: true, type: 'trial', expiresAt: result.expires_at, daysLeft };
+  }
+
+  async function backgroundVerify(code) {
+    // Оффлайн-ключ — не проверяем на сервере
+    if (_isMK(code)) return;
+
+    const fp = await getDeviceFingerprint();
+    const result = await licenseApiCall('validate', { key: code, fingerprint: fp });
+    if (result.valid) {
+      await chrome.storage.local.set({
+        licenseVerifiedAt: new Date().toISOString(),
+        licenseType: result.type,
+        licenseExpiresAt: result.expires_at || null,
+        licenseLastError: null
+      });
+      return;
+    }
+
+    const errCode = normalizeLicenseError(result.error);
+
+    // Fingerprint устройства изменился (например после реинсталла в другую папку) —
+    // пробуем молча переактивировать на текущий fp. Квота позволит — лицензия восстановится.
+    if (errCode === 'not_activated_here') {
+      try {
+        const browser = navigator?.userAgent || 'Chrome Extension';
+        const re = await licenseApiCall('activate', { key: code, fingerprint: fp, browser });
+        if (re.success) {
+          await chrome.storage.local.set({
+            licenseVerifiedAt: new Date().toISOString(),
+            licenseType: re.type,
+            licenseExpiresAt: re.expires_at || null,
+            licenseActivatedAt: new Date().toISOString(),
+            licenseLastError: null
+          });
+          return;
+        }
+        const reErr = normalizeLicenseError(re.error);
+        await chrome.storage.local.set({
+          licenseLastError: { code: reErr, message: licenseErrorMessage(reErr, re), at: Date.now() }
+        });
+        // Если квота забита — НЕ чистим licenseCode, пользователь сам деактивирует другое устройство.
+        return;
+      } catch (_) { return; }
+    }
+
+    if (errCode === 'expired' || errCode === 'revoked' || errCode === 'invalid_key') {
+      await chrome.storage.local.remove([
+        'licenseCode', 'licenseType', 'licenseExpiresAt',
+        'licenseVerifiedAt', 'licenseActivatedAt'
+      ]);
+      await chrome.storage.local.set({
+        licenseLastError: { code: errCode, message: licenseErrorMessage(errCode, result), at: Date.now() }
+      });
+    }
+  }
+
+  async function activateLicense(code) {
+    if (!code || typeof code !== 'string' || code.trim().length < 5) {
+      return { success: false, error: 'Введите код активации' };
+    }
+    const cleanKey = code.trim().toUpperCase();
+
+    // Оффлайн-активация
+    if (_isMK(cleanKey)) {
+      await chrome.storage.local.set({
+        licenseCode: cleanKey,
+        licenseType: 'lifetime',
+        licenseExpiresAt: null,
+        licenseActivatedAt: new Date().toISOString(),
+        licenseVerifiedAt: new Date().toISOString()
+      });
+      return { success: true, type: 'lifetime', expiresAt: null, daysLeft: null };
+    }
+
+    const fp = await getDeviceFingerprint();
+    const browser = navigator?.userAgent || 'Chrome Extension';
+
+    const result = await licenseApiCall('activate', {
+      key: cleanKey, fingerprint: fp, browser
+    });
+
+    if (result.error === 'network_error') {
+      const msg = licenseErrorMessage('network_error', result);
+      await chrome.storage.local.set({ licenseLastError: { code: 'network_error', message: msg, at: Date.now() } });
+      return { success: false, code: 'network_error', error: msg };
+    }
+    if (!result.success) {
+      const errCode = normalizeLicenseError(result.error);
+      const msg = licenseErrorMessage(errCode, result);
+      await chrome.storage.local.set({ licenseLastError: { code: errCode, message: msg, at: Date.now() } });
+      return { success: false, code: errCode, error: msg };
+    }
+
+    await chrome.storage.local.set({
+      licenseCode: cleanKey,
+      licenseType: result.type,
+      licenseExpiresAt: result.expires_at || null,
+      licenseActivatedAt: new Date().toISOString(),
+      licenseVerifiedAt: new Date().toISOString(),
+      licenseLastError: null
+    });
+
+    return {
+      success: true,
+      type: result.type,
+      expiresAt: result.expires_at,
+      daysLeft: result.days_left
+    };
+  }
+
+  async function deactivateLicense() {
+    const data = await chrome.storage.local.get(['licenseCode']);
+    if (data.licenseCode && !_isMK(data.licenseCode)) {
+      const fp = await getDeviceFingerprint();
+      await licenseApiCall('deactivate', { key: data.licenseCode, fingerprint: fp });
+    }
+    await chrome.storage.local.remove([
+      'licenseCode', 'licenseType', 'licenseExpiresAt',
+      'licenseVerifiedAt', 'licenseActivatedAt', 'licenseLastError'
+    ]);
+    return { success: true };
+  }
+
+  // Периодическая проверка лицензии
+  async function scheduleLicenseCheck() {
+    const data = await chrome.storage.local.get(['licenseCode']);
+    if (data.licenseCode) {
+      await backgroundVerify(data.licenseCode);
+    }
+  }
+  scheduleLicenseCheck();
+  chrome.alarms.create('licenseCheck', { periodInMinutes: 60 * 12 });
+  // Watchdog для бота жалоб — будит SW каждую минуту чтобы проверить не завис ли бот.
+  // Service worker может уснуть пока бот «ждёт» (verify прикрепления, ответ Ozon) —
+  // alarms просыпают его и дают возможность залогировать диагностику клиенту.
+  chrome.alarms.create('supportWatchdog', { periodInMinutes: 1 });
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === 'licenseCheck') scheduleLicenseCheck();
+    if (alarm.name === 'supportWatchdog') checkSupportWatchdog();
+  });
+
+  // === Состояние жалоб (support automation) ===
+  let supportState = {
+    isRunning: false,
+    isPaused: false,
+    mode: 'dry', // dry | auto
+    queue: [],        // [{sku, status, step, chatId, error, parentSku}]
+    currentIndex: 0,
+    files: [],        // общий пул доказательств [{id, name, type, size, storage, source}]
+    skuFiles: {},     // per-parent-SKU: { parentSku: [{id, name, type, size, storage, source}] }
+    evidenceMode: 'sku_first',
+    fileSkus: [],
+    parentMap: {},    // competitorSku → [parentSku, ...]
+    complaintType: 'plagiat_legacy', // plagiat_legacy | content_beta | brand_beta (v5.9.15)
+    logs: [],
+    sellerTabId: null,
+    session: null,     // {id, startedAt, completedAt}
+    lastPhase: null,   // последняя фаза для детекции зацикливания
+    phaseRepeatCount: 0, // сколько раз подряд одна и та же фаза
+    maxPhaseRepeats: 4,   // макс повторов одной фазы перед debug/стоп
+    // Защита от массового создания чатов (v5.9.10)
+    newChatsOpened: 0,            // счётчик новых обращений за сессию
+    consecutiveEscalations: 0,    // подряд эскалированных SKU
+    limits: { maxChatsPerSession: 10, maxConsecutiveEscalations: 5 },
+    limitGateAllowance: 0,         // сколько ещё новых чатов разрешено после подтверждения
+    limitGateActive: false,        // ждём ли подтверждения пользователя
+    // BETA-защиты (v5.9.15)
+    consecutiveFailed: 0,          // SKU подряд в failed на любом пути
+    betaAutostopLimit: 5,          // BETA-режим: стоп после 5 подряд failed
+    navClickRetries: {},           // { phase: count } — счётчик неудачных кликов по фазе
+    // Watchdog (v5.9.18)
+    lastActivityTs: 0,             // время последнего супер-лога/прогресса (ms)
+    watchdogWarned: false,         // показано ли уже первое предупреждение о заморозке
+    consecutiveAttachFails: 0,     // SKU подряд с провалом всех файлов
+    attachFailAdviceShown: false,  // показан ли совет писать в поддержку при серии провалов
+    limitGateReason: null          // причина ручного gate; лимит новых чатов больше не использует gate
+  };
+
+  let supportLoopRunning = false;
+  let supportLoopToken = 0;
+
+  // Watchdog: вызывается chrome.alarms раз в минуту. Если бот «жив» (isRunning && !isPaused),
+  // но не было активности больше 3 минут — пишем диагностику. После 6 минут — ставим паузу.
+  // Паника-режим выключаем если пользователь сам остановил.
+  async function checkSupportWatchdog() {
+    const hadMemory = supportState.queue && supportState.queue.length > 0;
+    if (!hadMemory) {
+      const restored = await restoreActiveSupportSession();
+      if (restored && supportState.isRunning && !supportState.isPaused) {
+        const tabId = supportState.sellerTabId || await findSellerTab();
+        if (tabId) {
+          supportState.sellerTabId = tabId;
+          ensureSupportLoop(tabId, 'watchdog-restore');
+        }
+      }
+    }
+
+    if (!supportState.isRunning || supportState.isPaused) {
+      supportState.watchdogWarned = false;
+      return;
+    }
+    const now = Date.now();
+    const idleMs = now - (supportState.lastActivityTs || now);
+    if (idleMs < 3 * 60 * 1000) return;
+
+    if (!supportState.watchdogWarned) {
+      supportState.watchdogWarned = true;
+      _supportLogRaw(`⏱ [WATCHDOG] Нет активности ${Math.round(idleMs/60000)} мин. Если зависло — скопируйте лог и отправьте в поддержку: t.me/firadex`);
+      // Снимок DOM для диагностики (важно: _supportLogRaw, чтобы не сбросить idle-таймер)
+      try {
+        const tabId = supportState.sellerTabId;
+        if (tabId) {
+          const dbg = await getSupportDebugDOM(tabId);
+          if (dbg) {
+            _supportLogRaw(`[WATCHDOG-DOM] phase=${dbg.phase} msgs=${dbg.chatMsgCount} input=${dbg.hasInput} fileInput=${dbg.hasFileInput} sendBtn=${dbg.hasSendButton}`);
+            _supportLogRaw(`[WATCHDOG-DOM] last bot: ${dbg.lastBotMsg || '—'}`);
+            _supportLogRaw(`[WATCHDOG-DOM] last user: ${dbg.lastUserMsg || '—'}`);
+          } else {
+            _supportLogRaw(`[WATCHDOG] Связь с вкладкой потеряна. Убедитесь что seller.ozon.ru открыта и нажмите «Обновить».`);
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (idleMs >= 6 * 60 * 1000) {
+      _supportLogRaw(`⛔ [WATCHDOG] ${Math.round(idleMs/60000)} мин без активности — ставлю паузу. Проверьте чат вручную и нажмите «Продолжить» или «Стоп».`);
+      supportState.isPaused = true;
+      supportState.watchdogWarned = false;
+      sendToPopup({ action: 'supportNeedAction', message: `Бот не отвечает ${Math.round(idleMs/60000)} мин. Проверьте чат seller.ozon.ru — возможно Ozon заблокировал чат или поменял интерфейс. Скопируйте лог и пришлите в t.me/firadex.` });
+      try { await saveSupportSession(); } catch (_) {}
+    }
+  }
+  function _bumpActivity() {
+    supportState.lastActivityTs = Date.now();
+    supportState.watchdogWarned = false;
+  }
+
+  // Throttle для updatePanel — не чаще раза в секунду, иначе при потоке логов
+  // создаются тысячи промисов которые вешают браузер
+  let _lastPanelUpdate = 0;
+  const PANEL_UPDATE_INTERVAL_MS = 1000;
+
+  // Debounced persist активной сессии жалоб в storage — чтобы popup мог её прочитать
+  // даже когда был закрыт во время работы бота
+  let _persistActiveTimer = null;
+  function buildActiveSupportSessionSnapshot() {
+    return {
+      isRunning: supportState.isRunning,
+      isPaused: supportState.isPaused,
+      mode: supportState.mode,
+      queue: supportState.queue ? supportState.queue.map(q => ({
+        sku: q.sku,
+        status: q.status,
+        step: q.step || null,
+        error: q.error || null,
+        chatId: q.chatId || null,
+        parentSku: q.parentSku || null,
+        parentSkus: Array.isArray(q.parentSkus) ? q.parentSkus.slice() : null,
+        _counted: !!q._counted,
+        _needsNextEvidence: !!q._needsNextEvidence,
+        _evidenceUsedIdx: typeof q._evidenceUsedIdx === 'number' ? q._evidenceUsedIdx : undefined,
+        _evidenceResendCount: typeof q._evidenceResendCount === 'number' ? q._evidenceResendCount : undefined,
+        _parentTryIdx: typeof q._parentTryIdx === 'number' ? q._parentTryIdx : undefined
+      })) : [],
+      currentIndex: supportState.currentIndex || 0,
+      files: Array.isArray(supportState.files) ? supportState.files : [],
+      skuFiles: supportState.skuFiles && typeof supportState.skuFiles === 'object' ? supportState.skuFiles : {},
+      evidenceMode: supportState.evidenceMode || 'sku_first',
+      fileSkus: Array.isArray(supportState.fileSkus) ? supportState.fileSkus : [],
+      parentMap: supportState.parentMap && typeof supportState.parentMap === 'object' ? supportState.parentMap : {},
+      complaintType: supportState.complaintType || 'plagiat_legacy',
+      logs: (supportState.logs || []).slice(-500),
+      sellerTabId: supportState.sellerTabId || null,
+      session: supportState.session || null,
+      sessionId: supportState.session?.id || null,
+      newChatsOpened: supportState.newChatsOpened || 0,
+      consecutiveEscalations: supportState.consecutiveEscalations || 0,
+      consecutiveFailed: supportState.consecutiveFailed || 0,
+      limits: supportState.limits || { maxChatsPerSession: 10, maxConsecutiveEscalations: 5 },
+      limitGateAllowance: supportState.limitGateAllowance || supportState.limits?.maxChatsPerSession || 10,
+      limitGateActive: !!supportState.limitGateActive,
+      limitGateReason: supportState.limitGateReason || null,
+      betaAutostopLimit: supportState.betaAutostopLimit || 5,
+      consecutiveAttachFails: supportState.consecutiveAttachFails || 0,
+      attachFailAdviceShown: !!supportState.attachFailAdviceShown,
+      escalatedRetry: supportState._escalatedRetry || 0,
+      chatSoftLimitNoticeAt: supportState._chatSoftLimitNoticeAt || null,
+      updatedAt: Date.now()
+    };
+  }
+
+  async function persistActiveSupportSessionNow() {
+    try {
+      await chrome.storage.local.set({ activeSupportSession: buildActiveSupportSessionSnapshot() });
+    } catch (_) {}
+  }
+
+  function persistActiveSupportSession() {
+    if (_persistActiveTimer) return; // debounce 1с
+    _persistActiveTimer = setTimeout(() => {
+      _persistActiveTimer = null;
+      try {
+        chrome.storage.local.set({ activeSupportSession: buildActiveSupportSessionSnapshot() });
+      } catch (_) {}
+    }, 1000);
+  }
+
+  // Низкоуровневое логирование без bump'а активности — для самого watchdog,
+  // чтобы он не сбрасывал свои же таймеры при печати диагностики
+  function _supportLogRaw(text) {
+    const ts = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const entry = `[${ts}] ${text}`;
+    supportState.logs.push(entry);
+    sendToPopup({ action: 'supportLog', text: entry });
+    console.log('[OZG-Support]', text);
+    persistActiveSupportSession();
+    return entry;
+  }
+
+  async function restoreActiveSupportSession() {
+    if (supportState.queue && supportState.queue.length > 0) return true;
+    try {
+      const data = await chrome.storage.local.get(['activeSupportSession']);
+      const s = data.activeSupportSession;
+      if (!s || !s.isRunning || !Array.isArray(s.queue) || s.queue.length === 0) return false;
+
+      supportState = {
+        isRunning: true,
+        isPaused: !!s.isPaused,
+        mode: s.mode || 'auto',
+        queue: s.queue,
+        currentIndex: Math.max(0, Math.min(parseInt(s.currentIndex, 10) || 0, s.queue.length)),
+        files: Array.isArray(s.files) ? s.files : [],
+        skuFiles: s.skuFiles && typeof s.skuFiles === 'object' ? s.skuFiles : {},
+        evidenceMode: s.evidenceMode === 'file_first' ? 'file_first' : 'sku_first',
+        fileSkus: Array.isArray(s.fileSkus) ? s.fileSkus : [],
+        parentMap: s.parentMap && typeof s.parentMap === 'object' ? s.parentMap : {},
+        complaintType: (s.complaintType === 'content_beta' || s.complaintType === 'brand_beta' || s.complaintType === 'plagiat_legacy')
+          ? s.complaintType
+          : 'plagiat_legacy',
+        logs: Array.isArray(s.logs) ? s.logs.slice(-500) : [],
+        sellerTabId: s.sellerTabId || null,
+        session: s.session || (s.sessionId ? { id: s.sessionId, startedAt: null } : null),
+        lastPhase: null,
+        phaseRepeatCount: 0,
+        maxPhaseRepeats: 4,
+        newChatsOpened: s.newChatsOpened || 0,
+        consecutiveEscalations: s.consecutiveEscalations || 0,
+        limits: s.limits || { maxChatsPerSession: 10, maxConsecutiveEscalations: 5 },
+        limitGateAllowance: s.limitGateAllowance || s.limits?.maxChatsPerSession || 10,
+        limitGateActive: !!s.limitGateActive,
+        limitGateReason: s.limitGateReason || null,
+        consecutiveFailed: s.consecutiveFailed || 0,
+        betaAutostopLimit: s.betaAutostopLimit || 5,
+        navClickRetries: {},
+        lastActivityTs: Date.now(),
+        watchdogWarned: false,
+        consecutiveAttachFails: s.consecutiveAttachFails || 0,
+        attachFailAdviceShown: !!s.attachFailAdviceShown,
+        _escalatedRetry: s.escalatedRetry || 0,
+        _chatSoftLimitNoticeAt: s.chatSoftLimitNoticeAt || null
+      };
+      _supportLogRaw('[RESTORE] Активная сессия жалоб восстановлена после сна service worker');
+      return true;
+    } catch (e) {
+      console.log('[OZG-Support] restoreActiveSupportSession:', e.message);
+      return false;
+    }
+  }
+
+  function supportLog(text) {
+    const ts = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const entry = `[${ts}] ${text}`;
+    supportState.logs.push(entry);
+    sendToPopup({ action: 'supportLog', text: entry });
+    console.log('[OZG-Support]', text);
+    // Любой лог = признак активности → перезапуск watchdog-таймера
+    _bumpActivity();
+    persistActiveSupportSession();
+    // Обновить плавающую панель на seller.ozon.ru — с throttle и БЕЗ рекурсивного логирования
+    // (раньше sendToSupport при ошибке вызывал supportLog → бесконечный каскад)
+    const now = Date.now();
+    if (supportState.sellerTabId && now - _lastPanelUpdate > PANEL_UPDATE_INTERVAL_MS) {
+      _lastPanelUpdate = now;
+      // ПРЯМОЙ chrome.tabs.sendMessage без авто-инжекта и без логирования при ошибке
+      try {
+        chrome.tabs.sendMessage(supportState.sellerTabId, {
+          _ozguard: true, action: 'updatePanel',
+          params: { log: entry, current: supportState.currentIndex + 1, total: supportState.queue.length }
+        }, () => { void chrome.runtime.lastError; }); // молча проглатываем ошибку
+      } catch (_) {}
+    }
+  }
+
+  // Pre-flight проверка перед запуском жалоб:
+  // 1) Если несколько вкладок seller.ozon.ru — попросить закрыть лишние
+  // 2) Если одна — попробовать тестовую инъекцию (старые вкладки от предыдущей сессии расширения
+  //    дают ошибку "Cannot access contents of the page" — из-за этого был баг с зацикливанием логов)
+  async function preflightSellerTabs() {
+    const tabs = await chrome.tabs.query({ url: 'https://seller.ozon.ru/*' });
+
+    // 0 вкладок — создаём новую
+    if (tabs.length === 0) {
+      try {
+        const newTab = await chrome.tabs.create({ url: 'https://seller.ozon.ru/app/messenger/?group=support_v2', active: false });
+        await waitForTabComplete(newTab.id);
+        await delay(3000);
+        return { ok: true, tabId: newTab.id };
+      } catch (e) {
+        return { ok: false, code: 'no_tab', error: 'Не удалось открыть seller.ozon.ru. Откройте вручную и повторите.' };
+      }
+    }
+
+    // Несколько вкладок — просим закрыть лишние
+    if (tabs.length > 1) {
+      return {
+        ok: false,
+        code: 'multiple_tabs',
+        error: `Открыто ${tabs.length} вкладок seller.ozon.ru. Закройте все, оставьте только ОДНУ вкладку с чатом поддержки и нажмите «Начать» снова.`
+      };
+    }
+
+    // Одна вкладка — тест инъекции
+    const tab = tabs[0];
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id, allFrames: false },
+        func: () => true
+      });
+      return { ok: true, tabId: tab.id };
+    } catch (e) {
+      // Старая вкладка от предыдущей сессии расширения — Chrome не разрешает скриптить
+      return {
+        ok: false,
+        code: 'stale_tab',
+        error: 'Старая вкладка seller.ozon.ru несовместима с обновлённым расширением. Закройте её, откройте новую (Ctrl+T → seller.ozon.ru) и нажмите «Начать» снова.'
+      };
+    }
+  }
+
+  async function findSellerTab() {
+    const tabs = await chrome.tabs.query({ url: 'https://seller.ozon.ru/*' });
+    // Строгий приоритет: вкладка с support_v2 (чат поддержки)
+    const supportTab = tabs.find(t => t.url && t.url.includes('group=support_v2'));
+    if (supportTab) {
+      supportState.sellerTabId = supportTab.id;
+      return supportTab.id;
+    }
+    // Вкладка мессенджера без конкретной группы (может быть поддержка)
+    const messengerTab = tabs.find(t => t.url && t.url.includes('/app/messenger') && !t.url.includes('group=customers'));
+    if (messengerTab) {
+      supportState.sellerTabId = messengerTab.id;
+      return messengerTab.id;
+    }
+    // Любая вкладка seller.ozon.ru (будет перенаправлена на support_v2)
+    if (tabs.length > 0) {
+      supportState.sellerTabId = tabs[0].id;
+      return tabs[0].id;
+    }
+    // Нет вкладки — создаём новую с чатом поддержки
+    try {
+      supportLog('Вкладка seller.ozon.ru не найдена — открываю автоматически...');
+      const newTab = await chrome.tabs.create({ url: 'https://seller.ozon.ru/app/messenger/?group=support_v2', active: false });
+      await waitForTabComplete(newTab.id);
+      await delay(3000); // даём SPA загрузиться
+      supportState.sellerTabId = newTab.id;
+      return newTab.id;
+    } catch (e) {
+      supportLog(`Не удалось открыть seller.ozon.ru: ${e.message}`);
+      return null;
+    }
+  }
+
+  // Circuit breaker: считает подряд неудачные injections.
+  // Если падает >= MAX_INJECT_FAILURES за < MAX_INJECT_WINDOW_MS — аварийная остановка.
+  const MAX_INJECT_FAILURES = 5;
+  const MAX_INJECT_WINDOW_MS = 10000;
+  let _injectFailureTimes = [];
+
+  function recordInjectFailure() {
+    const now = Date.now();
+    _injectFailureTimes.push(now);
+    // Оставляем только события за последнее окно
+    _injectFailureTimes = _injectFailureTimes.filter(t => now - t < MAX_INJECT_WINDOW_MS);
+    return _injectFailureTimes.length;
+  }
+
+  function resetInjectFailures() { _injectFailureTimes = []; }
+
+  // Программная инъекция content scripts (НЕ через manifest — иначе не работает на уже открытых вкладках)
+  // ВАЖНО: НЕ логируем ошибки через supportLog — это вызывало рекурсию (supportLog → updatePanel → fail → supportLog)
+  async function injectSupportScripts(tabId) {
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId, allFrames: false },
+        files: ['content/support-automation.js']
+      });
+      resetInjectFailures();
+      return true;
+    } catch (e) {
+      // Тихая запись ошибки — без вызова supportLog, чтобы не триггерить каскад
+      console.log('[OZG-Support] Ошибка инъекции:', e.message);
+      const failureCount = recordInjectFailure();
+      // Circuit breaker: останавливаем всё если слишком много ошибок подряд
+      if (failureCount >= MAX_INJECT_FAILURES && supportState.isRunning) {
+        supportState.isRunning = false;
+        supportState.isPaused = false;
+        supportLog(`⛔ Critical: ${failureCount} ошибок инъекции за ${MAX_INJECT_WINDOW_MS / 1000}с — аварийная остановка`);
+        sendToPopup({
+          action: 'supportNeedAction',
+          message: 'Не удалось получить доступ к вкладке seller.ozon.ru. ЗАКРОЙТЕ ВСЕ старые вкладки seller.ozon.ru, откройте новую и нажмите «Начать» снова.'
+        });
+        try { saveSupportSession(); } catch (_) {}
+      }
+      return false;
+    }
+  }
+
+  // Перейти на страницу чатов поддержки + инжект скриптов
+  async function ensureSellerChatPage(tabId) {
+    let tab;
+    try {
+      tab = await chrome.tabs.get(tabId);
+    } catch (e) {
+      supportLog('⚠ Вкладка закрыта — ищу заново...');
+      const newTabId = await findSellerTab();
+      if (!newTabId) {
+        supportLog('❌ Не удалось найти или открыть seller.ozon.ru');
+        return false;
+      }
+      supportState.sellerTabId = newTabId;
+      tab = await chrome.tabs.get(newTabId);
+      tabId = newTabId;
+    }
+
+    const url = tab.url || '';
+
+    // Проверка: редирект на логин (не авторизован)
+    if (url.includes('/signin') || url.includes('/login') || url.includes('passport.ozon.ru')) {
+      supportLog('⚠ Требуется авторизация на seller.ozon.ru — войдите в аккаунт');
+      sendToPopup({ action: 'supportNeedAction', message: 'Войдите в аккаунт seller.ozon.ru и нажмите «Обновить»' });
+      return false;
+    }
+
+    // ВАЖНО: нужна именно support_v2, а не customers_v2 или другая группа
+    const onSupportChat = url.includes('group=support_v2') ||
+      (url.includes('/app/messenger') && !url.includes('group=') && !url.includes('&id='));
+    if (!onSupportChat) {
+      supportLog('Переход на чат поддержки (support_v2)...');
+      await chrome.tabs.update(tabId, { url: 'https://seller.ozon.ru/app/messenger/?group=support_v2' });
+      await waitForTabComplete(tabId);
+      await delay(5000);
+      // Повторная проверка — мог произойти редирект на логин
+      const updatedTab = await chrome.tabs.get(tabId);
+      const updatedUrl = updatedTab.url || '';
+      if (updatedUrl.includes('/signin') || updatedUrl.includes('/login') || updatedUrl.includes('passport.ozon.ru')) {
+        supportLog('⚠ Требуется авторизация на seller.ozon.ru');
+        sendToPopup({ action: 'supportNeedAction', message: 'Войдите в аккаунт seller.ozon.ru и нажмите «Обновить»' });
+        return false;
+      }
+    }
+    await injectSupportScripts(tabId);
+    await delay(2000);
+    return { ok: true, tabId };
+  }
+
+  // Отправить команду в content script (ISOLATED world, direct chrome.runtime.onMessage)
+  // При ошибке связи — авто-инжект скрипта и повтор
+  // ВАЖНО: используем тихий console.log вместо supportLog для технических ошибок,
+  // иначе рекурсия (supportLog → updatePanel → fail → supportLog → ...)
+  function sendToSupport(tabId, action, params) {
+    return new Promise((resolve) => {
+      chrome.tabs.sendMessage(tabId, { _ozguard: true, action, params }, async (resp) => {
+        if (chrome.runtime.lastError) {
+          // Тихая запись + авто-инжект и повтор
+          console.log('[OZG-Support] Нет связи, инжектирую...', chrome.runtime.lastError.message);
+          const injected = await injectSupportScripts(tabId);
+          if (!injected) { resolve(null); return; }
+          await delay(2000);
+          // Повторная попытка
+          chrome.tabs.sendMessage(tabId, { _ozguard: true, action, params }, (resp2) => {
+            if (chrome.runtime.lastError) {
+              console.log('[OZG-Support] Повторная ошибка связи:', chrome.runtime.lastError.message);
+              resolve(null);
+              return;
+            }
+            resolve(resp2);
+          });
+          return;
+        }
+        resolve(resp);
+      });
+    });
+  }
+
+  async function getSupportPageState(tabId) {
+    return await sendToSupport(tabId, 'getState');
+  }
+
+  async function getSupportDebugDOM(tabId) {
+    return await sendToSupport(tabId, 'debugDOM');
+  }
+
+  async function saveSupportSession() {
+    try {
+      const session = {
+        id: supportState.session?.id || Date.now().toString(36),
+        startedAt: supportState.session?.startedAt || new Date().toISOString(),
+        completedAt: supportState.isRunning ? null : new Date().toISOString(),
+        mode: supportState.mode,
+        complaintType: supportState.complaintType,
+        queue: supportState.queue.map(q => ({ sku: q.sku, status: q.status, chatId: q.chatId || null, error: q.error || null })),
+        logs: supportState.logs.slice(-500)
+      };
+      const data = await chrome.storage.local.get(['supportHistory']);
+      let history = data.supportHistory || [];
+      // Обновляем существующую или добавляем новую
+      const idx = history.findIndex(h => h.id === session.id);
+      if (idx >= 0) history[idx] = session;
+      else history.unshift(session);
+      if (history.length > 10) history = history.slice(0, 10);
+
+      // Быстрый доступ: SKU с финальным статусом для skip-логики на рестарте
+      const processedSkus = supportState.queue
+        .filter(q => q.status === 'done' || q.status === 'failed' || q.status === 'skipped' ||
+          q.status === 'escalated' || q.status === 'no_violation')
+        .map(q => ({ sku: q.sku, status: q.status }));
+
+      await chrome.storage.local.set({
+        supportHistory: history,
+        complaintProgress: {
+          sessionId: session.id,
+          processedSkus,
+          updatedAt: Date.now()
+        }
+      });
+    } catch (e) {}
+  }
+
+  // === Хелперы для работы с файлами и лимитами v5.9.10 ===
+  const MAX_SUPPORT_FILE_BYTES = 50 * 1024 * 1024;
+
+  // Выбрать набор файлов для конкретного SKU конкурента.
+  // v5.9.20: поддерживает 2 режима через supportState.evidenceMode:
+  //   'sku_first' (default) — sku → [files]: per-parent файлы (объединение со всех родителей, дедуп)
+  //   'file_first'           — file → [skus]: для каждого файла проверяем, что parent SKU входит в его список
+  // Fallback к общему пулу supportState.files если ничего не нашли.
+  function pickFilesForItem(item) {
+    const parentSkus = (item.parentSkus && Array.isArray(item.parentSkus) && item.parentSkus.length > 0)
+      ? item.parentSkus
+      : (item.parentSku ? [item.parentSku] : []);
+    const parents = Array.from(new Set([
+      ...parentSkus.map(p => String(p || '').trim()).filter(Boolean),
+      String(item.sku || '').trim()
+    ].filter(Boolean)));
+    const mode = supportState.evidenceMode || 'sku_first';
+    const out = [];
+    const seen = new Set();
+
+    if (mode === 'file_first' && Array.isArray(supportState.fileSkus) && supportState.fileSkus.length > 0) {
+      // Каждый file имеет lightweight-метаданные + skus: ['12345', '67890'].
+      // Включаем file если хотя бы один parent SKU есть в его skus.
+      for (const f of supportState.fileSkus) {
+        const fileSkus = Array.isArray(f.skus) ? f.skus.map(s => String(s).trim()) : [];
+        if (fileSkus.length === 0) continue;
+        const matches = parents.some(p => fileSkus.includes(String(p).trim()));
+        if (!matches) continue;
+        const key = f.id || ((f.name || '') + '|' + (f.size || 0));
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(f);
+      }
+      if (out.length > 0) return { files: out, source: 'file_first' };
+    } else {
+      // sku_first (или fallback)
+      for (const p of parents) {
+        const list = supportState.skuFiles && supportState.skuFiles[p];
+        if (!Array.isArray(list) || list.length === 0) continue;
+        for (const f of list) {
+          const key = f.id || ((f.name || '') + '|' + (f.size || 0));
+          if (seen.has(key)) continue;
+          seen.add(key);
+          out.push(f);
+        }
+      }
+      if (out.length > 0) return { files: out, source: 'parent' };
+    }
+
+    if (Array.isArray(supportState.files) && supportState.files.length > 0) {
+      return { files: supportState.files.slice(), source: 'common' };
+    }
+    return { files: [], source: 'none' };
+  }
+
+  // === BETA navigation (v5.9.15) ===
+  // Резолвер кнопки для каждой навигационной фазы в зависимости от complaintPath.
+  // Возвращает { patterns, label } — массив паттернов для pageClickButton и человекочитаемую метку для лога.
+  function resolveNavButton(phase, path) {
+    const isBeta = path === 'content_beta' || path === 'brand_beta';
+    switch (phase) {
+      case 'direction_selection':
+        return isBeta
+          ? { patterns: ['товары и цены'], label: 'Товары и Цены' }
+          : { patterns: ['личный кабинет'], label: 'Личный кабинет' };
+      case 'category_selection':
+        return isBeta
+          ? { patterns: ['контроль качества'], label: 'Контроль качества' }
+          : { patterns: ['кабинет бренда'], label: 'Кабинет бренда' };
+      case 'complaint_type':
+        return isBeta
+          ? { patterns: ['нарушение правил площадки'], label: 'Нарушение правил площадки другим продавцом' }
+          : { patterns: ['жалоба на товар/продавца', 'жалоба на товар', 'жалоба'], label: 'Жалоба на товар/продавца' };
+      case 'complaint_subtype':
+        // В BETA пути этого экрана НЕТ — всё равно вернём дефолт на случай detection edge-case
+        return { patterns: ['плагиат', 'копирование', 'нарушение интеллект'], label: 'Плагиат карточек товара' };
+      case 'complaint_detail':
+        if (path === 'brand_beta') return { patterns: ['использование моего бренда'], label: 'Использование моего бренда' };
+        // content_beta и plagiat_legacy используют одну и ту же кнопку
+        return { patterns: ['использование моих фото, видео, текста', 'использование моих', 'фото, видео, текст'], label: 'Использование моих фото, видео, текста' };
+      default:
+        return null;
+    }
+  }
+
+  // Хелпер: отметить item как завершённый и обновить consecutiveFailed.
+  // Вызывается ВМЕСТО прямого `item.status = ...` там где это критично для BETA-autostop.
+  // Также используется в начале supportProcessStep для обработки ранее-завершённых.
+  function markItemStatus(item, status, error) {
+    if (!item) return;
+    item.status = status;
+    if (error) item.error = error;
+    if (!item._counted) {
+      item._counted = true;
+      if (status === 'failed') supportState.consecutiveFailed = (supportState.consecutiveFailed || 0) + 1;
+      else if (status === 'done' || status === 'escalated' || status === 'no_violation') supportState.consecutiveFailed = 0;
+    }
+  }
+
+  // Лог с префиксом [BETA] для новых путей — упрощает поиск проблем в массиве логов
+  function pathLog(msg) {
+    const p = supportState.complaintType;
+    if (p === 'content_beta' || p === 'brand_beta') {
+      supportLog(`[BETA] ${msg}`);
+    } else {
+      supportLog(msg);
+    }
+  }
+
+  // Общий обработчик навигационного клика для всех phase = direction_selection/category_selection/...
+  // Считает retry, логгирует, при превышении — failed + autostop проверка.
+  async function handleNavPhase(tabId, phase, state) {
+    const resolved = resolveNavButton(phase, supportState.complaintType);
+    if (!resolved) return null; // не навигационная фаза — дальше по основной логике
+    const { patterns, label } = resolved;
+
+    const retryKey = phase;
+    const curRetry = supportState.navClickRetries[retryKey] || 0;
+
+    // Проверка что нужная кнопка действительно видна в текущем меню
+    const visibleBtns = state.buttons || [];
+    const buttonPresent = patterns.some(p => visibleBtns.some(b => b.includes(p)));
+    if (!buttonPresent) {
+      pathLog(`⚠ Кнопка «${label}» НЕ найдена в меню (${visibleBtns.length} кнопок: [${visibleBtns.slice(0, 6).join(', ')}...])`);
+      supportState.navClickRetries[retryKey] = curRetry + 1;
+      if (supportState.navClickRetries[retryKey] >= 3) {
+        // v5.9.32: остановка с явным сообщением «Ozon изменил интерфейс».
+        // Раньше делали только delay+continue → loop guard срабатывал позже c менее
+        // понятным «Зацикливание на фазе X». Теперь пауза + supportNeedAction сразу.
+        const visibleList = visibleBtns.slice(0, 6).join(', ') || '—';
+        pathLog(`⛔ ИНТЕРФЕЙС OZON ИЗМЕНИЛСЯ: кнопка «${label}» не найдена в меню после 3 проверок. Путь жалоб «${supportState.complaintType}» больше не работает.`);
+        sendToPopup({
+          action: 'supportNeedAction',
+          message: `Похоже, Ozon изменил интерфейс жалоб: на шаге «${phase}» нет кнопки «${label}». Видимые кнопки: ${visibleList}. Проверьте чат вручную, попробуйте другой тип жалобы или сообщите в t.me/firadex.`
+        });
+        supportState.navClickRetries[retryKey] = 0;
+        supportState.isPaused = true;
+        try { await persistActiveSupportSessionNow(); } catch (_) {}
+        return 'wait';
+      }
+      await delay(3000);
+      return 'continue';
+    }
+
+    await humanDelay(800 + Math.random() * 1200);
+    pathLog(`Клик «${label}» (фаза ${phase}, путь ${supportState.complaintType})...`);
+    const resp = await pageClickButton(tabId, patterns);
+    if (!resp?.ok) {
+      pathLog(`⚠ Клик «${label}» неуспешен (${resp?.error || ''}), retry ${curRetry + 1}/3`);
+      supportState.navClickRetries[retryKey] = curRetry + 1;
+      if (supportState.navClickRetries[retryKey] >= 3) {
+        pathLog(`✗ Кнопка «${label}» не кликается после 3 попыток — остановка навигации`);
+        supportState.navClickRetries[retryKey] = 0;
+      }
+      await delay(3000);
+      return 'continue';
+    }
+    // Успешный клик — сброс retry
+    supportState.navClickRetries[retryKey] = 0;
+    pathLog(`✓ «${label}» кликнута`);
+    await humanDelay(2500 + Math.random() * 1500);
+    return 'continue';
+  }
+
+  // BETA autostop: если 5 SKU подряд failed на BETA-пути — пауза с предупреждением
+  async function checkBetaAutostop() {
+    const p = supportState.complaintType;
+    if (p !== 'content_beta' && p !== 'brand_beta') return true;
+    if (supportState.consecutiveFailed >= (supportState.betaAutostopLimit || 5)) {
+      if (!supportState.limitGateActive) {
+        supportState.limitGateActive = true;
+        supportState.limitGateReason = 'beta_autostop';
+        supportState.isPaused = true;
+        pathLog(`⛔ AUTOSTOP: ${supportState.consecutiveFailed} SKU подряд в failed на BETA-пути`);
+        sendToPopup({
+          action: 'supportLimitReached',
+          title: `BETA: ${supportState.consecutiveFailed} ошибок подряд`,
+          details: `Режим BETA (${p === 'content_beta' ? 'Использование моего контента' : 'Использование моего бренда'}) остановлен — ${supportState.consecutiveFailed} SKU подряд завершились ошибкой. Возможно путь в чате Ozon изменился. Проверьте вручную или переключитесь на «Плагиат моих карточек». Нажмите «Продолжить» чтобы попробовать ещё, «Остановить» чтобы прервать.`
+        });
+        await saveSupportSession();
+      }
+      return false;
+    }
+    return true;
+  }
+
+  // Проверка лимита новых обращений перед навигацией/открытием нового чата.
+  // v5.9.25: лимит больше не останавливает бота и не требует «Продолжить».
+  // Счётчик оставлен как мягкая диагностика, чтобы большие пакеты не зависали на gate.
+  async function canOpenNewChat() {
+    const opened = supportState.newChatsOpened;
+    const allow = supportState.limitGateAllowance;
+    if (opened >= allow) {
+      const nextNoticeAt = supportState._chatSoftLimitNoticeAt || allow;
+      if (opened >= nextNoticeAt) {
+        const step = Math.max(1, supportState.limits.maxChatsPerSession || 50);
+        supportState._chatSoftLimitNoticeAt = opened + step;
+        supportLog(`ℹ Создано ${opened} новых обращений. Автопауза лимита отключена, бот продолжает работу с антибот-паузами.`);
+      }
+    }
+    return true;
+  }
+
+  // Проверка подряд идущих эскалаций (Q2).
+  // v5.9.25: без ручного gate — только предупреждение и мягкая антибот-пауза.
+  async function checkConsecutiveEscalations() {
+    const maxConsec = supportState.limits.maxConsecutiveEscalations;
+    if (maxConsec === 0) {
+      // Режим «брендовый каталог»: только увеличенная пауза, не останавливаемся.
+      // Пауза прерываемая — если юзер нажал ⏸/⏹, выходим сразу.
+      const betweenDelay = 20000 + Math.random() * 15000;
+      const ok = await supportKeepaliveDelay(betweenDelay, {
+        label: `⏱ Длинная антибот-пауза при эскалациях подряд ${supportState.consecutiveEscalations}`,
+        logEveryMs: 10000
+      });
+      if (!ok) return false; // прервана — остановка в вызывающем
+      return true;
+    }
+    if (supportState.consecutiveEscalations >= maxConsec) {
+      const betweenDelay = 20000 + Math.random() * 15000;
+      const ok = await supportKeepaliveDelay(betweenDelay, {
+        label: `⚠ ${supportState.consecutiveEscalations} эскалаций подряд — ручная остановка отключена, делаю антибот-паузу и продолжаю`,
+        logEveryMs: 10000
+      });
+      if (!ok) return false;
+    }
+    return true;
+  }
+
+  // Инкремент счётчика новых обращений — вызывается когда мы ТОЧНО открыли новый чат
+  function registerNewChatOpened(reason) {
+    supportState.newChatsOpened++;
+    supportLog(`[chat-counter] Новое обращение открыто (${supportState.newChatsOpened}/${supportState.limitGateAllowance}) — ${reason || ''}`);
+  }
+
+  // Уведомить popup о проблемном SKU
+  function notifyProblem(category, sku, error) {
+    sendToPopup({ action: 'supportProblem', category, sku, error });
+  }
+
+  function resetSupportItemTransientState(item) {
+    supportState.lastPhase = null;
+    supportState.phaseRepeatCount = 0;
+    supportState._staleWaitCount = 0;
+    if (item) {
+      delete item._needsNextEvidence;
+      delete item._evidenceUsedIdx;
+      delete item._evidenceResendCount;
+      delete item._parentTryIdx;
+    }
+  }
+
+  async function finishProblemSupportItem(tabId, item, idx, error, opts = {}) {
+    const status = opts.status || 'failed';
+    const category = opts.category || status;
+    const recoverChat = !!opts.recoverChat;
+
+    if (opts.logMessage) supportLog(opts.logMessage);
+    if (item) {
+      item.status = status;
+      item.step = 'completed';
+      item.error = error;
+      if (category) notifyProblem(category, item.sku, item.error);
+    }
+
+    supportState.currentIndex = Math.max(supportState.currentIndex, idx + 1);
+    resetSupportItemTransientState(item);
+    sendToPopup({ action: 'supportProgress', current: idx + 1, total: supportState.queue.length, item });
+    await saveSupportSession();
+
+    if (recoverChat && supportState.isRunning && supportState.currentIndex < supportState.queue.length) {
+      supportLog(opts.recoverLogMessage || 'Открываю новую страницу чатов для следующего SKU после ошибки текущего обращения...');
+      const nextTabId = await openSupportChatsPage(tabId, 'восстановление после ошибки текущего обращения');
+      if (!nextTabId) {
+        await pauseSupportForChatRecoveryFailure('Не удалось открыть новую страницу чатов после ошибки текущего SKU');
+        return false;
+      }
+    } else {
+      await humanDelay(2000);
+    }
+    return true;
+  }
+
+  async function pauseSupportForChatRecoveryFailure(reason) {
+    supportState.isPaused = true;
+    supportState.lastPhase = null;
+    supportState.phaseRepeatCount = 0;
+    supportState._staleWaitCount = 0;
+    supportLog(`⛔ ${reason}. Ставлю паузу, чтобы следующий SKU не ушёл в старое обращение.`);
+    sendToPopup({
+      action: 'supportNeedAction',
+      message: `${reason}. Проверьте seller.ozon.ru и нажмите «Продолжить».`
+    });
+    await saveSupportSession();
+    await persistActiveSupportSessionNow();
+  }
+
+  async function openSupportChatsPage(tabId, reason) {
+    let targetTabId = tabId || supportState.sellerTabId;
+    try {
+      if (targetTabId) await chrome.tabs.get(targetTabId);
+    } catch (_) {
+      targetTabId = null;
+    }
+
+    if (!targetTabId) {
+      supportLog(`⚠ Вкладка потерялась (${reason || 'переход к чатам'}) — ищу seller.ozon.ru заново...`);
+      targetTabId = await findSellerTab();
+    }
+
+    if (!targetTabId) {
+      supportLog('❌ Не удалось найти или открыть вкладку seller.ozon.ru');
+      return null;
+    }
+
+    try {
+      supportState.sellerTabId = targetTabId;
+      await chrome.tabs.update(targetTabId, { url: 'https://seller.ozon.ru/app/messenger/?group=support_v2' });
+      await waitForTabComplete(targetTabId);
+      await delay(4000);
+      await injectSupportScripts(targetTabId);
+      await delay(2000);
+      return targetTabId;
+    } catch (e) {
+      supportLog(`Ошибка перехода к чатам (${reason || 'support_v2'}): ${e.message}`);
+      return null;
+    }
+  }
+
+  // Верификация что текущий SKU действительно дошёл до оператора/обработан.
+  // Нужно для v5.9.10 требования «точно видит что чат передан в поддержку на рассмотрение»
+  // перед созданием нового обращения.
+  async function verifyItemHandedOff(tabId, item) {
+    // Смотрим lastBotMsg + наличие системного уведомления о передаче оператору
+    try {
+      const debug = await getSupportDebugDOM(tabId);
+      const bot = (debug?.lastBotMsg || '').toLowerCase();
+      const handed = bot.includes('направил') || bot.includes('направили') ||
+                     bot.includes('коллегам') || bot.includes('рассмотрит') ||
+                     bot.includes('оператор') || bot.includes('создайте новое обращение');
+      const confirmed = bot.includes('скрыли товар') && bot.includes(item.sku);
+      return { handed, confirmed, botMsg: bot };
+    } catch (e) {
+      return { handed: false, confirmed: false, botMsg: '' };
+    }
+  }
+
+  // Обёртки для действий на странице
+  async function pageClickButton(tabId, patterns) {
+    return await sendToSupport(tabId, 'clickButton', patterns);
+  }
+  async function pageClickNewChat(tabId) {
+    return await sendToSupport(tabId, 'clickNewChat');
+  }
+  async function pageSendText(tabId, text) {
+    return await sendToSupport(tabId, 'sendText', text);
+  }
+  async function pageAttachFile(tabId, fileName, fileBase64, fileMimeType) {
+    return await sendToSupport(tabId, 'attachFile', { name: fileName, base64: fileBase64, type: fileMimeType });
+  }
+
+  function getComplaintFileBlobKey(source) {
+    if (source === 'sku') return 'complaintSkuFilesBlobs';
+    if (source === 'file_first') return 'complaintFileSkusBlobs';
+    return 'complaintFilesBlobs';
+  }
+
+  function ozgOpenFileDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open('ozguard-files', 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains('files')) db.createObjectStore('files');
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function ozgGetFileBlobFromDB(id) {
+    const db = await ozgOpenFileDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction('files', 'readonly');
+      const req = tx.objectStore('files').get(id);
+      req.onsuccess = () => {
+        db.close();
+        resolve(req.result || null);
+      };
+      req.onerror = () => {
+        db.close();
+        reject(req.error);
+      };
+    });
+  }
+
+  async function ozgBlobToBase64InWorker(blob) {
+    const buffer = await blob.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, chunk);
+    }
+    return btoa(binary);
+  }
+
+  async function requestComplaintFileFromPopup(file) {
+    return await new Promise((resolve) => {
+      let settled = false;
+      const done = (value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      };
+      const timer = setTimeout(() => done({
+        ok: false,
+        error: 'Таймаут чтения файла. Откройте popup OZGuard и повторите запуск.'
+      }), 120000);
+
+      try {
+        chrome.runtime.sendMessage({
+          action: 'getComplaintFilePayload',
+          source: file.source || 'common',
+          id: file.id
+        }, (resp) => {
+          if (chrome.runtime.lastError) {
+            done({
+              ok: false,
+              error: 'Откройте popup OZGuard, чтобы расширение могло прочитать крупный файл из IndexedDB'
+            });
+            return;
+          }
+          if (!resp || !resp.ok || !resp.file?.base64) {
+            done({ ok: false, error: resp?.error || 'Не удалось прочитать файл' });
+            return;
+          }
+          done({ ok: true, file: resp.file });
+        });
+      } catch (e) {
+        done({ ok: false, error: e.message || String(e) });
+      }
+    });
+  }
+
+  async function resolveComplaintFilePayload(file) {
+    if (file?.base64) return file; // backward compatibility with old in-memory sessions
+    if (!file?.id) throw new Error('Файл без id — обновите доказательства в popup');
+    const declaredSize = Number(file.size) || 0;
+    if (declaredSize > MAX_SUPPORT_FILE_BYTES) {
+      throw new Error(`Файл больше безопасного лимита ${Math.round(MAX_SUPPORT_FILE_BYTES / 1024 / 1024)} MB — сожмите видео или загрузите меньший файл`);
+    }
+
+    if ((file.storage || 'local') === 'local') {
+      const key = getComplaintFileBlobKey(file.source || 'common');
+      try {
+        const data = await chrome.storage.local.get([key]);
+        const b64 = data?.[key]?.[file.id];
+        if (b64) {
+          const approxBytes = Math.round(b64.length * 0.75);
+          if (approxBytes > MAX_SUPPORT_FILE_BYTES) {
+            throw new Error(`Файл больше безопасного лимита ${Math.round(MAX_SUPPORT_FILE_BYTES / 1024 / 1024)} MB — сожмите видео или загрузите меньший файл`);
+          }
+          return {
+            ...file,
+            base64: b64,
+            type: file.type || 'application/octet-stream'
+          };
+        }
+      } catch (e) {
+        if ((e?.message || '').includes('больше безопасного лимита')) throw e;
+      }
+    }
+
+    if (file.storage === 'idb') {
+      try {
+        const rec = await ozgGetFileBlobFromDB(file.id);
+        if (rec && rec.blob) {
+          const actualSize = Number(rec.size || rec.blob.size) || 0;
+          if (actualSize > MAX_SUPPORT_FILE_BYTES) {
+            throw new Error(`Файл больше безопасного лимита ${Math.round(MAX_SUPPORT_FILE_BYTES / 1024 / 1024)} MB — сожмите видео или загрузите меньший файл`);
+          }
+          return {
+            ...file,
+            name: rec.name || file.name,
+            type: rec.type || file.type || 'application/octet-stream',
+            base64: await ozgBlobToBase64InWorker(rec.blob)
+          };
+        }
+      } catch (e) {
+        if ((e?.message || '').includes('больше безопасного лимита')) throw e;
+      }
+    }
+
+    const resp = await requestComplaintFileFromPopup(file);
+    if (resp.ok) {
+      return {
+        ...file,
+        ...resp.file,
+        type: resp.file.type || file.type || 'application/octet-stream'
+      };
+    }
+    throw new Error(resp.error || 'Не удалось прочитать файл');
+  }
+
+  // Главный цикл автоматизации — заменяет рекурсию
+  // Лимит: 20 итераций на один SKU (защита от зацикливания)
+  // Общий лимит: 20 * количество SKU + 50 запас (навигация, setup)
+  const MAX_ITERATIONS_PER_SKU = 20;
+  const MAX_ITERATIONS_BASE = 50;
+  function ensureSupportLoop(tabId, reason) {
+    if (!supportState.isRunning || supportState.isPaused) return false;
+    const targetTabId = tabId || supportState.sellerTabId;
+    if (!targetTabId) return false;
+
+    if (supportLoopRunning) {
+      console.log(`[OZG-Support] support loop already running (${reason || 'unknown'})`);
+      return false;
+    }
+
+    supportState.sellerTabId = targetTabId;
+    const token = ++supportLoopToken;
+    supportLoopRunning = true;
+    console.log(`[OZG-Support] support loop start (${reason || 'manual'}, token=${token})`);
+    supportProcessLoop(targetTabId, token)
+      .catch(async (e) => {
+        supportLog(`⛔ Ошибка цикла жалоб: ${e.message}`);
+        try { await saveSupportSession(); } catch (_) {}
+      })
+      .finally(() => {
+        if (supportLoopToken === token) {
+          supportLoopRunning = false;
+          console.log(`[OZG-Support] support loop finished (token=${token})`);
+        }
+      });
+    return true;
+  }
+
+  async function supportProcessLoop(tabId, token) {
+    const totalSkus = supportState.queue ? supportState.queue.length : 100;
+    const maxTotal = MAX_ITERATIONS_PER_SKU * totalSkus + MAX_ITERATIONS_BASE;
+    let iterSinceLastProgress = 0; // Счётчик итераций без смены SKU
+    let lastSkuIndex = supportState.currentIndex;
+
+    for (let _iter = 0; _iter < maxTotal; _iter++) {
+      if (token && token !== supportLoopToken) return;
+      if (!supportState.isRunning || supportState.isPaused) return;
+      await delay(50);
+      if (token && token !== supportLoopToken) return;
+      const stepResult = await supportProcessStep(tabId);
+      if (stepResult === 'done' || stepResult === 'stop' || stepResult === 'wait') return;
+      if (supportState.sellerTabId) tabId = supportState.sellerTabId;
+
+      // Проверка прогресса: если SKU сменился — сброс счётчика
+      if (supportState.currentIndex !== lastSkuIndex) {
+        lastSkuIndex = supportState.currentIndex;
+        iterSinceLastProgress = 0;
+      } else {
+        iterSinceLastProgress++;
+      }
+
+      // Зацикливание на одном SKU
+      if (iterSinceLastProgress >= MAX_ITERATIONS_PER_SKU) {
+        const idx = supportState.currentIndex;
+        const item = supportState.queue[idx];
+        if (item) {
+          await finishProblemSupportItem(tabId, item, idx, 'Зацикливание', {
+            recoverChat: true,
+            logMessage: `⛔ Зацикливание на SKU ${item.sku}: ${MAX_ITERATIONS_PER_SKU} итераций без прогресса — пропускаю`
+          });
+        } else {
+          supportLog(`⛔ Зацикливание на SKU ${idx}: ${MAX_ITERATIONS_PER_SKU} итераций без прогресса — пропускаю`);
+          supportState.currentIndex++;
+        }
+        lastSkuIndex = supportState.currentIndex;
+        iterSinceLastProgress = 0;
+        // Продолжаем с следующим SKU
+      }
+    }
+    supportLog('⛔ Превышен общий лимит итераций (' + maxTotal + ') — аварийная остановка');
+    supportState.isRunning = false;
+    sendToPopup({ action: 'supportNeedAction', message: 'Аварийная остановка: превышен лимит итераций' });
+    await saveSupportSession();
+  }
+
+  // Один шаг автоматизации. Возвращает: 'continue' | 'done' | 'stop' | 'wait'
+  async function supportProcessStep(tabId) {
+    if (!supportState.isRunning || supportState.isPaused) return 'stop';
+
+    // v5.9.15: перед обработкой текущего SKU учитываем итоги ПРЕДЫДУЩЕГО
+    // (если он только что завершился failed/done — обновляем consecutiveFailed для BETA autostop)
+    const prevIdx = supportState.currentIndex - 1;
+    if (prevIdx >= 0 && prevIdx < supportState.queue.length) {
+      const prev = supportState.queue[prevIdx];
+      if (prev && !prev._counted && (prev.status === 'failed' || prev.status === 'done' ||
+          prev.status === 'escalated' || prev.status === 'no_violation')) {
+        prev._counted = true;
+        if (prev.status === 'failed') supportState.consecutiveFailed = (supportState.consecutiveFailed || 0) + 1;
+        else supportState.consecutiveFailed = 0;
+        // BETA autostop: проверяем перед началом следующего SKU
+        const autostopOk = await checkBetaAutostop();
+        if (!autostopOk) return 'wait';
+      }
+    }
+
+    const idx = supportState.currentIndex;
+    if (idx >= supportState.queue.length) {
+      supportState.isRunning = false;
+      supportLog('✅ Все жалобы обработаны');
+      sendToPopup({ action: 'supportComplete', queue: supportState.queue });
+      await saveSupportSession();
+      return 'done';
+    }
+
+    const item = supportState.queue[idx];
+    if (item.status === 'done' || item.status === 'failed' || item.status === 'skipped' ||
+        item.status === 'escalated' || item.status === 'no_violation') {
+      // v5.9.15: если это уже-обработанный из предыдущей сессии (не через prev-логику выше) —
+      // обновляем счётчик всё равно
+      if (!item._counted) {
+        item._counted = true;
+        if (item.status === 'failed') supportState.consecutiveFailed = (supportState.consecutiveFailed || 0) + 1;
+        else if (item.status === 'done' || item.status === 'escalated' || item.status === 'no_violation') supportState.consecutiveFailed = 0;
+      }
+      supportState.currentIndex++;
+      supportState._escalatedRetry = 0; // сброс счётчика handoff retry
+      supportState.navClickRetries = {}; // сброс retry навигационных кликов для нового SKU
+      sendToPopup({ action: 'supportProgress', current: idx + 1, total: supportState.queue.length, item });
+      return 'continue';
+    }
+
+    pathLog(`[${idx + 1}/${supportState.queue.length}] Обработка SKU ${item.sku}`);
+    sendToPopup({ action: 'supportProgress', current: idx + 1, total: supportState.queue.length, item });
+
+    // === Проверка что мы на правильной странице (support_v2) ===
+    try {
+      const currentTab = await chrome.tabs.get(tabId);
+      const currentUrl = currentTab.url || '';
+      // Проверка авторизации
+      if (currentUrl.includes('/signin') || currentUrl.includes('/login') || currentUrl.includes('passport.ozon.ru')) {
+        supportLog('⚠ Сессия истекла — требуется авторизация на seller.ozon.ru');
+        item.status = 'waiting';
+        sendToPopup({ action: 'supportNeedAction', message: 'Сессия истекла. Войдите в аккаунт seller.ozon.ru и нажмите «Обновить»' });
+        return 'wait';
+      }
+      // Проверка что не ушли со страницы seller.ozon.ru
+      if (!currentUrl.includes('seller.ozon.ru')) {
+        supportLog('⚠ Вкладка ушла с seller.ozon.ru — возвращаю на чат поддержки...');
+        await chrome.tabs.update(tabId, { url: 'https://seller.ozon.ru/app/messenger/?group=support_v2' });
+        await waitForTabComplete(tabId);
+        await delay(5000);
+        await injectSupportScripts(tabId);
+        await delay(2000);
+      }
+      // Проверка что не в чате покупателя
+      else if (currentUrl.includes('group=customers') || (currentUrl.includes('/app/messenger') && currentUrl.includes('&id=') && !currentUrl.includes('group=support'))) {
+        supportLog('⚠ Обнаружен чат покупателя — переключаюсь на поддержку...');
+        await chrome.tabs.update(tabId, { url: 'https://seller.ozon.ru/app/messenger/?group=support_v2' });
+        await waitForTabComplete(tabId);
+        await delay(5000);
+        await injectSupportScripts(tabId);
+        await delay(2000);
+      }
+    } catch (e) {
+      // Вкладка могла быть закрыта — пробуем найти/создать заново
+      supportLog('⚠ Вкладка недоступна — ищу заново...');
+      const newTabId = await findSellerTab();
+      if (!newTabId) {
+        supportLog('❌ Не удалось найти seller.ozon.ru');
+        item.status = 'waiting';
+        sendToPopup({ action: 'supportNeedAction', message: 'Вкладка seller.ozon.ru закрыта. Откройте и нажмите «Обновить»' });
+        return 'wait';
+      }
+      supportState.sellerTabId = newTabId;
+      tabId = newTabId;
+      await injectSupportScripts(tabId);
+      await delay(2000);
+    }
+
+    // Получаем состояние страницы
+    let state = await getSupportPageState(tabId);
+    if (!state) {
+      supportLog('Нет связи — пробую перейти на чаты...');
+      try {
+        const ensureResp = await ensureSellerChatPage(tabId);
+        if (ensureResp?.tabId) tabId = ensureResp.tabId;
+        state = await getSupportPageState(tabId);
+      } catch (e) {}
+      if (!state) {
+        supportLog('Нет связи с seller.ozon.ru — откройте чат поддержки вручную');
+        item.status = 'waiting';
+        sendToPopup({ action: 'supportNeedAction', message: 'Нет связи со страницей. Откройте seller.ozon.ru → Сообщения → Поддержка и нажмите «Обновить»' });
+        return 'wait';
+      }
+    }
+
+    const phase = state.phase;
+    supportLog(`Фаза: ${phase}, кнопки: [${(state.buttons || []).slice(0, 5).join(', ')}]`);
+
+    // === Защита от зацикливания ===
+    // Пропускаем стандартную защиту для ready_for_next/item_completed + новый SKU —
+    // smart handler сам управляет этим случаем (клик кнопки цикла + ожидание)
+    // evidence_insufficient тоже управляемая фаза: waiting_attachment handler должен успеть
+    // исчерпать лимит повторов файла и завершить только текущий SKU.
+    const isSmartHandled = ((phase === 'ready_for_next' || phase === 'item_completed') && !item.step) ||
+      (phase === 'waiting_attachment' && state.detail === 'evidence_insufficient');
+    // Для in_progress (ожидание ответа Ozon) используем повышенный лимит — Ozon иногда
+    // отвечает через 30-60 секунд, а не 10-20. Без этого — ложные срабатывания на медленном интернете.
+    const phaseRepeatLimit = phase === 'in_progress' ? 12 : supportState.maxPhaseRepeats;
+    if (phase === supportState.lastPhase && !isSmartHandled) {
+      supportState.phaseRepeatCount++;
+      if (supportState.phaseRepeatCount >= phaseRepeatLimit) {
+        // Debug при зацикливании
+        const debug = await getSupportDebugDOM(tabId);
+        if (debug) {
+          supportLog(`[LOOP-DEBUG] URL: ${debug.url}`);
+          supportLog(`[LOOP-DEBUG] Chat quick-replies: [${debug.chatQuickReplies?.slice(0, 10).join(', ')}]`);
+          supportLog(`[LOOP-DEBUG] Std buttons: [${debug.allButtonTexts?.slice(0, 10).join(', ')}]`);
+          supportLog(`[LOOP-DEBUG] Scored: [${debug.quickReplyTexts?.slice(0, 5).join(', ')}]`);
+          supportLog(`[LOOP-DEBUG] Бот: ${debug.lastBotMsg || 'нет'} | Юзер: ${debug.lastUserMsg || 'нет'}`);
+          supportLog(`[LOOP-DEBUG] chatContainer: ${debug.hasChatContainer}, input: ${debug.hasInput}, fileInput: ${debug.hasFileInput}, sendBtn: ${debug.hasSendButton}, botAfterUser: ${debug.lastBotAfterLastUser}`);
+        }
+        // v5.9.36: waiting_attachment и in_progress — recoverable фазы.
+        // Завершаем только текущий SKU и продолжаем пакет, а не останавливаем всё.
+        if (phase === 'waiting_attachment' || phase === 'in_progress') {
+          const stepHint = item.step === 'parent_sent' ? ' (Ozon не ответил на parent SKU)' : '';
+          const reason = `Зацикливание на фазе ${phase}${stepHint}`;
+          await finishProblemSupportItem(tabId, item, idx, reason, {
+            recoverChat: true,
+            logMessage: `⛔ ${reason}: завершаю только SKU ${item.sku} и продолжаю пакет`
+          });
+          return 'continue';
+        }
+        // v5.9.32: специальное сообщение для подозрения на изменение интерфейса Ozon.
+        // unknown/has_buttons/no_chat/faq_page подряд = бот не понимает что показывает Ozon.
+        const isInterfaceLikely = phase === 'unknown' || phase === 'has_buttons' ||
+          phase === 'no_chat' || phase === 'faq_page' || phase === 'input_ready';
+        if (isInterfaceLikely) {
+          const visibleList = (debug?.chatQuickReplies?.slice(0, 6) || []).join(', ') ||
+            (debug?.allButtonTexts?.slice(0, 6) || []).join(', ') || '—';
+          const lastBot = (debug?.lastBotMsg || '—').substring(0, 100);
+          supportLog(`⛔ ИНТЕРФЕЙС OZON ИЗМЕНИЛСЯ или чат в неизвестном состоянии: фаза «${phase}» повторилась ${supportState.phaseRepeatCount} раз. Бот не распознал ни одной знакомой кнопки/сообщения.`);
+          supportLog(`[INTERFACE-CHANGE] Видимые кнопки: ${visibleList}`);
+          supportLog(`[INTERFACE-CHANGE] Последнее сообщение Ozon: «${lastBot}»`);
+          item.status = 'failed';
+          item.error = `Интерфейс Ozon не распознан на фазе ${phase}`;
+          notifyProblem('failed', item.sku, item.error);
+          supportState.isRunning = false;
+          sendToPopup({
+            action: 'supportNeedAction',
+            message: `Похоже, Ozon изменил интерфейс жалоб: бот завис на «${phase}» (нет знакомых кнопок). Видимые кнопки: ${visibleList}. Проверьте чат вручную, попробуйте другой тип жалобы или сообщите в t.me/firadex.`
+          });
+          await saveSupportSession();
+          return 'wait';
+        }
+        // Прочие фазы (навигационные) — останавливаем пакет для ручной проверки
+        supportLog(`⛔ Зацикливание: фаза «${phase}» повторилась ${supportState.phaseRepeatCount} раз — остановка`);
+        item.status = 'failed';
+        item.error = `Зацикливание на фазе ${phase}`;
+        notifyProblem('failed', item.sku, item.error);
+        supportState.isRunning = false;
+        sendToPopup({ action: 'supportNeedAction', message: `Зацикливание на фазе «${phase}». Проверьте чат вручную.` });
+        await saveSupportSession();
+        return 'wait';
+      }
+    } else if (phase !== supportState.lastPhase) {
+      supportState.lastPhase = phase;
+      supportState.phaseRepeatCount = 1;
+    }
+
+    // === DRY RUN ===
+    if (supportState.mode === 'dry') {
+      if (idx === 0) {
+        const path = supportState.complaintType;
+        let navStr;
+        if (path === 'content_beta') {
+          navStr = 'Поддержка → Новое обращение → Товары и Цены → Контроль качества → Нарушение правил площадки → Использование моих фото, видео, текста';
+        } else if (path === 'brand_beta') {
+          navStr = 'Поддержка → Новое обращение → Товары и Цены → Контроль качества → Нарушение правил площадки → Использование моего бренда';
+        } else {
+          navStr = 'Поддержка → Новое обращение → Личный кабинет → Кабинет бренда → Жалоба → Плагиат → Использование моих фото, видео, текста';
+        }
+        pathLog(`[DRY] Навигация: ${navStr}`);
+      }
+      pathLog(`[DRY] Ввод артикула: ${item.sku}`);
+      if (supportState.files.length > 0) pathLog(`[DRY] Прикрепление + отправка ${supportState.files.length} файлов`);
+      pathLog(`[DRY] Ожидание → «Пожаловаться на другой товар»`);
+      item.status = 'done';
+      supportState.currentIndex++;
+      sendToPopup({ action: 'supportProgress', current: idx + 1, total: supportState.queue.length, item });
+      await humanDelay(500);
+      return 'continue';
+    }
+
+    // === АВТОМАТИЧЕСКИЙ РЕЖИМ ===
+
+    if (!item.step) {
+      const pickedBeforeArticle = pickFilesForItem(item);
+      if (pickedBeforeArticle.files.length === 0) {
+        await finishProblemSupportItem(tabId, item, idx, 'Нет файлов для прикрепления', {
+          logMessage: `✗ SKU ${item.sku}: нет файлов (parent=${item.parentSku || '—'}). Пропускаю до ввода артикула.`
+        });
+        return 'continue';
+      }
+    }
+
+    // Фаза: нет открытого чата
+    if (phase === 'no_chat') {
+      // Проверяем лимит ПЕРЕД созданием нового обращения
+      const okLimit = await canOpenNewChat();
+      if (!okLimit) return 'wait';
+
+      supportLog('Ожидаю загрузку чата (5с)...');
+      await delay(5000);
+
+      const stateRetry = await getSupportPageState(tabId);
+      if (stateRetry && stateRetry.phase !== 'no_chat') {
+        supportLog(`Чат загрузился: фаза ${stateRetry.phase}`);
+        return 'continue';
+      }
+
+      // Debug
+      const debug = await getSupportDebugDOM(tabId);
+      if (debug) {
+        supportLog(`[DEBUG] URL: ${debug.url}, кнопок: ${debug.allButtonCount}, input: ${debug.hasInput}`);
+        if (debug.allButtonTexts?.length > 0) supportLog(`[DEBUG] Кнопки: [${debug.allButtonTexts.slice(0, 10).join(', ')}]`);
+      }
+
+      supportLog('Ищу кнопку "Поддержка"...');
+      const groupResp = await pageClickButton(tabId, ['поддержка']);
+      if (groupResp?.ok) supportLog('"Поддержка" кликнута');
+      else supportLog(`"Поддержка" не найдена: ${groupResp?.error || ''}`);
+      await humanDelay(3000);
+
+      supportLog('Создаю новое обращение...');
+      const newChatResp = await pageClickNewChat(tabId);
+      if (!newChatResp?.ok) {
+        // Fallback: пробуем кнопку «Помощь» (плавающая кнопка → tippy → «Не нашли ответ»)
+        supportLog('«Новое обращение» не найдена — пробую кнопку «Помощь»...');
+        const helpResp = await sendToSupport(tabId, 'clickFaqButton');
+        if (helpResp?.ok) {
+          supportLog(`Кнопка «${helpResp.text}» нажата, ожидаю виджет (3с)...`);
+          await delay(3000);
+          return 'continue';
+        }
+        supportLog('Кнопки не найдены');
+        sendToPopup({ action: 'supportNeedAction', message: 'Откройте новый чат поддержки вручную: нажмите «Помощь» → «Не нашли ответ на свой вопрос?»' });
+        return 'wait';
+      }
+      registerNewChatOpened('через no_chat');
+      supportLog('Новое обращение создано, ожидаю загрузку (4с)...');
+      await delay(4000);
+      return 'continue';
+    }
+
+    // Фаза: FAQ / виджет «Помощь и обучение» / плавающая кнопка «Помощь»
+    // Двухшаговый flow: 1) клик «Помощь» → tippy → 2) клик «Не нашли ответ?» → чат
+    if (phase === 'faq_page') {
+      const faqType = state.faqType || 'unknown';
+      supportLog(`Обнаружена FAQ-фаза (${faqType}: ${state.faqText || ''})`);
+
+      if (faqType === 'faq_no_button' || faqType === 'messenger_no_chat') {
+        // Нет кнопки — ждём загрузку или пробуем обновить
+        supportLog('Кнопки не найдены, жду загрузку (3с)...');
+        await delay(3000);
+        return 'continue';
+      }
+
+      if (faqType === 'help_trigger') {
+        // Шаг 1: кликаем плавающую кнопку «Помощь» → откроется tippy-виджет
+        supportLog('Нажимаю плавающую кнопку «Помощь»...');
+        const faqResp = await sendToSupport(tabId, 'clickFaqButton');
+        if (faqResp?.ok) {
+          supportLog('Кнопка «Помощь» нажата, ожидаю виджет FAQ (3с)...');
+          await delay(3000);
+        } else {
+          supportLog(`Не удалось нажать «Помощь»: ${faqResp?.error || ''}`);
+          await delay(2000);
+        }
+        return 'continue'; // следующая итерация обнаружит tippy с «Не нашли ответ»
+      }
+
+      // Шаг 2: tippy открыт → кликаем «Не нашли ответ на свой вопрос?» или «Чаты»
+      supportLog('Нажимаю «Не нашли ответ на свой вопрос?»...');
+      const faqResp = await sendToSupport(tabId, 'clickFaqButton');
+      if (faqResp?.ok) {
+        supportLog(`Кнопка FAQ нажата (${faqResp.type}: ${faqResp.text}), ожидаю чат (5с)...`);
+        await delay(5000);
+      } else {
+        supportLog(`Не удалось нажать кнопку FAQ: ${faqResp?.error || 'неизвестная ошибка'}`);
+        sendToPopup({ action: 'supportNeedAction', message: 'Нажмите «Не нашли ответ на свой вопрос?» вручную в виджете помощи' });
+        return 'wait';
+      }
+      return 'continue';
+    }
+
+    // Навигационные фазы — клик по нужной кнопке.
+    // v5.9.15: path-resolver + handleNavPhase — выбор кнопки зависит от complaintType:
+    //   plagiat_legacy: Личный кабинет → Кабинет бренда → Жалоба на товар → Плагиат → Использование фото/видео/текста
+    //   content_beta:   Товары и Цены → Контроль качества → Нарушение правил площадки → Использование моих фото/видео/текста
+    //   brand_beta:     Товары и Цены → Контроль качества → Нарушение правил площадки → Использование моего бренда
+    //
+    // complaint_subtype в BETA-путях отсутствует (экран «Плагиат/Назад» пропускается).
+    // Если detection всё-таки вернул complaint_subtype на BETA — значит неожиданная ветка, логгируем и идём по-старому.
+    if (phase === 'direction_selection' || phase === 'category_selection' ||
+        phase === 'complaint_type' || phase === 'complaint_detail' ||
+        phase === 'complaint_subtype') {
+      const result = await handleNavPhase(tabId, phase, state);
+      if (result) return result;
+    }
+
+    // v5.9.32: НОВЫЙ этап Ozon — бот сначала просит ВАШ (parent) SKU, чью карточку
+    // использовал нарушитель. Только потом — SKU нарушителя. Если у item нет parentSku,
+    // помечаем failed с понятной подсказкой, что Ozon изменил сценарий.
+    if (phase === 'waiting_parent_article') {
+      const detail = state.detail || '';
+      const isNotFound = detail === 'not_found';
+
+      const parents = (Array.isArray(item.parentSkus) && item.parentSkus.length > 0)
+        ? item.parentSkus
+        : (item.parentSku ? [item.parentSku] : []);
+
+      if (parents.length === 0) {
+        await finishProblemSupportItem(tabId, item, idx,
+          'Ozon просит ваш SKU перед SKU нарушителя — у задачи нет parent SKU', {
+          recoverChat: true,
+          logMessage: `✗ SKU ${item.sku}: Ozon добавил этап «пришлите свой SKU». В задаче нет родителя — используйте «В жалобы» из вкладки Сканирование, чтобы привязать ваш товар к SKU конкурента.`
+        });
+        return 'continue';
+      }
+
+      // Если Ozon отказал по предыдущему parent — пробуем следующий или fail
+      if (isNotFound && item.step === 'parent_sent') {
+        const triedIdx = item._parentTryIdx || 0;
+        const triedSku = parents[triedIdx] || '?';
+        item._parentTryIdx = triedIdx + 1;
+        if (item._parentTryIdx >= parents.length) {
+          const triedList = parents.slice(0, item._parentTryIdx).join(', ');
+          await finishProblemSupportItem(tabId, item, idx,
+            `Ozon не нашёл ни один parent SKU (${triedList}) в вашем магазине`, {
+            recoverChat: true,
+            logMessage: `✗ SKU ${item.sku}: Ozon не нашёл [${triedList}] в вашем магазине. Проверьте, что parent SKU действительно ваш товар.`
+          });
+          return 'continue';
+        }
+        const nextSku = parents[item._parentTryIdx];
+        supportLog(`⚠ Ozon не нашёл parent ${triedSku} в магазине. Пробую следующего родителя: ${nextSku}`);
+        item.step = null; // позволим повторно отправить parent SKU
+      }
+
+      // Защита от дубликатов: parent уже отправлен, ждём ответ Ozon
+      if (item.step === 'parent_sent' && !isNotFound) {
+        supportLog('Parent SKU уже отправлен, ожидаю проверку Ozon (5с)...');
+        await delay(5000);
+        return 'continue';
+      }
+
+      const tryIdx = item._parentTryIdx || 0;
+      const parentSku = parents[tryIdx];
+      if (!parentSku) {
+        await finishProblemSupportItem(tabId, item, idx, 'Список parent SKU исчерпан', {
+          recoverChat: true,
+          logMessage: `✗ SKU ${item.sku}: исчерпан список parent SKU [${parents.join(', ')}]`
+        });
+        return 'continue';
+      }
+
+      await humanDelay(1000 + Math.random() * 1500);
+      const tryLabel = parents.length > 1 ? ` (родитель ${tryIdx + 1}/${parents.length})` : '';
+      supportLog(`Отправляю свой (parent) SKU ${parentSku}${tryLabel}...`);
+      const resp = await pageSendText(tabId, parentSku);
+      if (!resp?.ok) {
+        await finishProblemSupportItem(tabId, item, idx, 'Не удалось отправить parent SKU', {
+          recoverChat: true,
+          logMessage: `Не удалось отправить parent SKU ${parentSku}: ${resp?.error || 'unknown'}`
+        });
+        return 'continue';
+      }
+      item.step = 'parent_sent';
+      supportLog(`Parent SKU ${parentSku} отправлен ✓ (ожидаю проверку Ozon)`);
+      await humanDelay(4000 + Math.random() * 2000);
+      return 'continue';
+    }
+
+    // Фаза: ввод артикула НАРУШИТЕЛЯ (после parent_sent или старого пути без этапа parent)
+    if (phase === 'waiting_article' || phase === 'input_ready') {
+      // Защита от дублирования: артикул уже отправлен
+      if (item.step === 'article_sent' || item.step === 'file_sent' || item.step === 'completed') {
+        supportLog('Артикул уже отправлен, ожидаю следующую фазу (5с)...');
+        await delay(5000);
+        return 'continue';
+      }
+
+      // input_ready без явного запроса артикула — бот может ещё не ответить
+      if (phase === 'input_ready' && !item.step) {
+        const debug = await getSupportDebugDOM(tabId);
+        const botMsg = (debug?.lastBotMsg || '').toLowerCase();
+        // Расширенный набор паттернов запроса артикула от бота
+        const isArticleRequest = botMsg.includes('скопируйте') || botMsg.includes('артикул') ||
+          botMsg.includes('пришлите только') || botMsg.includes('введите') ||
+          botMsg.includes('пришлите одно') || botMsg.includes('значение артикула') ||
+          botMsg.includes('номер товара') || botMsg.includes('укажите товар') ||
+          botMsg.includes('sku') || botMsg.includes('номер артикула') ||
+          botMsg.includes('отправьте артикул');
+        if (isArticleRequest) {
+          supportLog(`[SMART] Бот запросил артикул: «${botMsg.substring(0, 80)}...»`);
+        }
+        // Fallback: если фаза повторяется 3+ раза — отправляем артикул
+        // (бот уже запросил, но текст не распарсился)
+        if (!isArticleRequest && supportState.phaseRepeatCount < 3) {
+          supportLog(`[SMART] input_ready без запроса артикула (попытка ${supportState.phaseRepeatCount}/3), бот: «${botMsg.substring(0, 80)}» — жду 3с...`);
+          await delay(3000);
+          return 'continue';
+        }
+        if (!isArticleRequest) {
+          supportLog(`[SMART] Fallback: отправляю артикул (бот-текст: «${botMsg.substring(0, 60)}»)`);
+        }
+      }
+
+      // Имитация человека: пауза перед вводом
+      await humanDelay(1000 + Math.random() * 1500);
+
+      supportLog(`Отправляю артикул ${item.sku}...`);
+      const resp = await pageSendText(tabId, item.sku);
+      if (!resp?.ok) {
+        await finishProblemSupportItem(tabId, item, idx, 'Не удалось ввести артикул', {
+          recoverChat: true,
+          logMessage: `Не удалось отправить артикул: ${resp?.error || 'unknown'}`
+        });
+        return 'continue';
+      }
+      item.step = 'article_sent';
+      supportLog(`Артикул ${item.sku} отправлен ✓`);
+      await humanDelay(4000 + Math.random() * 2000);
+      return 'continue';
+    }
+
+    // Фаза: прикрепление доказательств
+    if (phase === 'waiting_attachment') {
+      const detail = state.detail || '';
+      const isInsufficientRequest = detail === 'evidence_insufficient';
+
+      // v5.9.20: бот говорит «доказательств недостаточно» — добавить ещё один файл
+      // (если есть). step остаётся file_sent, но мы должны попасть в attach-блок ниже.
+      if (isInsufficientRequest && item.step === 'file_sent') {
+        supportLog(`📩 Бот запросил дополнительные доказательства для SKU ${item.sku}`);
+        item._evidenceUsedIdx = (item._evidenceUsedIdx || 0); // сколько уже отправили
+        // Помечаем что нам нужно прикреплять следующий файл
+        item._needsNextEvidence = true;
+        item.step = 'article_sent'; // позволяем войти в attach
+      } else if (item.step === 'file_sent') {
+        // Стандартная проверка: может файл уже отправлен и просто ждём ответ бота
+        const debug = await getSupportDebugDOM(tabId);
+        const lastUserIsFile = debug?.lastUserMsg === '[FILE]';
+        if (!lastUserIsFile && supportState.phaseRepeatCount < 3) {
+          supportLog('Файл не появился в чате, повторяю отправку...');
+          item.step = 'article_sent'; // Откатываем step для повторной попытки
+        } else {
+          supportLog('Файл уже отправлен, ожидаю ответ бота (5с)...');
+          await delay(5000);
+          return 'continue';
+        }
+      }
+
+      // v5.9.10: выбираем файлы для ТЕКУЩЕГО SKU (per-parent с fallback на общий пул)
+      const picked = pickFilesForItem(item);
+      if (picked.files.length === 0) {
+        // Для брендового сертификата / нет файлов → failed, не идём дальше.
+        // Это корректное поведение для Q5: «фейлед если совсем нет файлов»
+        await finishProblemSupportItem(tabId, item, idx, 'Нет файлов для прикрепления', {
+          recoverChat: true,
+          logMessage: `✗ SKU ${item.sku}: нет файлов (parent=${item.parentSku || '—'}). Помечаю failed.`
+        });
+        return 'continue';
+      }
+
+      // v5.9.20: на повторный запрос «доказательств недостаточно» отправляем ТОЛЬКО следующий файл,
+      // а не все заново. Это естественнее для оператора Ozon и ближе к ручному поведению.
+      // v5.9.27: для сценария «Мой контент» (content_beta) разрешаем два контрольных
+      // повтора последнего файла. Если Ozon снова просит доказательства — SKU failed, бот идёт дальше.
+      let filesToAttach;
+      if (isInsufficientRequest) {
+        const startIdx = item._evidenceUsedIdx || 0;
+        if (startIdx >= picked.files.length) {
+          const isContentBeta = supportState.complaintType === 'content_beta';
+          const maxResends = 2;
+          item._evidenceResendCount = (item._evidenceResendCount || 0);
+
+          if (isContentBeta && picked.files.length > 0 && item._evidenceResendCount < maxResends) {
+            // Повторно отправляем последний файл из набора
+            const lastFile = picked.files[picked.files.length - 1];
+            filesToAttach = [lastFile];
+            item._evidenceResendCount++;
+            supportLog(`🔁 [Мой контент] Файлы исчерпаны (${picked.files.length}/${picked.files.length}). Повторно отправляю последний файл (попытка ${item._evidenceResendCount}/${maxResends})`);
+          } else {
+            const reason = isContentBeta
+              ? `Ozon повторно запросил доказательства после ${maxResends} контрольных повторов файла`
+              : 'Бот запросил доп. доказательства, но файлы исчерпаны';
+            await finishProblemSupportItem(tabId, item, idx, reason, {
+              recoverChat: true,
+              logMessage: `⚠ SKU ${item.sku}: ${reason}. Помечаю failed и перехожу к следующему SKU.`
+            });
+            return 'continue';
+          }
+        } else {
+          filesToAttach = [picked.files[startIdx]];
+          supportLog(`Прикрепляю ДОПОЛНИТЕЛЬНЫЙ файл (${startIdx + 1}/${picked.files.length}, источник: ${picked.source})`);
+        }
+      } else {
+        // Первичная подача: все файлы по порядку
+        filesToAttach = picked.files.slice();
+        item._evidenceUsedIdx = 0;
+        item._evidenceResendCount = 0;
+        supportLog(`Прикрепляю ${filesToAttach.length} файл(ов) (источник: ${picked.source}, parent=${item.parentSku || '—'})`);
+      }
+
+      let attachedOk = false;
+      let lastDbgSnap = null; // снимок DOM при провале для диагностики
+      for (let fi = 0; fi < filesToAttach.length; fi++) {
+        const file = filesToAttach[fi];
+        const totalCount = isInsufficientRequest ? picked.files.length : filesToAttach.length;
+        const fileNum = isInsufficientRequest ? ((item._evidenceUsedIdx || 0) + 1) : (fi + 1);
+        const idxLabel = `${fileNum}/${totalCount}`;
+        let filePayload;
+        try {
+          filePayload = await resolveComplaintFilePayload(file);
+        } catch (e) {
+          supportLog(`[${idxLabel}] Ошибка чтения файла ${file.name || file.id || 'document'}: ${e.message || e}`);
+          continue;
+        }
+        // Имитация: человек не сразу прикрепляет файл
+        await humanDelay(2000 + Math.random() * 2000);
+        // Для крупных (видео) — увеличенная пауза после старта прикрепления
+        const isLarge = filePayload.base64 && filePayload.base64.length > 6 * 1024 * 1024; // ~4.5MB raw
+        const fileSizeKb = filePayload.base64 ? Math.round((filePayload.base64.length * 0.75) / 1024) : 0;
+        // Baseline: сколько сообщений в чате ДО отправки файла (для верификации по росту счётчика)
+        const baselineDbg = await getSupportDebugDOM(tabId);
+        const baselineCount = baselineDbg?.chatMsgCount || 0;
+        supportLog(`[${idxLabel}] Прикрепляю${isLarge ? ' КРУПНЫЙ файл (видео/HD)' : ''}: ${filePayload.name || file.name || 'document'} (${fileSizeKb} КБ, тип ${filePayload.type || '?'}, baseline ${baselineCount})...`);
+        const attachT0 = Date.now();
+        const resp = await pageAttachFile(tabId, filePayload.name, filePayload.base64, filePayload.type);
+        const attachMs = Date.now() - attachT0;
+        if (resp?.ok) {
+          supportLog(`[${idxLabel}] Файл прикреплён${resp.sent ? ' и отправлен ✓' : ' ⚠ НЕ отправлен (файл остался в поле ввода)'} за ${attachMs}мс`);
+          // Если файл не был отправлен (остался в поле ввода) — пробуем clickSend с повторами
+          if (!resp.sent) {
+            supportLog(`[${idxLabel}] Пробую отправить файл повторно...`);
+            let retrySent = false;
+            for (let retryAttempt = 0; retryAttempt < 3; retryAttempt++) {
+              const clickResp = await sendToSupport(tabId, 'clickSend');
+              await delay(isLarge ? 5000 : 3000);
+              if (clickResp?.ok) {
+                // Проверяем: файл ушёл?
+                const dbgCheck = await getSupportDebugDOM(tabId);
+                if (dbgCheck && (dbgCheck.chatMsgCount || 0) > baselineCount) {
+                  retrySent = true;
+                  supportLog(`[${idxLabel}] ✓ Файл отправлен после повторного клика (попытка ${retryAttempt + 1})`);
+                  break;
+                }
+              }
+              if (retryAttempt < 2) {
+                supportLog(`[${idxLabel}] Повтор отправки (${retryAttempt + 2}/3)...`);
+                await delay(3000 + retryAttempt * 3000);
+              }
+            }
+            if (!retrySent) {
+              supportLog(`[${idxLabel}] ⚠ Файл так и не ушёл из поля ввода после 3 попыток`);
+              // Не ждём 60с впустую — сразу переходим к следующему файлу
+              lastDbgSnap = await getSupportDebugDOM(tabId);
+              if (fi < filesToAttach.length - 1) await delay(2000);
+              continue;
+            }
+          }
+          // Верификация что файл дошёл. Принимаем ЛЮБОЕ из:
+          //  (a) lastUserMsg === '[FILE]' (прямой признак — наше сообщение-файл)
+          //  (b) lastBotMsg содержит маркер принятия жалобы (бот отвечает ПОСЛЕ файла)
+          //  (c) counter сообщений вырос на 2+ (файл + ответ бота вместе)
+          //  (d) counter вырос на 1 (только файл, бот ещё не ответил)
+          let verified = false;
+          let maxWait = 15;
+          if (isLarge) {
+            maxWait = fileSizeKb >= 50 * 1024 ? 90 : (fileSizeKb >= 10 * 1024 ? 60 : 30);
+          }
+          const botAckPatterns = ['скрыли товар', 'нарушение подтвердилось', 'нарушение рассмотрено',
+            'рассмотрим', 'получили ваш', 'направил', 'направили', 'проверим', 'жалобу рассмотр',
+            'пожаловаться на другой', item.sku];
+          let lastDbg = null;
+          for (let w = 0; w < maxWait; w++) {
+            await delay(1000);
+            if (!supportState.isRunning || supportState.isPaused) return 'stop';
+            const dbg = await getSupportDebugDOM(tabId);
+            if (!dbg) continue;
+            lastDbg = dbg;
+            const grew = (dbg.chatMsgCount || 0) > baselineCount;
+            const grewBig = (dbg.chatMsgCount || 0) >= baselineCount + 2;
+            const botMsg = (dbg.lastBotMsg || '').toLowerCase();
+            const botAck = grew && botAckPatterns.some(p => botMsg.includes(p));
+            const userFile = dbg.lastUserMsg === '[FILE]';
+            if (userFile || botAck || grewBig) { verified = true; break; }
+            // Дополнительно: если счётчик вырос на 1 и lastMsgIsMine=true — файл ушёл, бот ещё не ответил
+            if (grew && dbg.lastMsgIsMine) { verified = true; break; }
+          }
+          if (verified) {
+            supportLog(`[${idxLabel}] ✓ Файл в чате`);
+            attachedOk = true;
+            // v5.9.20: учитываем сколько файлов уже отправили — для последовательных доп.запросов
+            item._evidenceUsedIdx = (item._evidenceUsedIdx || 0) + 1;
+          } else {
+            // Подробная диагностика что увидели после ожидания
+            lastDbgSnap = lastDbg;
+            const finalCount = lastDbg?.chatMsgCount ?? '?';
+            const lastUser = lastDbg?.lastUserMsg || '—';
+            const lastBot = (lastDbg?.lastBotMsg || '—').slice(0, 80);
+            supportLog(`[${idxLabel}] ⚠ Файл не появился в чате за ${maxWait}с (msgs ${baselineCount}→${finalCount}, last user: «${lastUser}», last bot: «${lastBot}») — пробую следующий`);
+          }
+          // Небольшая пауза между файлами
+          if (fi < filesToAttach.length - 1) await delay(3000 + Math.random() * 2000);
+        } else {
+          supportLog(`[${idxLabel}] Ошибка прикрепления: ${resp?.error || 'неизвестная ошибка'} (за ${attachMs}мс)`);
+        }
+      }
+
+      if (!attachedOk) {
+        // Счётчик ТОЛЬКО для случая «ни один файл не прошёл» в waiting_attachment.
+        // Эскалации (chat_escalated после успешного attach) сюда не попадают — эскалация
+        // случается уже после reset'а на строке ниже. Поэтому 5+ подряд = реальная проблема
+        // с приёмом файлов (Ozon antispam / DOM rate-limit / изменение интерфейса).
+        supportState.consecutiveAttachFails = (supportState.consecutiveAttachFails || 0) + 1;
+        // Финальный DOM-снимок чтобы клиент мог понять что увидел бот
+        if (lastDbgSnap) {
+          supportLog(`[ATTACH-DIAG] hasFileInput=${lastDbgSnap.hasFileInput} hasInput=${lastDbgSnap.hasInput} hasSendBtn=${lastDbgSnap.hasSendButton} viewport=${lastDbgSnap.viewportWidth}px`);
+        }
+        // Подсказки в зависимости от паттерна
+        if (supportState.consecutiveAttachFails === 1) {
+          supportLog(`💡 Возможные причины: файл слишком большой / неподдерживаемый формат / Ozon временно ограничил приём файлов в чате`);
+        }
+        if (supportState.consecutiveAttachFails >= 5 && !supportState.attachFailAdviceShown) {
+          supportLog(`⚠ ${supportState.consecutiveAttachFails} SKU подряд: файлы прикрепляются, но НЕ ПОЯВЛЯЮТСЯ в чате. Это не эскалация — это проблема с загрузкой файлов. Возможно: Ozon antispam (сделайте паузу 30 мин), браузер тротлит фоновую вкладку (не сворачивайте), либо изменился интерфейс Ozon. Скопируйте лог и пришлите в t.me/firadex.`);
+          supportState.attachFailAdviceShown = true;
+        }
+        // НЕ останавливаем бота — он продолжит со следующим SKU. Это не критическая ошибка.
+        await finishProblemSupportItem(tabId, item, idx, 'Ни один файл не удалось прикрепить', {
+          recoverChat: true,
+          logMessage: `✗ SKU ${item.sku}: ни один из ${picked.files.length} файлов не прошёл — failed`
+        });
+        return 'continue';
+      }
+
+      // Успех — сбрасываем счётчик подряд-провалов
+      supportState.consecutiveAttachFails = 0;
+
+      item.step = 'file_sent';
+      await humanDelay(5000);
+      return 'continue';
+    }
+
+    // Фаза: обработка — ждём ответ бота
+    // detail: 'article_sent_waiting' или 'file_sent_waiting'
+    if (phase === 'in_progress') {
+      const detail = state.detail || '';
+      if (detail === 'file_sent_waiting') {
+        item.step = 'file_sent'; // Файл уже отправлен пользователем
+        supportLog('Файл отправлен — ожидаю ответ бота (5с)...');
+      } else if (detail === 'article_sent_waiting') {
+        // v5.9.36: НЕ перезаписываем step если parent_sent — иначе waiting_article
+        // handler подумает что артикул нарушителя уже отправлен и уйдёт в бесконечный цикл
+        if (item.step === 'parent_sent') {
+          supportLog('Parent SKU отправлен — ожидаю ответ Ozon (5с)...');
+        } else {
+          item.step = 'article_sent';
+          supportLog('Артикул отправлен — ожидаю ответ бота (5с)...');
+        }
+      } else {
+        supportLog('Бот обрабатывает — ожидаю (5с)...');
+      }
+      await delay(5000);
+      return 'continue';
+    }
+
+    // Фаза: Ozon проверил обращение, но не нашёл нарушений.
+    // Это нормальный финальный исход текущего SKU, а не изменение интерфейса.
+    if (phase === 'no_violation') {
+      if (!item.step) {
+        supportLog(`[SMART] Новый SKU ${item.sku} видит старый чат «без нарушений» — открываю новое обращение...`);
+        const nextTabId = await openSupportChatsPage(tabId, 'старый no_violation перед новым SKU');
+        if (nextTabId) {
+          tabId = nextTabId;
+          supportState.lastPhase = null;
+          supportState.phaseRepeatCount = 0;
+          supportState._staleWaitCount = 0;
+          return 'continue';
+        }
+        await pauseSupportForChatRecoveryFailure('Не удалось открыть новое обращение после ответа Ozon «без нарушений»');
+        return 'wait';
+      }
+
+      supportState.consecutiveFailed = 0;
+      supportState.consecutiveEscalations = 0;
+      await finishProblemSupportItem(tabId, item, idx, 'Ozon не нашёл нарушений', {
+        status: 'no_violation',
+        category: 'noViolation',
+        recoverChat: true,
+        recoverLogMessage: 'Открываю новую страницу чатов для следующего SKU после ответа «без нарушений»...',
+        logMessage: `○ SKU ${item.sku}: Ozon не нашёл нарушений — перехожу к следующему SKU`
+      });
+      return 'continue';
+    }
+
+    // Фаза: чат эскалирован (бот передал запрос оператору / требуется новое обращение)
+    // Встречается когда бот не подтверждает жалобу, а пишет «Я направил ваше обращение коллегам.
+    // Для жалобы на товары другого продавца создайте новое обращение.»
+    // v5.9.10: + защита от каскада обращений, + верификация handoff, + per-SKU проблемы
+    if (phase === 'chat_escalated') {
+      supportLog('⚠ Чат эскалирован оператору');
+
+      if (item && item.step !== 'completed') {
+        // Верификация: точно ли обращение уже передано оператору
+        const v = await verifyItemHandedOff(tabId, item);
+        if (v.confirmed) {
+          // Жалоба принята до эскалации — помечаем done
+          item.status = 'done';
+          item.step = 'completed';
+          supportLog(`SKU ${item.sku} — обработан ✓ (принят перед эскалацией)`);
+          supportState.consecutiveEscalations = 0; // успех — сбрасываем счётчик
+        } else if (v.handed) {
+          // Уже передано оператору — сразу отмечаем escalated без повторной отправки
+          item.status = 'escalated';
+          item.step = 'completed';
+          item.error = 'Передано оператору — ожидает ручной обработки';
+          notifyProblem('escalated', item.sku, item.error);
+          supportLog(`SKU ${item.sku} — уже передан оператору (escalated)`);
+          supportState.consecutiveEscalations++;
+          supportState.consecutiveFailed = 0;
+        } else {
+          // handoff НЕ подтверждён — пишем оператору вежливую просьбу рассмотреть жалобу
+          // ВАЖНО: до подтверждения handoff НЕ создаём новое обращение (защита от пустых тикетов)
+          const polite = 'Пожалуйста рассмотрите жалобу';
+          await humanDelay(1500 + Math.random() * 1000);
+          const sendResp = await pageSendText(tabId, polite);
+          if (sendResp?.ok) {
+            supportLog(`Отправлено оператору: «${polite}» ✓`);
+            await delay(3000);
+          } else {
+            supportLog(`Не удалось написать оператору: ${sendResp?.error || 'поле ввода недоступно'}`);
+          }
+          // После отправки — ещё раз проверяем handoff
+          const v2 = await verifyItemHandedOff(tabId, item);
+          if (v2.handed || v2.confirmed) {
+            if (v2.confirmed) {
+              item.status = 'done';
+              item.step = 'completed';
+              supportLog(`SKU ${item.sku} — обработан ✓ (подтверждён после просьбы)`);
+              supportState.consecutiveEscalations = 0;
+            } else {
+              item.status = 'escalated';
+              item.step = 'completed';
+              item.error = 'Передано оператору — ожидает ручной обработки';
+              notifyProblem('escalated', item.sku, item.error);
+              supportLog(`SKU ${item.sku} — передан оператору (escalated)`);
+              supportState.consecutiveEscalations++;
+              supportState.consecutiveFailed = 0;
+            }
+          } else {
+            // Handoff НЕ подтверждён — счётчик попыток (до 3-х)
+            supportState._escalatedRetry = (supportState._escalatedRetry || 0) + 1;
+            if (supportState._escalatedRetry < 3) {
+              supportLog(`⚠ Handoff не подтверждён (попытка ${supportState._escalatedRetry}/3) — остаюсь в чате, жду 10с`);
+              const okr = await interruptibleDelay(10000);
+              if (!okr) return 'stop';
+              return 'continue'; // без currentIndex++
+            }
+            // 3 попытки не помогли — failed, НО новый чат не создаём
+            supportLog(`✗ SKU ${item.sku}: 3 попытки не подтвердили handoff — помечаю failed БЕЗ создания нового чата`);
+            item.status = 'failed';
+            item.step = 'completed';
+            item.error = 'Handoff не подтверждён после 3 попыток';
+            notifyProblem('failed', item.sku, item.error);
+            supportState._escalatedRetry = 0;
+            supportState.currentIndex++;
+            sendToPopup({ action: 'supportProgress', current: idx + 1, total: supportState.queue.length, item });
+            // Пропускаем навигацию — возможно Ozon в плохом состоянии, лучше дать обработчику
+            // следующей итерации заново прочитать phase
+            supportState.lastPhase = null;
+            supportState.phaseRepeatCount = 0;
+            await saveSupportSession();
+            return 'continue';
+          }
+        }
+        supportState._escalatedRetry = 0;
+        supportState.currentIndex++;
+        sendToPopup({ action: 'supportProgress', current: idx + 1, total: supportState.queue.length, item });
+        await saveSupportSession();
+        await persistActiveSupportSessionNow();
+      }
+
+      // Проверка подряд идущих эскалаций перед открытием нового чата
+      const okConsec = await checkConsecutiveEscalations();
+      if (!okConsec) return 'wait';
+
+      // Проверка лимита за сессию
+      const okLimit = await canOpenNewChat();
+      if (!okLimit) return 'wait';
+
+      // КРИТИЧНО: навигируем на страницу чатов — открываем новое обращение
+      supportLog('Открываю новую страницу чатов для следующего SKU...');
+      const nextTabId = await openSupportChatsPage(tabId, 'после chat_escalated');
+      if (nextTabId) {
+        tabId = nextTabId;
+        registerNewChatOpened('после chat_escalated');
+      } else {
+        await pauseSupportForChatRecoveryFailure('Не удалось открыть новую страницу чатов после передачи оператору');
+        return 'wait';
+      }
+
+      supportState.lastPhase = null;
+      supportState.phaseRepeatCount = 0;
+      supportState._staleWaitCount = 0;
+      await saveSupportSession();
+      return 'continue';
+    }
+
+    // Фаза: товар скрыт / результат получен / кнопка «Пожаловаться на другой»
+    if (phase === 'item_completed' || phase === 'ready_for_next') {
+
+      // === SMART SELF-CORRECTION: новый SKU видит ready_for_next ===
+      // Это НЕ ошибка — чат уже в состоянии «Пожаловаться на другой товар»
+      // (предыдущая жалоба обработана, или бот перезапущен на существующем чате).
+      // Нужно кликнуть кнопку цикла и ждать навигации к вводу артикула.
+      if (!item.step) {
+        if (!supportState._staleWaitCount) supportState._staleWaitCount = 0;
+        supportState._staleWaitCount++;
+
+        const MAX_STALE_ATTEMPTS = 5;
+        // Клик «Пожаловаться на другой товар»
+        if (supportState._staleWaitCount <= MAX_STALE_ATTEMPTS) {
+          supportLog(`[SMART] Новый SKU ${item.sku} — чат в фазе ${phase}, кликаю «Пожаловаться на другой» (${supportState._staleWaitCount}/${MAX_STALE_ATTEMPTS})...`);
+          const resp = await pageClickButton(tabId, ['пожаловаться на другой']);
+          if (resp?.ok) {
+            supportLog('[SMART] Кнопка цикла кликнута, жду переход...');
+            // Увеличенное ожидание для медленных клиентов (Win11 + медленный Ozon)
+            await delay(5000);
+            const newState = await getSupportPageState(tabId);
+            if (newState && newState.phase !== 'ready_for_next' && newState.phase !== 'item_completed') {
+              supportLog(`[SMART] Переход успешен → фаза: ${newState.phase}`);
+              supportState._staleWaitCount = 0;
+              supportState.lastPhase = null;
+              supportState.phaseRepeatCount = 0;
+              return 'continue';
+            }
+            supportLog('[SMART] Фаза не сменилась, повторю...');
+            await delay(3000);
+          } else {
+            supportLog('[SMART] Кнопка цикла не найдена — жду 3с...');
+            await delay(3000);
+          }
+          return 'continue';
+        }
+        // Fallback: 5 попыток не помогли — пробуем ОТКРЫТЬ НОВЫЙ ЧАТ через навигацию
+        // (раньше сразу помечали failed, что при медленном Ozon/Win11 давало ложные пропуски).
+        // v5.9.10: проверка лимита обращений перед fallback-открытием нового чата
+        const okLimitStale = await canOpenNewChat();
+        if (!okLimitStale) return 'wait';
+        supportLog(`[SMART] ${supportState._staleWaitCount} попыток не сменили фазу — открываю новый чат...`);
+        supportState._staleWaitCount = 0;
+        const nextTabId = await openSupportChatsPage(tabId, 'fallback после ready_for_next');
+        if (nextTabId) {
+          tabId = nextTabId;
+          supportState.lastPhase = null;
+          supportState.phaseRepeatCount = 0;
+          // Следующая итерация → no_chat/faq_page → бот откроет новый чат (там registerNewChatOpened)
+          return 'continue';
+        }
+        await pauseSupportForChatRecoveryFailure('Не удалось начать новую жалобу — кнопка цикла не работает');
+        return 'wait';
+      }
+
+      // === SMART SELF-CORRECTION: верификация SKU ===
+      // Проверяем, что бот действительно обработал ТЕКУЩИЙ артикул
+      if (item.step === 'article_sent' || item.step === 'file_sent') {
+        const debug = await getSupportDebugDOM(tabId);
+        const chatHistory = debug?.lastBotMsg || '';
+        // Если бот упоминает наш SKU в ответе — подтверждено
+        const skuConfirmed = chatHistory.includes(item.sku) ||
+          chatHistory.includes('скрыли товар') || chatHistory.includes('нарушение подтвердилось') ||
+          chatHistory.includes('пожаловаться на другой');
+        if (!skuConfirmed && phase !== 'item_completed') {
+          supportLog(`[SMART] SKU ${item.sku} не подтверждён в ответе бота — жду (5с)...`);
+          await delay(5000);
+          return 'continue';
+        }
+      }
+
+      // Сброс stale-счётчика
+      supportState._staleWaitCount = 0;
+
+      item.status = 'done';
+      item.step = 'completed';
+      supportState.currentIndex++;
+      supportLog(`SKU ${item.sku} — жалоба обработана ✓`);
+      sendToPopup({ action: 'supportProgress', current: idx + 1, total: supportState.queue.length, item });
+      await saveSupportSession();
+
+      if (supportState.currentIndex < supportState.queue.length) {
+        // Антибот: пауза 7-15с между жалобами (прерываемая паузой/стопом)
+        const betweenDelay = 7000 + Math.random() * 8000;
+        supportLog(`Антибот-пауза ${Math.round(betweenDelay / 1000)}с...`);
+        const ok1 = await interruptibleDelay(betweenDelay);
+        if (!ok1) return 'stop'; // пользователь нажал ⏸ или ⏹ во время паузы
+
+        if (phase === 'ready_for_next' || (state.buttons || []).some(b => b.includes('пожаловаться'))) {
+          // Ещё одна проверка непосредственно перед кликом — мог быть race с supportPause
+          if (!supportState.isRunning || supportState.isPaused) return 'stop';
+          supportLog('Нажимаю «Пожаловаться на другой товар»...');
+          const resp = await pageClickButton(tabId, ['пожаловаться на другой']);
+          if (!resp?.ok) {
+            supportLog('Кнопка цикла не найдена — жду обновления (5с)...');
+            const ok2 = await interruptibleDelay(5000);
+            if (!ok2) return 'stop';
+            // Повторная попытка
+            const resp2 = await pageClickButton(tabId, ['пожаловаться на другой']);
+            if (!resp2?.ok) {
+              supportLog('Кнопка цикла не найдена повторно');
+              sendToPopup({ action: 'supportNeedAction', message: 'Нажмите «Пожаловаться на другой товар» вручную' });
+              return 'wait';
+            }
+          }
+          // Ждём пока страница обновится после клика
+          supportLog('[SMART] Жду обновление страницы после клика «Пожаловаться на другой»...');
+          const ok3 = await interruptibleDelay(4000);
+          if (!ok3) return 'stop';
+          // Верифицируем: фаза должна измениться с ready_for_next
+          const newState = await getSupportPageState(tabId);
+          if (newState && (newState.phase === 'ready_for_next' || newState.phase === 'item_completed')) {
+            supportLog('[SMART] Страница ещё не обновилась — доп. ожидание 5с...');
+            const ok4 = await interruptibleDelay(5000);
+            if (!ok4) return 'stop';
+          }
+        }
+      }
+
+      // Сбрасываем трекинг фазы для нового SKU
+      supportState.lastPhase = null;
+      supportState.phaseRepeatCount = 0;
+      return 'continue';
+    }
+
+    // has_buttons — неизвестные кнопки, пробуем навигировать
+    if (phase === 'has_buttons') {
+      supportLog(`Неизвестные кнопки: [${(state.buttons || []).slice(0, 8).join(', ')}]`);
+      // Пробуем найти знакомую кнопку
+      const knownPatterns = ['личный кабинет', 'кабинет бренда', 'качество', 'жалоба', 'плагиат',
+        'использование моих', 'использование моего бренда', 'нарушение правил площадки',
+        'нарушение', 'товары и цены', 'контроль качества', 'пожаловаться', 'поддержка'];
+      for (const p of knownPatterns) {
+        if ((state.buttons || []).some(b => b.includes(p))) {
+          supportLog(`Найдена знакомая кнопка «${p}», пробую кликнуть...`);
+          const resp = await pageClickButton(tabId, [p]);
+          if (resp?.ok) {
+            await humanDelay(2500);
+            return 'continue';
+          }
+        }
+      }
+      // Ничего знакомого — пробуем кнопку «Помощь» (возможно мы на мессенджере без чата)
+      supportLog('Знакомых кнопок нет — пробую кнопку «Помощь»...');
+      const helpResp = await sendToSupport(tabId, 'clickFaqButton');
+      if (helpResp?.ok) {
+        supportLog(`Кнопка «${helpResp.text}» нажата, ожидаю виджет (3с)...`);
+        await delay(3000);
+        return 'continue';
+      }
+      supportLog('Жду обновление чата (5с)...');
+      await delay(5000);
+      return 'continue';
+    }
+
+    // unknown — ждём
+    if (phase === 'unknown') {
+      supportLog('Состояние неопределённо, ожидаю (5с)...');
+      await delay(5000);
+      return 'continue';
+    }
+
+    // Всё остальное — стоп
+    supportLog(`⛔ Необработанная фаза: ${phase}`);
+    supportLog(`Кнопки: [${(state.buttons || []).join(', ')}]`);
+    supportState.isRunning = false;
+    sendToPopup({ action: 'supportNeedAction', message: `Неожиданное состояние чата (${phase}). Проверьте страницу вручную.` });
+    await saveSupportSession();
+  }
+
+  // === Состояние ===
+  let scanState = {
+    isRunning: false,
+    isPaused: false,
+    skus: [],
+    currentIndex: 0,
+    results: [],
+    config: {},
+    logs: [],
+    workerTabId: null,
+    workerWindowId: null,
+    hiddenTabId: null,
+    hiddenTabCreated: false
+  };
+
+  // === Утилиты ===
+  function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Прерываемая пауза — проверяет isPaused/isRunning каждые 250ms.
+  // Возвращает true если отработала полностью, false если прервана (stop/pause).
+  // Используется для длинных антибот-пауз между жалобами, чтобы нажатие ⏸ работало мгновенно.
+  async function supportKeepaliveHeartbeat() {
+    try {
+      if (supportState.sellerTabId) {
+        await chrome.tabs.get(supportState.sellerTabId);
+      } else {
+        await chrome.runtime.getPlatformInfo();
+      }
+    } catch (_) {
+      try { await chrome.runtime.getPlatformInfo(); } catch (_) {}
+    }
+    await persistActiveSupportSessionNow();
+  }
+
+  async function supportKeepaliveDelay(totalMs, opts = {}) {
+    const step = 250;
+    const startToken = supportLoopToken;
+    const heartbeatMs = opts.heartbeatMs || (totalMs >= 10000 ? 4000 : 0);
+    const logEveryMs = opts.logEveryMs || 0;
+    const label = opts.label || '';
+    const endAt = Date.now() + Math.max(0, totalMs);
+    let nextHeartbeatAt = Date.now();
+    let nextLogAt = logEveryMs ? Date.now() + logEveryMs : Infinity;
+
+    if (label) supportLog(`${label}: ${Math.round(totalMs / 1000)}с`);
+    await supportKeepaliveHeartbeat();
+
+    while (Date.now() < endAt) {
+      await delay(Math.min(step, Math.max(1, endAt - Date.now())));
+      if (!supportState.isRunning || supportState.isPaused) return false;
+      if (startToken && startToken !== supportLoopToken) return false;
+
+      const now = Date.now();
+      if (heartbeatMs && now >= nextHeartbeatAt) {
+        nextHeartbeatAt = now + heartbeatMs;
+        await supportKeepaliveHeartbeat();
+      }
+      if (logEveryMs && now >= nextLogAt) {
+        nextLogAt = now + logEveryMs;
+        const leftSec = Math.max(1, Math.ceil((endAt - now) / 1000));
+        supportLog(`${label || 'Антибот-пауза'}: осталось ${leftSec}с`);
+      }
+    }
+    await supportKeepaliveHeartbeat();
+    if (label) supportLog('Антибот-пауза завершена');
+    return true;
+  }
+
+  async function interruptibleDelay(totalMs) {
+    if (totalMs >= 10000) {
+      return await supportKeepaliveDelay(totalMs);
+    }
+    const startToken = supportLoopToken;
+    const step = 250;
+    const iterations = Math.max(1, Math.ceil(totalMs / step));
+    for (let i = 0; i < iterations; i++) {
+      await delay(step);
+      if (!supportState.isRunning || supportState.isPaused) return false;
+      if (startToken && startToken !== supportLoopToken) return false;
+    }
+    return true;
+  }
+
+  // Рандомная задержка ±30% от базового значения (имитация человека)
+  function humanDelay(baseMs) {
+    const jitter = baseMs * 0.3;
+    const ms = baseMs + (Math.random() * jitter * 2 - jitter);
+    return delay(Math.round(ms));
+  }
+
+  function sendToPopup(msg) {
+    try { chrome.runtime.sendMessage(msg); } catch (e) {}
+    // Persist активной сессии жалоб в storage — чтобы popup мог восстановить состояние
+    // после переоткрытия (без этого прогресс и queue теряются когда popup закрыт)
+    if (msg && (msg.action === 'supportProgress' || msg.action === 'supportComplete' || msg.action === 'supportNeedAction')) {
+      try { persistActiveSupportSession(); } catch (_) {}
+    }
+  }
+
+  function logToPopup(text) {
+    const ts = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const entry = `[${ts}] ${text}`;
+    scanState.logs.push(entry);
+    sendToPopup({ action: 'scanLog', text: entry });
+    // Также отправляем на рабочую вкладку OZON для плавающей панели
+    if (scanState.workerTabId) {
+      try {
+        chrome.tabs.sendMessage(scanState.workerTabId, {
+          action: 'scanPanelUpdate',
+          log: entry,
+          current: scanState.currentIndex + 1,
+          total: scanState.skus.length
+        });
+      } catch (_) {}
+    }
+    console.log('[OZG]', text);
+  }
+
+  // === Прямой API-запрос данных товара (без навигации) ===
+  // Выполняет fetch к Ozon API из контекста открытой вкладки ozon.ru
+  async function fetchProductDataDirect(sku, tabId) {
+    const productPath = `/product/${sku}/`;
+
+    const apiResults = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: async (sku, path) => {
+        // Шаг 1: Пробуем прямой API-запрос к product page
+        const endpoints = [
+          `/api/entrypoint-api.bx/page/json/v2?url=${encodeURIComponent(path)}`,
+          `/api/composer-api.bx/page/json/v2?url=${encodeURIComponent(path)}`
+        ];
+        const headers = {
+          'Accept': 'application/json',
+          'x-o3-app-name': 'ozonapp_web',
+          'x-o3-app-version': '1.0.0',
+          'sec-fetch-dest': 'empty',
+          'sec-fetch-mode': 'cors',
+          'sec-fetch-site': 'same-origin'
+        };
+
+        for (const apiUrl of endpoints) {
+          try {
+            const resp = await fetch(apiUrl, { method: 'GET', credentials: 'include', headers });
+            if (!resp.ok) continue;
+            const data = await resp.json();
+            if (data && data.widgetStates && Object.keys(data.widgetStates).length > 0) {
+              return { data, error: null, method: 'direct-' + (apiUrl.includes('entrypoint') ? 'entry' : 'composer') };
+            }
+          } catch (e) { continue; }
+        }
+
+        // Шаг 2: Поиск через search API
+        try {
+          const searchUrl = `/api/entrypoint-api.bx/page/json/v2?url=${encodeURIComponent('/search/?text=' + sku + '&from_global=true')}`;
+          const searchResp = await fetch(searchUrl, { method: 'GET', credentials: 'include', headers });
+          if (searchResp.ok) {
+            const searchData = await searchResp.json();
+            if (searchData && searchData.widgetStates) {
+              // Ищем ссылку на товар в результатах поиска
+              const ws = searchData.widgetStates;
+              for (const [key, raw] of Object.entries(ws)) {
+                try {
+                  const state = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                  const json = JSON.stringify(state);
+                  // Ищем sku в ссылках /product/
+                  const productMatch = json.match(new RegExp('/product/[^"]*' + sku + '[^"]*', 'i'));
+                  if (productMatch) {
+                    const foundPath = productMatch[0].split('?')[0];
+                    // Запрашиваем данные найденного товара
+                    for (const ep of endpoints) {
+                      const epUrl = ep.replace(encodeURIComponent(path), encodeURIComponent(foundPath));
+                      try {
+                        const r = await fetch(epUrl, { method: 'GET', credentials: 'include', headers });
+                        if (!r.ok) continue;
+                        const d = await r.json();
+                        if (d && d.widgetStates && Object.keys(d.widgetStates).length > 0) {
+                          return { data: d, error: null, method: 'search-api' };
+                        }
+                      } catch (_) { continue; }
+                    }
+                  }
+                } catch (_) {}
+              }
+            }
+          }
+        } catch (e) {}
+
+        return { data: null, error: 'API не вернул данные', method: null };
+      },
+      args: [sku, productPath],
+      world: 'MAIN'
+    });
+
+    const apiResult = apiResults?.[0]?.result;
+    if (apiResult?.data?.widgetStates) {
+      const wc = Object.keys(apiResult.data.widgetStates).length;
+      logToPopup(`API прямой: ${wc} виджетов (${apiResult.method})`);
+      return apiResult.data;
+    }
+
+    return null; // null = fallback на визуальный метод
+  }
+
+  // === Прямой запрос списка продавцов (без навигации) ===
+  async function fetchSellersListDirect(tabId, modalLink) {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: async (modalUrl) => {
+        const urls = [
+          `/api/entrypoint-api.bx/page/json/v2?url=${encodeURIComponent(modalUrl)}`,
+          `/api/composer-api.bx/page/json/v2?url=${encodeURIComponent(modalUrl)}`
+        ];
+        const headers = {
+          'Accept': 'application/json',
+          'x-o3-app-name': 'ozonapp_web',
+          'x-o3-app-version': '1.0.0',
+          'sec-fetch-dest': 'empty',
+          'sec-fetch-mode': 'cors',
+          'sec-fetch-site': 'same-origin'
+        };
+        for (const apiUrl of urls) {
+          try {
+            const resp = await fetch(apiUrl, { method: 'GET', credentials: 'include', headers });
+            if (!resp.ok) continue;
+            const data = await resp.json();
+            if (data && (data.widgetStates || data.modal || data.content)) {
+              return { error: null, data };
+            }
+          } catch (e) { continue; }
+        }
+        return { error: 'Все API вернули пусто', data: null };
+      },
+      args: [modalLink],
+      world: 'MAIN'
+    });
+
+    const result = results?.[0]?.result;
+    if (!result || result.error || !result.data) return [];
+
+    return parseSellersFromModalData(result.data);
+  }
+
+  // Парсинг продавцов из modal data (общий для обоих режимов)
+  function parseSellersFromModalData(data) {
+    const sellers = [];
+    const ws = data.widgetStates || {};
+    for (const [key, raw] of Object.entries(ws)) {
+      let state;
+      try { state = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { continue; }
+      if (state.sellers && Array.isArray(state.sellers)) {
+        for (const item of state.sellers) {
+          const name = item.name || '';
+          if (!name) continue;
+          const sellerId = String(item.id || '');
+          const competitorSku = String(item.sku || '');
+          const sellerUrl = item.link || (sellerId ? `https://www.ozon.ru/seller/${sellerId}/` : '');
+          const productLink = item.productLink || (competitorSku ? `https://www.ozon.ru/product/${competitorSku}/` : '');
+          let price = '';
+          try {
+            if (item.price != null) {
+              const priceJson = JSON.stringify(item.price);
+              const rubleMatch = priceJson.match(/(\d[\d\s\u00a0]*)\s*₽/);
+              if (rubleMatch) {
+                price = rubleMatch[1].replace(/[\s\u00a0]/g, '');
+              } else {
+                const candidates = [
+                  item.price?.price, item.price?.cardPrice, item.price?.originalPrice,
+                  item.price?.value, item.price?.amount, item.price?.text,
+                  typeof item.price === 'string' ? item.price : null,
+                  typeof item.price === 'number' ? item.price : null
+                ];
+                for (const c of candidates) {
+                  if (c == null) continue;
+                  const s = String(c);
+                  const m = s.match(/(\d[\d\s\u00a0.,]*)/);
+                  if (m && m[1].replace(/[\s\u00a0]/g, '').length >= 2) {
+                    price = m[1].replace(/[\s\u00a0]/g, '');
+                    break;
+                  }
+                }
+              }
+            }
+          } catch (e) {}
+          sellers.push({ name: name.trim(), sellerId, price, competitorSku, url: sellerUrl, productLink });
+        }
+      }
+    }
+    return sellers;
+  }
+
+  // Проверка: это страница конкретного товара или категория/редирект?
+  // Товар не в наличии → OZON возвращает категорию вместо product page
+  function isProductPage(data, sku) {
+    const ws = data.widgetStates || {};
+    // Признак 1: есть виджет productHeading (конкретный товар)
+    const hasProductHeading = Object.keys(ws).some(k =>
+      k.toLowerCase().includes('productheading') || k.toLowerCase().includes('product_heading'));
+    if (!hasProductHeading) return false;
+
+    // Признак 2: SKU упоминается в widgetStates или SEO
+    const dataStr = JSON.stringify(ws).substring(0, 50000);
+    if (dataStr.includes(sku)) return true;
+
+    // Признак 3: проверяем seo.url на наличие SKU
+    if (data.seo?.url && data.seo.url.includes(sku)) return true;
+
+    // Признак 4: title не содержит "купить на OZON" (маркер категории)
+    const title = data.seo?.title || '';
+    if (title.includes('купить на OZON') || title.includes('купить на Ozon')) return false;
+
+    return hasProductHeading;
+  }
+
+  // === Быстрое сканирование одного SKU (API-only, без навигации) ===
+  async function scanSkuFast(sku, tabId, config) {
+    // Прямой API-запрос данных товара
+    const pageData = await fetchProductDataDirect(sku, tabId);
+    if (!pageData) return null; // fallback на визуальный
+
+    // Проверка: OZON вернул конкретный товар или категорию (товар не в наличии)?
+    if (!isProductPage(pageData, sku)) {
+      logToPopup(`⚠ SKU ${sku}: OZON вернул категорию вместо товара (нет в наличии?) — пропуск`);
+      return { sku, sellers: [], productName: '', error: 'Товар не найден или не в наличии' };
+    }
+
+    const mainInfo = parseMainPageSellers(pageData);
+    let sellers = [];
+
+    if (mainInfo.otherSellersCount > 0 && mainInfo.modalLink) {
+      sellers = await fetchSellersListDirect(tabId, mainInfo.modalLink);
+    } else if (mainInfo.otherSellersCount > 0) {
+      // Пробуем извлечь product_id из widgetStates
+      const productId = extractProductId(pageData, sku);
+      if (productId) {
+        const fallbackModal = `/modal/otherOffersFromSellers?product_id=${productId}`;
+        sellers = await fetchSellersListDirect(tabId, fallbackModal);
+      }
+    }
+
+    // Также добавляем продавцов из DOM-fallback если они были в pageData
+    if (pageData.sellers && pageData.sellers.length > 0 && sellers.length === 0) {
+      sellers = pageData.sellers;
+    }
+
+    const filtered = filterSellers(sellers, config);
+    return { sku, sellers: filtered, productName: mainInfo.productName, error: null };
+  }
+
+  // Извлечь product_id из widgetStates (для fallback modal URL)
+  function extractProductId(data, sku) {
+    const ws = data.widgetStates || {};
+    for (const [key, raw] of Object.entries(ws)) {
+      try {
+        const json = typeof raw === 'string' ? raw : JSON.stringify(raw);
+        // Ищем product_id в JSON
+        const m = json.match(/"product_id"\s*:\s*(\d+)/);
+        if (m) return m[1];
+        // Fallback: sku как product_id
+        const skuMatch = json.match(new RegExp('"id"\\s*:\\s*' + sku));
+        if (skuMatch) return sku;
+      } catch (e) {}
+    }
+    return sku; // В крайнем случае используем сам SKU
+  }
+
+  // === Создать рабочее окно (отдельное от пользователя) ===
+  async function getWorkerTab() {
+    // Проверяем существующую
+    if (scanState.workerTabId) {
+      try {
+        const tab = await chrome.tabs.get(scanState.workerTabId);
+        if (tab && tab.url && tab.url.includes('ozon.ru')) {
+          return scanState.workerTabId;
+        }
+      } catch (e) {
+        scanState.workerTabId = null;
+        scanState.workerWindowId = null;
+      }
+    }
+
+    // Создаём ОТДЕЛЬНОЕ окно (не фоновую вкладку!)
+    // Отдельное окно = вкладка считается "active" → OZON грузит полный контент
+    logToPopup('Создаю рабочее окно OZON...');
+    const win = await chrome.windows.create({
+      url: 'https://www.ozon.ru/',
+      focused: false,
+      type: 'normal',
+      width: 1200,
+      height: 800,
+      left: 0,
+      top: 0
+    });
+
+    scanState.workerTabId = win.tabs[0].id;
+    scanState.workerWindowId = win.id;
+    await waitForTabComplete(scanState.workerTabId);
+    await delay(2000);
+
+    // Инжект плавающей панели
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: scanState.workerTabId },
+        files: ['content/scan-panel.js']
+      });
+    } catch (_) {}
+
+    return scanState.workerTabId;
+  }
+
+  // Инжект плавающей панели (вызывается после каждой навигации)
+  async function injectScanPanel() {
+    if (!scanState.workerTabId) return;
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId: scanState.workerTabId },
+        files: ['content/scan-panel.js']
+      });
+    } catch (_) {}
+  }
+
+  // Закрыть рабочее окно
+  async function closeWorkerWindow() {
+    if (scanState.workerWindowId) {
+      try { await chrome.windows.remove(scanState.workerWindowId); } catch (e) {}
+    } else if (scanState.workerTabId) {
+      try { await chrome.tabs.remove(scanState.workerTabId); } catch (e) {}
+    }
+    scanState.workerTabId = null;
+    scanState.workerWindowId = null;
+  }
+
+  function waitForTabComplete(tabId) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        chrome.tabs.onUpdated.removeListener(listener);
+        resolve();
+      }, TAB_READY_TIMEOUT_MS);
+
+      function listener(updatedId, info) {
+        if (updatedId === tabId && info.status === 'complete') {
+          clearTimeout(timer);
+          chrome.tabs.onUpdated.removeListener(listener);
+          resolve();
+        }
+      }
+
+      chrome.tabs.get(tabId, (tab) => {
+        if (chrome.runtime.lastError) {
+          clearTimeout(timer);
+          reject(new Error('Вкладка не найдена'));
+          return 'continue';
+        }
+        if (tab.status === 'complete') {
+          clearTimeout(timer);
+          resolve();
+        } else {
+          chrome.tabs.onUpdated.addListener(listener);
+        }
+      });
+    });
+  }
+
+  // === Имитация человеческого поведения ===
+  async function simulateHumanBehavior(tabId) {
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => {
+          // Плавный скролл на случайное расстояние
+          const scrollY = 200 + Math.random() * 600;
+          window.scrollTo({ top: scrollY, behavior: 'smooth' });
+
+          // Имитация движения мыши (MouseEvent)
+          const x = 100 + Math.random() * (window.innerWidth - 200);
+          const y = 100 + Math.random() * (window.innerHeight - 200);
+          document.dispatchEvent(new MouseEvent('mousemove', {
+            clientX: x, clientY: y, bubbles: true
+          }));
+
+          // Случайный hover на элемент
+          const el = document.elementFromPoint(x, y);
+          if (el) {
+            el.dispatchEvent(new MouseEvent('mouseenter', { clientX: x, clientY: y, bubbles: true }));
+            el.dispatchEvent(new MouseEvent('mouseover', { clientX: x, clientY: y, bubbles: true }));
+          }
+
+          // Небольшой скролл обратно (как будто пользователь читает)
+          setTimeout(() => {
+            window.scrollTo({ top: scrollY * 0.3, behavior: 'smooth' });
+          }, 300 + Math.random() * 500);
+        },
+        world: 'MAIN'
+      });
+    } catch (e) {}
+  }
+
+  // Сбросить перехватчик
+  async function resetInterceptor(tabId) {
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => {
+          window.__ozguard = {
+            widgetStates: {}, seo: null, layout: [],
+            widgetCount: 0, callCount: 0, ready: false, method: '', urls: []
+          };
+        },
+        world: 'MAIN'
+      });
+    } catch (e) {}
+  }
+
+  // Найти ссылку на товар на странице поиска
+  async function findProductOnPage(tabId, sku) {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: (sku) => {
+        const allLinks = document.querySelectorAll('a[href*="/product/"]');
+        let bestMatch = null;
+        let firstProduct = null;
+
+        for (const link of allLinks) {
+          const href = link.getAttribute('href') || '';
+          if (!href.includes('/product/') || href.length < 15) continue;
+          const clean = href.split('?')[0];
+          if (!firstProduct) firstProduct = clean;
+          // Приоритет: ссылка содержит наш SKU в URL
+          if (clean.includes(sku)) {
+            bestMatch = clean;
+            break;
+          }
+        }
+        return bestMatch || firstProduct || null;
+      },
+      args: [sku],
+      world: 'MAIN'
+    });
+
+    return results?.[0]?.result || null;
+  }
+
+  // === Поиск SKU → SPA-клик на товар → перехват API-данных ===
+  async function fetchProductData(sku) {
+    const tabId = await getWorkerTab();
+
+    // Шаг 1: Открываем поиск по SKU
+    const searchUrl = `https://www.ozon.ru/search/?text=${encodeURIComponent(sku)}&from_global=true`;
+    logToPopup(`Ищу SKU ${sku}...`);
+
+    await chrome.tabs.update(tabId, { url: searchUrl });
+    await waitForTabComplete(tabId);
+    await injectScanPanel();
+    await humanDelay(3000);
+
+    // Имитация поведения на странице поиска
+    await simulateHumanBehavior(tabId);
+    await humanDelay(800);
+
+    // Если OZON перенаправил на товар — возвращаемся к поиску
+    // (нам нужна страница поиска чтобы кликнуть по ссылке = SPA-навигация)
+    let tab = await chrome.tabs.get(tabId);
+    let currentUrl = tab.url || '';
+
+    if (currentUrl.includes('/product/')) {
+      logToPopup('Редирект на товар, возвращаюсь к поиску...');
+      await chrome.tabs.update(tabId, { url: searchUrl });
+      await waitForTabComplete(tabId);
+      await injectScanPanel();
+      await humanDelay(3000);
+      await simulateHumanBehavior(tabId);
+      await humanDelay(600);
+    }
+
+    // Шаг 2: Находим ссылку на товар в результатах поиска
+    const productHref = await findProductOnPage(tabId, sku);
+    if (!productHref) {
+      throw new Error(`Товар по SKU ${sku} не найден на OZON`);
+    }
+    logToPopup(`Найден: ${productHref.substring(0, 55)}`);
+
+    // Шаг 3: Сбрасываем interceptor и КЛИКАЕМ по ссылке (SPA-навигация!)
+    // Клик через SPA-роутер → OZON делает API-вызов клиентски → interceptor перехватит
+    await resetInterceptor(tabId);
+    logToPopup('SPA-переход на товар...');
+
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      func: (href) => {
+        const clean = href.split('?')[0];
+        const links = document.querySelectorAll('a[href*="/product/"]');
+        for (const link of links) {
+          const lh = (link.getAttribute('href') || '').split('?')[0];
+          if (lh === clean || lh.includes(clean) || clean.includes(lh)) {
+            link.removeAttribute('target');
+            link.click();
+            return 'continue';
+          }
+        }
+        // Fallback: программная навигация (может триггернуть SPA роутер)
+        const a = document.createElement('a');
+        a.href = href;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      },
+      args: [productHref],
+      world: 'MAIN'
+    });
+
+    // Ждём SPA-навигацию
+    await humanDelay(3000);
+
+    // Имитация на странице товара
+    await simulateHumanBehavior(tabId);
+    await humanDelay(500);
+
+    // Проверяем что перешли на страницу товара
+    tab = await chrome.tabs.get(tabId);
+    currentUrl = tab.url || '';
+    if (!currentUrl.includes('/product/')) {
+      // SPA не сработала — пробуем прямую навигацию
+      logToPopup('SPA не сработала, пробую прямой переход...');
+      await resetInterceptor(tabId);
+      const fullUrl = productHref.startsWith('http') ? productHref : 'https://www.ozon.ru' + productHref;
+      await chrome.tabs.update(tabId, { url: fullUrl });
+      await waitForTabComplete(tabId);
+      await injectScanPanel();
+      await humanDelay(3000);
+      await simulateHumanBehavior(tabId);
+    }
+
+    // Получаем путь товара из URL
+    tab = await chrome.tabs.get(tabId);
+    currentUrl = tab.url || '';
+    const productPath = new URL(currentUrl).pathname;
+    logToPopup(`На странице: ${productPath}`);
+
+    // Верификация: URL должен содержать наш SKU
+    if (!currentUrl.includes(sku)) {
+      logToPopup(`⚠ SKU ${sku} не найден в URL — возможно OZON показал другой товар, пропускаю`);
+      return { widgetStates: {}, url: currentUrl, skuMismatch: true };
+    }
+
+    // === ГЛАВНЫЙ МЕТОД: прямой API-вызов из контекста страницы товара ===
+    // Мы на странице товара → same-origin → cookies есть → должно работать
+    // Задержка перед API (имитация чтения страницы)
+    await humanDelay(1200);
+    logToPopup('Запрашиваю данные через API...');
+
+    const apiResults = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: async (path) => {
+        const endpoints = [
+          `/api/entrypoint-api.bx/page/json/v2?url=${encodeURIComponent(path)}`,
+          `/api/composer-api.bx/page/json/v2?url=${encodeURIComponent(path)}`
+        ];
+
+        for (const apiUrl of endpoints) {
+          try {
+            const resp = await fetch(apiUrl, {
+              method: 'GET',
+              credentials: 'include',
+              headers: {
+                'Accept': 'application/json',
+                'x-o3-app-name': 'ozonapp_web',
+                'x-o3-app-version': '1.0.0',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin'
+              }
+            });
+
+            if (!resp.ok) {
+              // Пробуем XHR fallback
+              const xhrResult = await new Promise((resolve) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', apiUrl, true);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('x-o3-app-name', 'ozonapp_web');
+                xhr.withCredentials = true;
+                xhr.onload = function() {
+                  if (xhr.status === 200) {
+                    try { resolve({ data: JSON.parse(xhr.responseText), error: null, status: xhr.status }); }
+                    catch (e) { resolve({ data: null, error: 'JSON parse', status: xhr.status }); }
+                  } else {
+                    resolve({ data: null, error: `HTTP ${xhr.status}`, status: xhr.status });
+                  }
+                };
+                xhr.onerror = () => resolve({ data: null, error: 'network error', status: 0 });
+                xhr.send();
+              });
+
+              if (xhrResult.data && xhrResult.data.widgetStates) {
+                return { data: xhrResult.data, error: null, method: 'xhr-' + apiUrl.substring(5, 20) };
+              }
+              continue;
+            }
+
+            const data = await resp.json();
+            if (data && data.widgetStates) {
+              return { data, error: null, method: 'fetch-' + apiUrl.substring(5, 20) };
+            }
+          } catch (e) {
+            continue;
+          }
+        }
+
+        // Пробуем найти данные в DOM
+        try {
+          // React state через fiber
+          const appEl = document.getElementById('__next') || document.getElementById('app') || document.getElementById('root');
+          if (appEl) {
+            const fiberKey = Object.keys(appEl).find(k => k.startsWith('__reactFiber') || k.startsWith('__reactInternalInstance'));
+            if (fiberKey) {
+              // Traverse fiber tree looking for widgetStates
+              let fiber = appEl[fiberKey];
+              let depth = 0;
+              while (fiber && depth < 20) {
+                const state = fiber.memoizedState || fiber.stateNode?.state;
+                if (state && typeof state === 'object') {
+                  // Check for widgetStates in the state chain
+                  let s = state;
+                  while (s) {
+                    if (s.memoizedState && typeof s.memoizedState === 'object') {
+                      const ms = s.memoizedState;
+                      if (ms.widgetStates) return { data: ms, error: null, method: 'react-fiber' };
+                    }
+                    s = s.next;
+                  }
+                }
+                fiber = fiber.child || fiber.sibling || fiber.return;
+                depth++;
+              }
+            }
+          }
+        } catch (e) {}
+
+        // Ищем seller-ссылки в DOM
+        const sellers = [];
+        const sellerLinks = document.querySelectorAll('a[href*="/seller/"]');
+        const seen = new Set();
+        for (const link of sellerLinks) {
+          const href = link.getAttribute('href') || '';
+          if (href.includes('/info/') || href.includes('/reviews')) continue;
+          const m = href.match(/\/seller\/([^/?#]+)/);
+          if (!m || seen.has(m[1])) continue;
+          seen.add(m[1]);
+          const idM = m[1].match(/(\d+)$/);
+          const name = link.textContent.trim();
+          if (name && name.length > 1) {
+            sellers.push({ name, sellerId: idM ? idM[1] : '', url: 'https://www.ozon.ru' + href });
+          }
+        }
+
+        return {
+          data: null,
+          sellers,
+          error: 'API вернул пусто или 403',
+          diag: {
+            url: location.href,
+            title: document.title,
+            bodyLen: document.body?.innerHTML?.length || 0,
+            dataWidgets: document.querySelectorAll('[data-widget]').length,
+            sellerLinks: sellerLinks.length,
+            allWidgetNames: [...document.querySelectorAll('[data-widget]')].map(el => el.getAttribute('data-widget')).slice(0, 30)
+          }
+        };
+      },
+      args: [productPath],
+      world: 'MAIN'
+    });
+
+    const apiResult = apiResults?.[0]?.result;
+
+    if (apiResult?.data?.widgetStates) {
+      const ws = apiResult.data.widgetStates;
+      const wc = Object.keys(ws).length;
+      logToPopup(`API OK: ${wc} виджетов (${apiResult.method})`);
+
+      return apiResult.data;
+    }
+
+    // DOM sellers fallback
+    if (apiResult?.sellers?.length > 0) {
+      logToPopup(`DOM: ${apiResult.sellers.length} продавцов`);
+      return { widgetStates: {}, sellers: apiResult.sellers };
+    }
+
+    // Диагностика
+    if (apiResult?.diag) {
+      const d = apiResult.diag;
+      logToPopup(`ДИАГ: body=${d.bodyLen}b, data-widget=${d.dataWidgets}, seller-links=${d.sellerLinks}`);
+      if (d.allWidgetNames?.length > 0) {
+        logToPopup(`DOM виджеты: ${d.allWidgetNames.join(', ')}`);
+      }
+    }
+    logToPopup(`Ошибка API: ${apiResult?.error || 'нет результата'}`);
+
+    throw new Error('Не удалось получить данные товара');
+  }
+
+  // Извлечение данных из DOM страницы
+  function extractDataFromDOM() {
+    const result = { widgetStates: {}, sellers: [], _method: '' };
+
+    try {
+      // __NEXT_DATA__
+      const nextEl = document.getElementById('__NEXT_DATA__');
+      if (nextEl) {
+        try {
+          const nd = JSON.parse(nextEl.textContent);
+          if (nd?.props?.pageProps?.widgetStates) {
+            result.widgetStates = nd.props.pageProps.widgetStates;
+            result._method = 'NEXT_DATA';
+            return result;
+          }
+          if (nd?.widgetStates) {
+            result.widgetStates = nd.widgetStates;
+            result._method = 'NEXT_DATA_root';
+            return result;
+          }
+        } catch (e) {}
+      }
+
+      // JSON в script тегах
+      for (const script of document.querySelectorAll('script:not([src])')) {
+        const text = script.textContent || '';
+        if (text.length < 500 || !text.includes('widgetStates')) continue;
+
+        if (script.type === 'application/json') {
+          try {
+            const d = JSON.parse(text);
+            if (d.widgetStates) {
+              result.widgetStates = d.widgetStates;
+              result._method = 'script-json';
+              return result;
+            }
+          } catch (e) {}
+        }
+      }
+
+      // DOM: ссылки на продавцов
+      const sellerLinks = document.querySelectorAll('a[href*="/seller/"]');
+      const seen = new Set();
+
+      for (const link of sellerLinks) {
+        const href = link.getAttribute('href') || '';
+        if (href.includes('/info/') || href.includes('/reviews')) continue;
+
+        const slugMatch = href.match(/\/seller\/([^/?#]+)/);
+        if (!slugMatch) continue;
+
+        const slug = slugMatch[1];
+        if (seen.has(slug)) continue;
+        seen.add(slug);
+
+        const idMatch = slug.match(/(\d+)$/);
+        const sellerId = idMatch ? idMatch[1] : '';
+
+        let name = link.textContent.trim();
+        if (!name || name.length < 2) {
+          const parent = link.closest('[data-widget]') || link.parentElement?.parentElement?.parentElement;
+          if (parent) {
+            for (const sp of parent.querySelectorAll('span, div')) {
+              const t = sp.textContent.trim();
+              if (t.length > 2 && t.length < 100 && !t.includes('₽') && !t.match(/^\d/)) {
+                name = t;
+                break;
+              }
+            }
+          }
+        }
+        if (!name || name.length < 2) continue;
+
+        let price = '';
+        const pc = link.closest('[data-widget]') || link.parentElement?.parentElement;
+        if (pc) {
+          const pm = (pc.textContent || '').match(/(\d[\d\s]*)\s*₽/);
+          if (pm) price = pm[1].replace(/\s/g, '');
+        }
+
+        result.sellers.push({
+          name, sellerId, price, competitorSku: '',
+          url: href.startsWith('http') ? href : 'https://www.ozon.ru' + href
+        });
+      }
+
+      if (result.sellers.length > 0) result._method = 'dom-links';
+      return result;
+    } catch (e) {
+      result._method = 'error: ' + e.message;
+      return result;
+    }
+  }
+
+  // === Парсинг данных о продавцах с ГЛАВНОЙ страницы товара ===
+  function parseMainPageSellers(data) {
+    const productName = extractProductName(data);
+    const ws = data.widgetStates || {};
+    let otherSellersCount = 0;
+    let modalLink = '';
+    let currentSellerName = '';
+
+    for (const [key, raw] of Object.entries(ws)) {
+      const kl = key.toLowerCase();
+      let state;
+      try { state = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { continue; }
+
+      if (kl.includes('bestseller') || kl.includes('best_seller')) {
+        if (state.count) otherSellersCount = parseInt(state.count, 10) || 0;
+        if (state.modalLink) modalLink = state.modalLink;
+      }
+
+      if (kl.includes('currentseller') || kl.includes('current_seller')) {
+        // Имя продавца в subtitle или в link с /seller/
+        const json = JSON.stringify(state);
+        const sellerLinkMatch = json.match(/\/seller\/([^"/?]+)/);
+        if (sellerLinkMatch) {
+          // Ищем текст рядом с ссылкой — обычно имя продавца
+          const nameMatch = json.match(/"title"[^}]*"text"\s*:\s*"([^"]+)"/);
+          // subtitle обычно содержит имя
+          if (state.header?.subtitle?.components) {
+            for (const comp of state.header.subtitle.components) {
+              if (comp.text && comp.text !== 'Подписаться' && !comp.text.includes('SIZE_')) {
+                currentSellerName = comp.text;
+                break;
+              }
+            }
+          }
+          if (!currentSellerName && state.header?.subtitle?.text && state.header.subtitle.text !== 'Подписаться') {
+            currentSellerName = state.header.subtitle.text;
+          }
+        }
+      }
+    }
+
+    return { productName, otherSellersCount, modalLink, currentSellerName };
+  }
+
+  // === Получить список продавцов через modal endpoint ===
+  async function fetchSellersList(tabId, modalLink) {
+    logToPopup('Загружаю список продавцов...');
+
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: async (modalUrl) => {
+        // Пробуем несколько вариантов API для modal
+        const urls = [
+          `/api/entrypoint-api.bx/page/json/v2?url=${encodeURIComponent(modalUrl)}`,
+          `/api/composer-api.bx/page/json/v2?url=${encodeURIComponent(modalUrl)}`
+        ];
+
+        for (const apiUrl of urls) {
+          try {
+            const resp = await fetch(apiUrl, {
+              method: 'GET',
+              credentials: 'include',
+              headers: {
+                'Accept': 'application/json',
+                'x-o3-app-name': 'ozonapp_web',
+                'x-o3-app-version': '1.0.0',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin'
+              }
+            });
+
+            if (!resp.ok) continue;
+            const data = await resp.json();
+            if (data && (data.widgetStates || data.modal || data.content || data.items)) {
+              return { error: null, data, method: apiUrl.includes('entrypoint') ? 'entrypoint' : 'composer' };
+            }
+          } catch (e) { continue; }
+        }
+
+        return { error: 'Все API вернули пусто', data: null };
+      },
+      args: [modalLink],
+      world: 'MAIN'
+    });
+
+    const result = results?.[0]?.result;
+    if (!result || result.error || !result.data) {
+      logToPopup(`Modal ошибка: ${result?.error || 'нет данных'}`);
+      return [];
+    }
+
+    logToPopup(`Modal OK (${result.method})`);
+    const sellers = parseSellersFromModalData(result.data);
+    logToPopup(`Modal: ${sellers.length} продавцов`);
+    return sellers;
+  }
+
+  function extractSellersFromState(state) {
+    const sellers = [];
+    if (!state || typeof state !== 'object') return sellers;
+
+    const arrays = [
+      state.items, state.offers, state.sellers, state.sellerList,
+      state.data?.items, state.data?.offers, state.data?.sellers,
+      state.content?.items, state.content?.offers
+    ];
+
+    for (const arr of arrays) {
+      if (!Array.isArray(arr)) continue;
+      for (const item of arr) {
+        const s = extractSeller(item);
+        if (s) sellers.push(s);
+      }
+    }
+
+    return sellers;
+  }
+
+  function deepFindSellers(obj, depth) {
+    if (depth > 4 || !obj || typeof obj !== 'object') return [];
+    const sellers = [];
+
+    if (obj.sellerId && (obj.sellerName || obj.seller_name || obj.name)) {
+      const s = extractSeller(obj);
+      if (s) sellers.push(s);
+      return sellers;
+    }
+
+    if (Array.isArray(obj)) {
+      for (const item of obj) sellers.push(...deepFindSellers(item, depth + 1));
+      return sellers;
+    }
+
+    for (const key of ['sellers', 'offers', 'items', 'sellerList', 'otherSellers', 'cheaperSellers']) {
+      if (obj[key] && Array.isArray(obj[key])) {
+        for (const item of obj[key]) {
+          const s = extractSeller(item);
+          if (s) sellers.push(s);
+          sellers.push(...deepFindSellers(item, depth + 1));
+        }
+      }
+    }
+
+    return sellers;
+  }
+
+  function extractSeller(item) {
+    if (!item || typeof item !== 'object') return null;
+
+    const name = item.sellerName || item.seller_name || item.name || item.title || item.seller?.name || '';
+    if (!name || typeof name !== 'string') return null;
+
+    let sellerId = String(item.sellerId || item.seller_id || item.id || item.seller?.id || '');
+
+    const deeplink = item.deeplink || item.link || item.url || '';
+    if (!sellerId && deeplink) {
+      const m = deeplink.match(/seller\/(?:[^/]*?-)?(\d+)/);
+      if (m) sellerId = m[1];
+    }
+
+    let price = '';
+    if (item.price != null) price = String(item.price).replace(/[^\d.,]/g, '');
+    else if (item.finalPrice != null) price = String(item.finalPrice).replace(/[^\d.,]/g, '');
+    else if (item.priceText) { const m = item.priceText.match(/(\d[\d\s.,]*)/); if (m) price = m[1].replace(/\s/g, ''); }
+
+    let competitorSku = String(item.sku || item.productId || item.product_id || '');
+    if (!competitorSku && deeplink) {
+      const m = deeplink.match(/product\/[^/]*?-?(\d{5,})/);
+      if (m) competitorSku = m[1];
+    }
+
+    let url = '';
+    if (sellerId) url = `https://www.ozon.ru/seller/${sellerId}/`;
+    const sellerUrl = item.sellerUrl || item.seller_url || '';
+    if (sellerUrl) url = sellerUrl.startsWith('http') ? sellerUrl : 'https://www.ozon.ru' + sellerUrl;
+
+    return { name: name.trim(), sellerId, price, competitorSku, url };
+  }
+
+  function extractProductName(data) {
+    const ws = data.widgetStates || {};
+    for (const [key, val] of Object.entries(ws)) {
+      if (key.toLowerCase().includes('productheading') || key.toLowerCase().includes('product_heading')) {
+        try {
+          const st = typeof val === 'string' ? JSON.parse(val) : val;
+          if (st.title) return st.title;
+          if (st.name) return st.name;
+        } catch (e) {}
+      }
+    }
+    if (data.seo?.title) return data.seo.title;
+    return '';
+  }
+
+  function filterSellers(sellers, config) {
+    const seen = new Set();
+    const filtered = [];
+    const excludeNames = (config.excludeSellers || []).map(n => n.toLowerCase().trim()).filter(Boolean);
+
+    for (const s of sellers) {
+      const key = s.sellerId || s.name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const nameLower = s.name.toLowerCase();
+      if (excludeNames.some(ex => nameLower.includes(ex))) continue;
+      filtered.push(s);
+    }
+    return filtered;
+  }
+
+  async function waitWhilePaused() {
+    while (scanState.isPaused && scanState.isRunning) await delay(500);
+  }
+
+  async function getDelayMs() {
+    try {
+      const data = await chrome.storage.local.get(['delayMs']);
+      return data.delayMs || DEFAULT_DELAY_MS;
+    } catch (e) {
+      return DEFAULT_DELAY_MS;
+    }
+  }
+
+  async function saveToHistory(results, config, skus) {
+    try {
+      const session = {
+        id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+        date: new Date().toISOString(),
+        skusCount: skus.length,
+        skus,
+        sellersFound: results.reduce((sum, r) => sum + (r.sellers ? r.sellers.length : 0), 0),
+        excludeSellers: config.excludeSellers || [],
+        results,
+        logs: scanState.logs.slice()
+      };
+
+      const data = await chrome.storage.local.get(['scanHistory']);
+      let history = data.scanHistory || [];
+      history.unshift(session);
+      if (history.length > MAX_HISTORY_SESSIONS) history = history.slice(0, MAX_HISTORY_SESSIONS);
+      await chrome.storage.local.set({ scanHistory: history });
+      logToPopup('Сессия сохранена');
+    } catch (e) {
+      console.error('[OZG] saveToHistory:', e);
+    }
+  }
+
+  function startScanInternal(skus, config) {
+    scanState = {
+      isRunning: true, isPaused: false,
+      skus, currentIndex: 0, results: [],
+      config: config || {}, logs: [],
+      workerTabId: scanState.workerTabId,
+      workerWindowId: scanState.workerWindowId
+    };
+    logToPopup(`Старт: ${scanState.skus.length} SKU`);
+    runScan();
+  }
+
+  // === Основной цикл ===
+  async function runScan() {
+    const { skus, config } = scanState;
+    const total = skus.length;
+    const delayMs = await getDelayMs();
+    const scanMode = config.scanMode || 'fast'; // 'fast' | 'visual'
+
+    // Быстрый режим: скрытый таб + прямые API-запросы
+    // Визуальный режим: отдельное окно + навигация (как было)
+    const isFastMode = scanMode === 'fast';
+
+    if (isFastMode) {
+      try {
+        const existingTabs = await chrome.tabs.query({ url: 'https://www.ozon.ru/*' });
+        if (existingTabs.length > 0) {
+          scanState.hiddenTabId = existingTabs[0].id;
+          scanState.hiddenTabCreated = false;
+        } else {
+          logToPopup('Создаю скрытый таб OZON...');
+          const tab = await chrome.tabs.create({ url: 'https://www.ozon.ru/', active: false });
+          await waitForTabComplete(tab.id);
+          await delay(2000);
+          scanState.hiddenTabId = tab.id;
+          scanState.hiddenTabCreated = true;
+        }
+        logToPopup('Быстрый режим: API-запросы без навигации');
+      } catch (e) {
+        logToPopup('Не удалось подготовить таб — переключаюсь на визуальный режим');
+        return runScanVisual(skus, config, total, delayMs);
+      }
+    } else {
+      try {
+        await getWorkerTab();
+        logToPopup('Рабочее окно готово (визуальный режим)');
+      } catch (e) {
+        logToPopup('Ошибка: не удалось открыть окно OZON');
+        scanState.isRunning = false;
+        sendToPopup({ action: 'scanComplete', results: [] });
+        return;
+      }
+    }
+
+    let fastFailCount = 0; // Счётчик подряд неудачных быстрых запросов
+
+    for (let i = scanState.currentIndex; i < total; i++) {
+      if (!scanState.isRunning) break;
+      await waitWhilePaused();
+      if (!scanState.isRunning) break;
+
+      scanState.currentIndex = i;
+      const sku = skus[i];
+      logToPopup(`[${i + 1}/${total}] SKU ${sku}`);
+
+      let result = null;
+
+      // === Быстрый путь (API-only) ===
+      if (isFastMode && fastFailCount < 3) {
+        try {
+          result = await scanSkuFast(sku, scanState.hiddenTabId, config);
+          if (result) {
+            logToPopup(`⚡ ${result.sellers.length} конкурентов` + (result.productName ? ` (${result.productName.substring(0, 40)})` : ''));
+            fastFailCount = 0;
+          } else {
+            fastFailCount++;
+            logToPopup(`API не вернул данные (попытка ${fastFailCount}/3), пробую визуальный...`);
+          }
+        } catch (e) {
+          fastFailCount++;
+          logToPopup(`Быстрый запрос ошибка: ${e.message} (${fastFailCount}/3)`);
+        }
+      }
+
+      // === Визуальный fallback ===
+      if (!result) {
+        // Убедимся что рабочее окно готово
+        if (!scanState.workerTabId) {
+          try {
+            await getWorkerTab();
+          } catch (e) {
+            logToPopup(`Ошибка: ${e.message}`);
+            result = { sku, sellers: [], productName: '', error: e.message };
+            scanState.results.push(result);
+            sendToPopup({ action: 'scanProgress', current: i + 1, total, ...result });
+            continue;
+          }
+        }
+
+        try {
+          const pageData = await fetchProductData(sku);
+
+          if (pageData.skuMismatch) {
+            result = { sku, sellers: [], productName: '', error: 'SKU не совпал — OZON перенаправил на другой товар' };
+          } else {
+            const mainInfo = parseMainPageSellers(pageData);
+            logToPopup(`Продавцов на карточке: ${mainInfo.otherSellersCount}`);
+
+            let sellers = [];
+            if (mainInfo.otherSellersCount > 0 && mainInfo.modalLink) {
+              sellers = await fetchSellersList(scanState.workerTabId, mainInfo.modalLink);
+            } else if (mainInfo.otherSellersCount > 0) {
+              const tab = await chrome.tabs.get(scanState.workerTabId);
+              const currentUrl = new URL(tab.url);
+              const pidMatch = currentUrl.pathname.match(/(\d+)\/?$/);
+              if (pidMatch) {
+                const fallbackModal = `/modal/otherOffersFromSellers?product_id=${pidMatch[1]}`;
+                sellers = await fetchSellersList(scanState.workerTabId, fallbackModal);
+              }
+            }
+
+            const filtered = filterSellers(sellers, config);
+            logToPopup(`→ ${filtered.length} конкурентов` + (mainInfo.productName ? ` (${mainInfo.productName.substring(0, 40)})` : ''));
+            result = { sku, sellers: filtered, productName: mainInfo.productName, error: null };
+          }
+        } catch (e) {
+          logToPopup(`Ошибка: ${e.message}`);
+          result = { sku, sellers: [], productName: '', error: e.message };
+          scanState.workerTabId = null;
+          scanState.workerWindowId = null;
+        }
+      }
+
+      scanState.results.push(result);
+      sendToPopup({ action: 'scanProgress', current: i + 1, total, ...result });
+
+      // Задержка между SKU
+      if (i < total - 1 && scanState.isRunning) {
+        const actualDelay = isFastMode && fastFailCount === 0 ? FAST_DELAY_MS : delayMs;
+        await humanDelay(actualDelay);
+
+        // Визуальный режим: имитация поведения
+        if (!isFastMode && scanState.workerTabId) {
+          await simulateHumanBehavior(scanState.workerTabId);
+        }
+        // Антибот: доп. пауза каждые 20 SKU
+        if (total >= 50 && (i + 1) % 20 === 0) {
+          const pauseSec = isFastMode ? (3 + Math.round(Math.random() * 5)) : (10 + Math.round(Math.random() * 10));
+          logToPopup(`Антибот: пауза ${pauseSec} сек (${i + 1}/${total})`);
+          await delay(pauseSec * 1000);
+        }
+      }
+    }
+
+    scanState.isRunning = false;
+    await saveToHistory(scanState.results, scanState.config, scanState.skus);
+
+    const totalSellers = scanState.results.reduce((s, r) => s + (r.sellers ? r.sellers.length : 0), 0);
+    sendToPopup({ action: 'scanComplete', results: scanState.results });
+    logToPopup(`Завершено: ${totalSellers} конкурентов по ${skus.length} SKU`);
+
+    await delay(1000);
+    // Закрываем рабочее окно если использовалось
+    await closeWorkerWindow();
+    // Закрываем скрытый таб если мы его создали
+    if (scanState.hiddenTabCreated && scanState.hiddenTabId) {
+      try { await chrome.tabs.remove(scanState.hiddenTabId); } catch (e) {}
+    }
+    scanState.hiddenTabId = null;
+    scanState.hiddenTabCreated = false;
+  }
+
+  // Визуальный режим — прежний полный цикл (используется как fallback)
+  async function runScanVisual(skus, config, total, delayMs) {
+    try {
+      await getWorkerTab();
+      logToPopup('Рабочее окно готово (fallback визуальный)');
+    } catch (e) {
+      logToPopup('Ошибка: не удалось открыть окно OZON');
+      scanState.isRunning = false;
+      sendToPopup({ action: 'scanComplete', results: [] });
+      return;
+    }
+
+    for (let i = scanState.currentIndex; i < total; i++) {
+      if (!scanState.isRunning) break;
+      await waitWhilePaused();
+      if (!scanState.isRunning) break;
+
+      scanState.currentIndex = i;
+      const sku = skus[i];
+      logToPopup(`[${i + 1}/${total}] SKU ${sku} (визуальный)`);
+
+      let result;
+      try {
+        const pageData = await fetchProductData(sku);
+        if (pageData.skuMismatch) {
+          result = { sku, sellers: [], productName: '', error: 'SKU не совпал' };
+        } else {
+          const mainInfo = parseMainPageSellers(pageData);
+          let sellers = [];
+          if (mainInfo.otherSellersCount > 0 && mainInfo.modalLink) {
+            sellers = await fetchSellersList(scanState.workerTabId, mainInfo.modalLink);
+          } else if (mainInfo.otherSellersCount > 0) {
+            const tab = await chrome.tabs.get(scanState.workerTabId);
+            const pidMatch = new URL(tab.url).pathname.match(/(\d+)\/?$/);
+            if (pidMatch) sellers = await fetchSellersList(scanState.workerTabId, `/modal/otherOffersFromSellers?product_id=${pidMatch[1]}`);
+          }
+          const filtered = filterSellers(sellers, config);
+          logToPopup(`→ ${filtered.length} конкурентов`);
+          result = { sku, sellers: filtered, productName: mainInfo.productName, error: null };
+        }
+      } catch (e) {
+        logToPopup(`Ошибка: ${e.message}`);
+        result = { sku, sellers: [], productName: '', error: e.message };
+        scanState.workerTabId = null;
+        scanState.workerWindowId = null;
+      }
+
+      scanState.results.push(result);
+      sendToPopup({ action: 'scanProgress', current: i + 1, total, ...result });
+
+      if (i < total - 1 && scanState.isRunning) {
+        await humanDelay(delayMs);
+        if (scanState.workerTabId) await simulateHumanBehavior(scanState.workerTabId);
+        if (total >= 50 && (i + 1) % 20 === 0) {
+          const pauseSec = 10 + Math.round(Math.random() * 10);
+          logToPopup(`Антибот: пауза ${pauseSec} сек`);
+          await delay(pauseSec * 1000);
+        }
+      }
+    }
+
+    scanState.isRunning = false;
+    await saveToHistory(scanState.results, config, skus);
+    const totalSellers = scanState.results.reduce((s, r) => s + (r.sellers ? r.sellers.length : 0), 0);
+    sendToPopup({ action: 'scanComplete', results: scanState.results });
+    logToPopup(`Завершено: ${totalSellers} конкурентов по ${skus.length} SKU`);
+    await delay(1000);
+    await closeWorkerWindow();
+  }
+
+  // === Обработка сообщений ===
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.action === 'getLicenseStatus') {
+      getLicenseStatus().then(status => sendResponse(status));
+      return true;
+    }
+
+    if (msg.action === 'activateTrial') {
+      activateTrial().then(result => sendResponse(result));
+      return true;
+    }
+
+    if (msg.action === 'activateLicense') {
+      activateLicense(msg.code).then(result => sendResponse(result));
+      return true;
+    }
+
+    if (msg.action === 'deactivateLicense') {
+      deactivateLicense().then(result => sendResponse(result));
+      return true;
+    }
+
+    if (msg.action === 'startScan') {
+      if (scanState.isRunning) { sendResponse({ status: 'already_running' }); return true; }
+      const skus = msg.skus || [];
+      // Сбор SKU (одиночный + множественный + пакетный XLSX) — бесплатный функционал.
+      // PRO-подписка нужна только для бота подачи жалоб.
+      startScanInternal(skus, msg.config);
+      sendResponse({ status: 'started' });
+      return true;
+    }
+
+    if (msg.action === 'getScanStatus') {
+      sendResponse({
+        isRunning: scanState.isRunning,
+        isPaused: scanState.isPaused,
+        currentIndex: scanState.currentIndex,
+        total: scanState.skus ? scanState.skus.length : 0,
+        results: scanState.results || [],
+        logs: scanState.logs || []
+      });
+      return true;
+    }
+
+    if (msg.action === 'pauseScan') { scanState.isPaused = true; logToPopup('Пауза'); sendResponse({ status: 'paused' }); return true; }
+    if (msg.action === 'resumeScan') { scanState.isPaused = false; logToPopup('Возобновлено'); sendResponse({ status: 'resumed' }); return true; }
+
+    if (msg.action === 'stopScan') {
+      scanState.isRunning = false;
+      scanState.isPaused = false;
+      logToPopup('Остановлено');
+      if (scanState.results.length > 0) saveToHistory(scanState.results, scanState.config, scanState.skus);
+      closeWorkerWindow();
+      sendResponse({ status: 'stopped' });
+      return true;
+    }
+
+    if (msg.action === 'getHistory') {
+      chrome.storage.local.get(['scanHistory'], (data) => sendResponse({ history: data.scanHistory || [] }));
+      return true;
+    }
+
+    if (msg.action === 'deleteHistorySession') {
+      chrome.storage.local.get(['scanHistory'], (data) => {
+        const history = (data.scanHistory || []).filter(s => s.id !== msg.sessionId);
+        chrome.storage.local.set({ scanHistory: history }, () => sendResponse({ status: 'deleted' }));
+      });
+      return true;
+    }
+
+    if (msg.action === 'clearHistory') {
+      chrome.storage.local.set({ scanHistory: [] }, () => sendResponse({ status: 'cleared' }));
+      return true;
+    }
+
+    // === SUPPORT AUTOMATION ===
+    if (msg.action === 'supportStart') {
+      if (supportState.isRunning) { sendResponse({ status: 'already_running' }); return true; }
+      // PRO check
+      getLicenseStatus().then(async (license) => {
+        await restoreActiveSupportSession();
+        if (supportState.isRunning) {
+          sendResponse({ status: 'already_running' });
+          return;
+        }
+        if (!license.isPro) {
+          sendResponse({ status: 'license_required', error: 'Жалобы доступны в PRO-версии' });
+          return 'continue';
+        }
+        const skus = msg.skus || [];
+        if (skus.length === 0) { sendResponse({ status: 'error', error: 'Нет SKU' }); return; }
+
+        // Проверка ранее обработанных SKU — если есть и пользователь не попросил сбросить,
+        // помечаем их сразу как done/failed и стартуем с первого pending
+        let preProcessed = {};
+        if (!msg.resetProgress) {
+          try {
+            const progressData = await chrome.storage.local.get(['complaintProgress']);
+            const prog = progressData.complaintProgress;
+            if (prog && prog.processedSkus && prog.processedSkus.length > 0) {
+              for (const p of prog.processedSkus) preProcessed[p.sku] = p.status;
+            }
+          } catch (_) {}
+        }
+
+        // v5.9.23: явные логи каждого этапа подготовки —
+        // раньше preflight + ensureSellerChatPage могли молча висеть до 30+ сек,
+        // popup показывал «Ожидание» без признаков жизни.
+        sendToPopup({ action: 'supportLog', text: `[${new Date().toLocaleTimeString('ru-RU')}] 🔍 Проверяю вкладки seller.ozon.ru...` });
+
+        // Pre-flight: проверка вкладок seller.ozon.ru
+        const preflight = await preflightSellerTabs();
+        if (!preflight.ok) {
+          sendToPopup({ action: 'supportLog', text: `[${new Date().toLocaleTimeString('ru-RU')}] ⚠ Pre-flight: ${preflight.error}` });
+          sendResponse({ status: 'error', error: preflight.error, code: preflight.code });
+          return;
+        }
+        sendToPopup({ action: 'supportLog', text: `[${new Date().toLocaleTimeString('ru-RU')}] ✓ Вкладка seller.ozon.ru найдена (id=${preflight.tabId})` });
+
+        let tabId = preflight.tabId;
+        // Автопереход на чаты если не на странице чатов
+        sendToPopup({ action: 'supportLog', text: `[${new Date().toLocaleTimeString('ru-RU')}] 🔍 Проверяю что вкладка на чате поддержки...` });
+        const chatReady = await ensureSellerChatPage(tabId);
+        if (!chatReady?.ok) {
+          sendToPopup({ action: 'supportLog', text: `[${new Date().toLocaleTimeString('ru-RU')}] ⚠ Не удалось перейти на чат поддержки` });
+          sendResponse({ status: 'error', error: 'Не удалось перейти в чат поддержки. Откройте чат вручную: seller.ozon.ru → Сообщения → Поддержка' });
+          return;
+        }
+        sendToPopup({ action: 'supportLog', text: `[${new Date().toLocaleTimeString('ru-RU')}] ✓ Чат поддержки готов` });
+        tabId = chatReady.tabId || supportState.sellerTabId; // мог обновиться если вкладка пересоздана
+        resetInjectFailures(); // Сброс circuit breaker для новой сессии
+
+        // Строим очередь, помечая уже обработанные SKU
+        const queue = skus.map(sku => {
+          const prev = preProcessed[sku];
+          if (prev === 'done' || prev === 'failed' || prev === 'skipped' ||
+              prev === 'escalated' || prev === 'no_violation') {
+            const prevError = prev === 'failed'
+              ? 'ранее не удалось'
+              : (prev === 'escalated'
+                ? 'ранее передано оператору'
+                : (prev === 'no_violation' ? 'ранее не нашли нарушений' : null));
+            return { sku, status: prev, step: 'completed', chatId: null, error: prevError };
+          }
+          return { sku, status: 'pending', step: null, chatId: null, error: null };
+        });
+
+        // Стартуем с первого pending
+        const firstPendingIdx = queue.findIndex(q => q.status === 'pending');
+        const skipCount = firstPendingIdx === -1 ? queue.length : firstPendingIdx;
+
+        const incomingLimits = msg.limits || {};
+        const limits = {
+          maxChatsPerSession: Math.max(1, Math.min(500, parseInt(incomingLimits.maxChatsPerSession, 10) || 10)),
+          maxConsecutiveEscalations: Math.max(0, Math.min(50, parseInt(incomingLimits.maxConsecutiveEscalations, 10) || 5))
+        };
+        const parentMap = msg.parentMap && typeof msg.parentMap === 'object' ? msg.parentMap : {};
+        // В queue проставляем parentSku для каждого SKU (первый родитель если несколько)
+        for (const q of queue) {
+          const parents = parentMap[q.sku];
+          if (Array.isArray(parents) && parents.length > 0) {
+            q.parentSku = parents[0];
+            q.parentSkus = parents.slice(); // для объединения файлов из нескольких родителей (Q6)
+          }
+        }
+        supportState = {
+          isRunning: true,
+          isPaused: false,
+          mode: msg.mode || 'dry',
+          queue,
+          currentIndex: firstPendingIdx === -1 ? queue.length : firstPendingIdx,
+          files: msg.files || [],
+          skuFiles: msg.skuFiles && typeof msg.skuFiles === 'object' ? msg.skuFiles : {},
+          // v5.9.20: режим работы с доказательствами
+          // - 'sku_first' — старый: к каждому parent SKU привязан свой набор файлов
+          // - 'file_first' — новый: каждый файл несёт список SKU к которым подходит
+          evidenceMode: msg.evidenceMode === 'file_first' ? 'file_first' : 'sku_first',
+          fileSkus: Array.isArray(msg.fileSkus) ? msg.fileSkus : [],
+          parentMap,
+          // v5.9.15: три типа пути — plagiat_legacy (default, stable) / content_beta / brand_beta.
+          // Миграция старых значений seller/brand → plagiat_legacy для backward compat.
+          complaintType: (msg.complaintType === 'content_beta' || msg.complaintType === 'brand_beta' || msg.complaintType === 'plagiat_legacy')
+            ? msg.complaintType
+            : 'plagiat_legacy',
+          logs: [],
+          sellerTabId: tabId,
+          session: { id: Date.now().toString(36), startedAt: new Date().toISOString() },
+          lastPhase: null,
+          phaseRepeatCount: 0,
+          maxPhaseRepeats: 4,
+          newChatsOpened: 0,
+          consecutiveEscalations: 0,
+          limits,
+          limitGateAllowance: limits.maxChatsPerSession,
+          limitGateActive: false,
+          limitGateReason: null,
+          // BETA-защиты v5.9.15
+          consecutiveFailed: 0,
+          betaAutostopLimit: 5,
+          navClickRetries: {},
+          // Watchdog v5.9.18
+          lastActivityTs: Date.now(),
+          watchdogWarned: false,
+          consecutiveAttachFails: 0,
+          attachFailAdviceShown: false
+        };
+
+        // Сбрасываем старую activeSupportSession — начинается новая
+        await chrome.storage.local.remove(['activeSupportSession']);
+
+        if (skipCount > 0) {
+          supportLog(`Пропуск ${skipCount} ранее обработанных SKU`);
+        }
+        if (firstPendingIdx === -1) {
+          supportLog('Все SKU уже обработаны — нажмите «Очистить» для сброса прогресса');
+          supportState.isRunning = false;
+          sendResponse({ status: 'all_done', error: 'Все SKU из списка уже были обработаны ранее. Нажмите «Очистить» для сброса прогресса.' });
+          return;
+        }
+        supportLog(`Старт: ${queue.length - skipCount} жалоб (из ${queue.length}), режим ${supportState.mode}`);
+        await persistActiveSupportSessionNow();
+        sendResponse({ status: 'started' });
+        ensureSupportLoop(tabId, 'supportStart');
+      });
+      return true;
+    }
+
+    if (msg.action === 'supportPause') {
+      (async () => {
+        await restoreActiveSupportSession();
+        supportState.isPaused = true;
+        supportLoopToken++;
+        supportLoopRunning = false;
+        supportLog('Пауза');
+        await persistActiveSupportSessionNow();
+        sendResponse({ status: 'paused' });
+      })();
+      return true;
+    }
+
+    if (msg.action === 'supportResume') {
+      (async () => {
+        await restoreActiveSupportSession();
+        supportState.isPaused = false;
+        supportLog('Возобновлено');
+        const tabId = supportState.sellerTabId || await findSellerTab();
+        if (tabId) {
+          supportState.sellerTabId = tabId;
+          ensureSupportLoop(tabId, 'supportResume');
+        }
+        await persistActiveSupportSessionNow();
+        sendResponse({ status: 'resumed' });
+      })();
+      return true;
+    }
+
+    // Пользователь подтвердил продолжение после достижения лимита обращений (v5.9.10)
+    if (msg.action === 'supportLimitContinue') {
+      if (supportState.limitGateActive) {
+        const add = supportState.limits.maxChatsPerSession;
+        supportState.limitGateAllowance = supportState.newChatsOpened + add;
+        supportState.limitGateActive = false;
+        supportState.limitGateReason = null;
+        supportState.isPaused = false;
+        supportState.consecutiveEscalations = 0; // Сбрасываем счётчик эскалаций подряд
+        supportLog(`▶ Подтверждено — разрешено ещё ${add} обращений (до ${supportState.limitGateAllowance})`);
+        if (supportState.sellerTabId) ensureSupportLoop(supportState.sellerTabId, 'supportLimitContinue');
+      }
+      sendResponse({ status: 'limit_continued' });
+      return true;
+    }
+
+    if (msg.action === 'supportResetProgress') {
+      chrome.storage.local.remove(['complaintProgress'], () => sendResponse({ status: 'reset' }));
+      return true;
+    }
+
+    if (msg.action === 'supportGetProgress') {
+      chrome.storage.local.get(['complaintProgress'], (data) => {
+        sendResponse({ progress: data.complaintProgress || null });
+      });
+      return true;
+    }
+
+    if (msg.action === 'supportStop') {
+      (async () => {
+        await restoreActiveSupportSession();
+        supportState.isRunning = false;
+        supportState.isPaused = false;
+        supportLoopToken++;
+        supportLoopRunning = false;
+        supportLog('Остановлено');
+        await saveSupportSession();
+        await persistActiveSupportSessionNow();
+        sendResponse({ status: 'stopped' });
+      })();
+      return true;
+    }
+
+    if (msg.action === 'supportGetStatus') {
+      // Read-only status: не запускаем loop из getter, только возвращаем память или storage.
+      (async () => {
+        const hasInMemory = supportState.queue && supportState.queue.length > 0;
+        if (hasInMemory) {
+          sendResponse({
+            isRunning: supportState.isRunning,
+            isPaused: supportState.isPaused,
+            mode: supportState.mode,
+            queue: supportState.queue,
+            currentIndex: supportState.currentIndex,
+            logs: supportState.logs,
+            newChatsOpened: supportState.newChatsOpened || 0,
+            consecutiveEscalations: supportState.consecutiveEscalations || 0,
+            limitGateActive: !!supportState.limitGateActive,
+            limitGateReason: supportState.limitGateReason || null,
+            source: 'memory'
+          });
+        } else {
+          const data = await chrome.storage.local.get(['activeSupportSession']);
+          const s = data.activeSupportSession;
+          if (s) {
+            sendResponse({
+              isRunning: !!s.isRunning,
+              isPaused: !!s.isPaused,
+              mode: s.mode,
+              queue: s.queue || [],
+              currentIndex: s.currentIndex || 0,
+              logs: s.logs || [],
+              sessionId: s.sessionId,
+              newChatsOpened: s.newChatsOpened || 0,
+              consecutiveEscalations: s.consecutiveEscalations || 0,
+              limitGateActive: !!s.limitGateActive,
+              limitGateReason: s.limitGateReason || null,
+              source: 'storage'
+            });
+          } else {
+            sendResponse({
+              isRunning: false, isPaused: false, mode: null,
+              queue: [], currentIndex: 0, logs: [], source: 'none'
+            });
+          }
+        }
+      })();
+      return true;
+    }
+
+    if (msg.action === 'supportRecoverAndContinue') {
+      (async () => {
+        await restoreActiveSupportSession();
+        if (!supportState.isRunning) {
+          sendResponse({ ok: false, error: 'Нет активной сессии' });
+          return;
+        }
+        if (supportState.isPaused) {
+          sendResponse({ ok: false, paused: true });
+          return;
+        }
+        const tabId = supportState.sellerTabId || await findSellerTab();
+        if (!tabId) {
+          sendResponse({ ok: false, error: 'seller.ozon.ru не найден' });
+          return;
+        }
+        supportState.sellerTabId = tabId;
+        ensureSupportLoop(tabId, 'supportRecoverAndContinue');
+        sendResponse({ ok: true });
+      })();
+      return true;
+    }
+
+    if (msg.action === 'supportRefresh') {
+      // Принудительно обновить состояние страницы и продолжить
+      (async () => {
+        await restoreActiveSupportSession();
+        const tabId = supportState.sellerTabId || await findSellerTab();
+        if (tabId) {
+          supportState.sellerTabId = tabId;
+          if (supportState.isRunning && !supportState.isPaused) {
+            ensureSupportLoop(tabId, 'supportRefresh');
+          }
+          sendResponse({ ok: true });
+        } else {
+          sendResponse({ ok: false, error: 'seller.ozon.ru не найден' });
+        }
+      })();
+      return true;
+    }
+
+    if (msg.action === 'supportGetHistory') {
+      chrome.storage.local.get(['supportHistory'], (data) => sendResponse({ history: data.supportHistory || [] }));
+      return true;
+    }
+
+    if (msg.action === 'testApi') {
+      (async () => {
+        try {
+          const tabs = await chrome.tabs.query({ url: 'https://www.ozon.ru/*' });
+
+          if (tabs.length === 0) {
+            sendResponse({
+              status: 'error',
+              message: 'Откройте ozon.ru в любой вкладке и авторизуйтесь, затем повторите'
+            });
+            return 'continue';
+          }
+
+          const tabId = tabs[0].id;
+          const tabUrl = tabs[0].url || '';
+
+          const results = await chrome.scripting.executeScript({
+            target: { tabId },
+            func: () => {
+              const hasInterceptor = typeof window.__ozguard !== 'undefined';
+              const hasCookies = document.cookie.length > 0;
+              const pageTitle = document.title || '';
+              return { hasInterceptor, hasCookies, pageTitle };
+            },
+            world: 'MAIN'
+          });
+
+          const info = results?.[0]?.result;
+          if (!info) {
+            sendResponse({ status: 'error', message: 'Не удалось проверить вкладку' });
+            return 'continue';
+          }
+
+          const checks = [];
+          if (info.hasInterceptor) checks.push('перехватчик активен');
+          else checks.push('перехватчик НЕ загружен (обновите страницу ozon.ru)');
+          if (info.hasCookies) checks.push('cookies есть');
+          else checks.push('cookies отсутствуют');
+
+          const ok = info.hasInterceptor && info.hasCookies;
+          sendResponse({
+            status: ok ? 'ok' : 'error',
+            message: ok ? `Готово. ${checks.join(', ')}` : `Проблема: ${checks.join(', ')}`,
+            widgets: [`Вкладка: ${tabUrl.substring(0, 80)}`, ...checks]
+          });
+        } catch (e) {
+          sendResponse({ status: 'error', message: e.message });
+        }
+      })();
+      return true;
+    }
+
+    return true;
+  });
+
+})();
