@@ -892,6 +892,40 @@ textarea:focus, input[type="text"]:focus {
   border-top: 1px solid #e0e2e8;
 }
 
+.parent-sku-modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.parent-sku-modal.hidden { display: none; }
+.parent-sku-dialog {
+  width: min(100%, 360px);
+  height: auto;
+  max-height: calc(100vh - 32px);
+}
+.parent-sku-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.parent-sku-modal-body p {
+  margin: 0 0 4px;
+  color: #444;
+}
+.parent-sku-modal-body label {
+  font-size: 10px;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.parent-sku-modal-error {
+  color: #d93025;
+  font-size: 11px;
+}
+
 /* Таблица результатов в модалке */
 .results-table {
   width: 100%;
@@ -1801,6 +1835,33 @@ textarea:focus, input[type="text"]:focus {
   gap: 8px;
   margin-top: 6px;
   margin-bottom: 6px;
+}
+
+.complaint-parent-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: end;
+  margin-top: 6px;
+}
+.complaint-parent-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.complaint-parent-field label {
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.complaint-parent-hint {
+  margin-top: 4px;
+  margin-bottom: 6px;
+  font-size: 10.5px;
+  line-height: 1.3;
+  color: #666;
 }
 
 /* Жалобы (Support Automation) */

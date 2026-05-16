@@ -415,6 +415,14 @@
     <!-- Ввод артикулов -->
     <label for="complaintSkuInput">Артикулы (по одному на строку):</label>
     <textarea id="complaintSkuInput" rows="3" placeholder="1234567890&#10;9876543210"></textarea>
+    <div class="complaint-parent-row">
+      <div class="complaint-parent-field">
+        <label for="complaintParentSkuInput">Родительский SKU</label>
+        <input id="complaintParentSkuInput" class="input-select" type="text" inputmode="numeric" placeholder="Ваш SKU для списка ниже">
+      </div>
+      <button id="btnCopyComplaintParentSku" class="btn btn-small" title="Скопировать родительский SKU">📋</button>
+    </div>
+    <div class="complaint-parent-hint">Если список SKU вставлен вручную, укажите ваш товар — бот отправит его перед SKU нарушителя.</div>
     <div class="complaint-import-row">
       <button id="btnImportCsv" class="btn btn-small">📥 Импорт из Excel</button>
       <span id="importCsvHint" class="saved-hint hidden"></span>
@@ -580,6 +588,25 @@
         <button id="modalDownload" class="btn btn-small">📥 Excel</button>
         <button id="modalCopy" class="btn btn-small">📋 Копировать</button>
         <button id="modalLogs" class="btn btn-small">📝 Логи</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="parentSkuModal" class="modal parent-sku-modal hidden">
+    <div class="modal-content parent-sku-dialog">
+      <div class="modal-header">
+        <h3>Родительский SKU</h3>
+        <button id="parentSkuModalClose" class="btn-close">&times;</button>
+      </div>
+      <div class="parent-sku-modal-body">
+        <p>Укажите ваш SKU, чью карточку скопировали. Он будет привязан ко всем SKU конкурентов из этой сборки.</p>
+        <label for="parentSkuModalInput">Ваш родительский SKU</label>
+        <input id="parentSkuModalInput" class="input-select" type="text" inputmode="numeric">
+        <div id="parentSkuModalError" class="parent-sku-modal-error hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="parentSkuModalCancel" class="btn btn-small">Отмена</button>
+        <button id="parentSkuModalApply" class="btn btn-small btn-primary">Применить</button>
       </div>
     </div>
   </div>
