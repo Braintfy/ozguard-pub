@@ -444,6 +444,9 @@
     // BETA-защиты (v5.9.15)
     consecutiveFailed: 0,          // SKU подряд в failed на любом пути
     betaAutostopLimit: 5,          // BETA-режим: стоп после 5 подряд failed
+    // v5.9.37: recovery после зависания на interface-like фазах
+    consecutiveInterfaceStuck: 0,  // SKU подряд застрявших на input_ready/faq_page/unknown/has_buttons/no_chat
+    maxConsecutiveInterfaceStuck: 5, // лимит recovery перед остановкой пакета (truly interface change)
     navClickRetries: {},           // { phase: count } — счётчик неудачных кликов по фазе
     // Watchdog (v5.9.18)
     lastActivityTs: 0,             // время последнего супер-лога/прогресса (ms)
@@ -553,6 +556,7 @@
       newChatsOpened: supportState.newChatsOpened || 0,
       consecutiveEscalations: supportState.consecutiveEscalations || 0,
       consecutiveFailed: supportState.consecutiveFailed || 0,
+      consecutiveInterfaceStuck: supportState.consecutiveInterfaceStuck || 0,
       limits: supportState.limits || { maxChatsPerSession: 10, maxConsecutiveEscalations: 5 },
       limitGateAllowance: supportState.limitGateAllowance || supportState.limits?.maxChatsPerSession || 10,
       limitGateActive: !!supportState.limitGateActive,
@@ -628,6 +632,8 @@
         limitGateActive: !!s.limitGateActive,
         limitGateReason: s.limitGateReason || null,
         consecutiveFailed: s.consecutiveFailed || 0,
+        consecutiveInterfaceStuck: s.consecutiveInterfaceStuck || 0,
+        maxConsecutiveInterfaceStuck: s.maxConsecutiveInterfaceStuck || 5,
         betaAutostopLimit: s.betaAutostopLimit || 5,
         navClickRetries: {},
         lastActivityTs: Date.now(),
@@ -1010,6 +1016,10 @@
       item._counted = true;
       if (status === 'failed') supportState.consecutiveFailed = (supportState.consecutiveFailed || 0) + 1;
       else if (status === 'done' || status === 'escalated' || status === 'no_violation') supportState.consecutiveFailed = 0;
+      // v5.9.37: любой "не-стак" статус сбрасывает счётчик interface-stuck recovery
+      if (status === 'done' || status === 'escalated' || status === 'no_violation') {
+        supportState.consecutiveInterfaceStuck = 0;
+      }
     }
   }
 
@@ -1514,6 +1524,10 @@
         prev._counted = true;
         if (prev.status === 'failed') supportState.consecutiveFailed = (supportState.consecutiveFailed || 0) + 1;
         else supportState.consecutiveFailed = 0;
+        // v5.9.37: сбрасываем счётчик interface-stuck recovery при любом успешном статусе
+        if (prev.status === 'done' || prev.status === 'escalated' || prev.status === 'no_violation') {
+          supportState.consecutiveInterfaceStuck = 0;
+        }
         // BETA autostop: проверяем перед началом следующего SKU
         const autostopOk = await checkBetaAutostop();
         if (!autostopOk) return 'wait';
@@ -1649,23 +1663,38 @@
           return 'continue';
         }
         // v5.9.32: специальное сообщение для подозрения на изменение интерфейса Ozon.
-        // unknown/has_buttons/no_chat/faq_page подряд = бот не понимает что показывает Ozon.
+        // unknown/has_buttons/no_chat/faq_page/input_ready подряд = бот не понимает что показывает Ozon.
+        // v5.9.37: пытаемся восстановиться (новый чат + следующий SKU) до 5 раз подряд.
         const isInterfaceLikely = phase === 'unknown' || phase === 'has_buttons' ||
           phase === 'no_chat' || phase === 'faq_page' || phase === 'input_ready';
         if (isInterfaceLikely) {
           const visibleList = (debug?.chatQuickReplies?.slice(0, 6) || []).join(', ') ||
             (debug?.allButtonTexts?.slice(0, 6) || []).join(', ') || '—';
           const lastBot = (debug?.lastBotMsg || '—').substring(0, 100);
-          supportLog(`⛔ ИНТЕРФЕЙС OZON ИЗМЕНИЛСЯ или чат в неизвестном состоянии: фаза «${phase}» повторилась ${supportState.phaseRepeatCount} раз. Бот не распознал ни одной знакомой кнопки/сообщения.`);
+          const stuckLimit = supportState.maxConsecutiveInterfaceStuck || 5;
+          supportState.consecutiveInterfaceStuck = (supportState.consecutiveInterfaceStuck || 0) + 1;
+          // Пока не достигли лимита подряд-зависаний — пропускаем SKU, открываем новый чат, продолжаем пакет
+          if (supportState.consecutiveInterfaceStuck < stuckLimit) {
+            supportLog(`[INTERFACE-STUCK ${supportState.consecutiveInterfaceStuck}/${stuckLimit}] Видимые кнопки: ${visibleList}`);
+            supportLog(`[INTERFACE-STUCK] Последнее сообщение Ozon: «${lastBot}»`);
+            await finishProblemSupportItem(tabId, item, idx,
+              `Ozon показал нестандартный экран на фазе ${phase} — пропущен`, {
+                recoverChat: true,
+                logMessage: `⚠ SKU ${item.sku}: Ozon показал нестандартный экран на «${phase}» (${visibleList}). Пропускаю SKU, открываю новый чат и продолжаю пакет.`
+              });
+            return 'continue';
+          }
+          // Лимит достигнут — это уже похоже на реальное изменение интерфейса
+          supportLog(`⛔ ИНТЕРФЕЙС OZON ИЗМЕНИЛСЯ: ${stuckLimit} SKU подряд застряли на «${phase}». Бот не распознал ни одной знакомой кнопки/сообщения.`);
           supportLog(`[INTERFACE-CHANGE] Видимые кнопки: ${visibleList}`);
           supportLog(`[INTERFACE-CHANGE] Последнее сообщение Ozon: «${lastBot}»`);
           item.status = 'failed';
-          item.error = `Интерфейс Ozon не распознан на фазе ${phase}`;
+          item.error = `Интерфейс Ozon не распознан на фазе ${phase} (${stuckLimit} SKU подряд)`;
           notifyProblem('failed', item.sku, item.error);
           supportState.isRunning = false;
           sendToPopup({
             action: 'supportNeedAction',
-            message: `Похоже, Ozon изменил интерфейс жалоб: бот завис на «${phase}» (нет знакомых кнопок). Видимые кнопки: ${visibleList}. Проверьте чат вручную, попробуйте другой тип жалобы или сообщите в t.me/firadex.`
+            message: `Похоже, Ozon изменил интерфейс жалоб: ${stuckLimit} SKU подряд застряли на «${phase}» (нет знакомых кнопок). Видимые кнопки: ${visibleList}. Проверьте чат вручную, попробуйте другой тип жалобы или сообщите в t.me/firadex.`
           });
           await saveSupportSession();
           return 'wait';
@@ -4093,6 +4122,9 @@
           // BETA-защиты v5.9.15
           consecutiveFailed: 0,
           betaAutostopLimit: 5,
+          // v5.9.37: recovery interface-stuck
+          consecutiveInterfaceStuck: 0,
+          maxConsecutiveInterfaceStuck: 5,
           navClickRetries: {},
           // Watchdog v5.9.18
           lastActivityTs: Date.now(),

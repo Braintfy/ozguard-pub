@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.9.37] - 2026-05-20
+### Fixed
+- **Бот больше не останавливает весь пакет при зависании на нестандартном экране Ozon** — `background/service-worker.js` при зацикливании на фазах `input_ready` / `faq_page` / `unknown` / `has_buttons` / `no_chat` теперь помечает только текущий SKU как `failed` (с понятным error «Ozon показал нестандартный экран на фазе X — пропущен»), открывает новый чат через `finishProblemSupportItem(... recoverChat: true)` и продолжает пакет. Раньше один такой SKU останавливал всю работу.
+- **Repro-кейс** — лог [10:18:58] показал, что после клика «Контроль качества» Ozon вместо обычного flow выдавал «Собрали для вас правила работы на площадке... Базе знаний» — фаза детектировалась как `input_ready`, бот зависал и через 4 повтора выкидывал «ИНТЕРФЕЙС OZON ИЗМЕНИЛСЯ», теряя 1755 из 1779 SKU.
+
+### Added
+- **Лимит подряд-зависаний на interface-like фазах** — `supportState.consecutiveInterfaceStuck` + `maxConsecutiveInterfaceStuck` (5 по умолчанию). После 5 SKU подряд застрявших на одной из этих фаз — пакет останавливается с диагностикой «truly interface change», как раньше. Сбрасывается на любом успешном статусе (`done` / `escalated` / `no_violation`). Counter persistится через `serializeSupportSession`/`restoreActiveSupportSession` чтобы не теряться при засыпании service worker.
+
+### Changed
+- **Версия диагностики content script** — `support-automation.js` обновлён до `5.9.37`.
+- **Версия расширения** — `manifest.json` обновлён до `5.9.37`.
+
 ## [5.9.36] - 2026-05-16
 ### Fixed
 - **Зацикливание `in_progress` после отправки parent SKU** — `background/service-worker.js` обработчик фазы `in_progress` перезаписывал `item.step` на `'article_sent'`, даже когда реальный step = `'parent_sent'`. Из-за этого `waiting_article` handler считал артикул уже отправленным и уходил в бесконечный 5с-цикл (12 повторов → стоп). Фикс: не трогать step если он `'parent_sent'`.
