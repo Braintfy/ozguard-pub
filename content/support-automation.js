@@ -1,4 +1,4 @@
-// OZGuard Support Automation v5.9.37
+// OZGuard Support Automation v5.9.38
 // ISOLATED world — прямая коммуникация через chrome.runtime.onMessage
 // Поиск элементов по ТЕКСТУ и атрибутам DOM, не по CSS-классам
 // Quick-reply кнопки чата: div/span с cursor:pointer внутри контейнера сообщений
@@ -7,7 +7,7 @@
 
 (function() {
   'use strict';
-  const OZG_SUPPORT_VERSION = '5.9.37';
+  const OZG_SUPPORT_VERSION = '5.9.38';
 
   if (document.getElementById('__ozguard-support-guard')) return;
   const guard = document.createElement('div');

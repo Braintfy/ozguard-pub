@@ -1283,12 +1283,21 @@
     return [...out];
   }
 
-  function applyParentSkuOverride(parentMap, skus, parentSku) {
+  // v5.9.35: применить ручной родительский SKU к списку SKU.
+  // v5.9.38: добавлен режим preserveExisting — если SKU уже имеет parentMap-привязку,
+  // НЕ перезаписываем её. Это критично для multi-batch сборок (merge через v5.9.36),
+  // когда поле «Родительский SKU» хранит только первый родитель, а в parentMap уже есть
+  // правильные привязки разных competitor → разных parents.
+  function applyParentSkuOverride(parentMap, skus, parentSku, opts = {}) {
     if (!parentSku) return 0;
+    const preserveExisting = !!opts.preserveExisting;
     let count = 0;
     for (const sku of skus) {
       const comp = String(sku || '').trim();
       if (!comp) continue;
+      if (preserveExisting && Array.isArray(parentMap[comp]) && parentMap[comp].length > 0) {
+        continue; // оставляем существующую multi-parent привязку нетронутой
+      }
       parentMap[comp] = [parentSku];
       count++;
     }
@@ -1666,10 +1675,32 @@
 
     // Карта конкурент→родитель (для выбора per-SKU файлов)
     const parentMap = await loadParentMap();
+    // v5.9.38: считаем уникальных parents в текущем пакете для диагностики multi-batch сборок
+    const uniqueParentsInBatch = new Set();
+    for (const sku of skus) {
+      const ps = parentMap[sku];
+      if (Array.isArray(ps)) for (const p of ps) {
+        const v = String(p || '').trim();
+        if (v) uniqueParentsInBatch.add(v);
+      }
+    }
     if (manualParentSku) {
-      const linkedCount = applyParentSkuOverride(parentMap, skus, manualParentSku);
-      await saveParentMap(parentMap);
-      addComplaintLog(`Родительский SKU ${manualParentSku} привязан к ${linkedCount} SKU`);
+      // v5.9.38: preserveExisting=true — НЕ перезаписываем уже привязанные SKU.
+      // manualParentSku применяется только к SKU без parentMap-привязки.
+      // Это сохраняет корректное mapping для multi-batch сборок (merge v5.9.36).
+      const linkedCount = applyParentSkuOverride(parentMap, skus, manualParentSku, { preserveExisting: true });
+      if (linkedCount > 0) {
+        await saveParentMap(parentMap);
+        addComplaintLog(`Родительский SKU ${manualParentSku} привязан к ${linkedCount} SKU без существующей привязки`);
+      }
+      // Если в пакете уже есть несколько разных parents — предупреждаем что поле не управляет ими
+      if (uniqueParentsInBatch.size > 1 && !uniqueParentsInBatch.has(manualParentSku)) {
+        addComplaintLog(`ℹ В пакете ${uniqueParentsInBatch.size} разных родительских SKU из «В жалобы». Поле «${manualParentSku}» применено только к новым SKU; остальные используют свои родители из истории.`);
+      } else if (uniqueParentsInBatch.size > 1) {
+        addComplaintLog(`ℹ В пакете ${uniqueParentsInBatch.size} разных родительских SKU из «В жалобы». Каждый использует свой parent для подбора файлов.`);
+      }
+    } else if (uniqueParentsInBatch.size > 1) {
+      addComplaintLog(`ℹ В пакете ${uniqueParentsInBatch.size} разных родительских SKU. Каждый использует свой parent для подбора файлов.`);
     }
     const activeParentSkus = getActiveParentSkus(skus, parentMap);
     // Файлы передаём в background только как lightweight-метаданные.
