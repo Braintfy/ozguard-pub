@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.9.39] - 2026-05-21
+### Fixed
+- **Зацикливание на навигационных фазах больше не останавливает весь пакет** — `background/service-worker.js` loop guard для фаз `complaint_type` / `complaint_detail` / `direction_selection` / `category_selection` / `complaint_subtype` теперь recoverable (skip SKU + recoverChat + continue) по аналогии с `waiting_attachment` / `in_progress`. Раньше один зацикленный SKU на complaint_type выкидывал «⛔ Зацикливание... остановка» и убивал всю BETA-сессию (видно в логе [14:58:10] для SKU 4361543425).
+- **`faq_page` + пустая страница мессенджера: активный recovery вместо пассивного ожидания** — `background/service-worker.js` faq_page handler с `messenger_no_chat`/`faq_no_button` после 2 пустых попыток теперь дёргает `openSupportChatsPage` (перезагружает чаты) вместо очередного `await delay(3000)`. Раньше 4 пустых тика на одном SKU доедали `phaseRepeatCount` → loop guard → +1 в `consecutiveInterfaceStuck`. Repro: лог [16:52:20-29] SKU 3677988929, 4 итерации `messenger_no_chat`, на 5-й — глобальный стоп пакета.
+### Changed
+- **Унифицированный stuck-recovery**: убрана развилка `isInterfaceLikely` vs «прочие фазы» в loop guard. Все non-recoverable фазы используют единый счётчик `consecutiveInterfaceStuck` и единое сообщение «зацикливание на «X» — SKU пропущен».
+- **Лимит подряд-зависаний поднят 5→8** — `maxConsecutiveInterfaceStuck`. На больших пакетах (1000+ SKU) транзиентные сбои Ozon стали запускать стоп слишком рано; новый лимит даёт больше recovery-попыток до объявления «интерфейс изменился».
+- **Сброс `_faqEmptyRetry`** — `resetSupportItemTransientState` + при смене фазы из faq_page в любую другую.
+- **Версия диагностики content script** — `support-automation.js` обновлён до `5.9.39`.
+- **Версия расширения** — `manifest.json` обновлён до `5.9.39`.
+
 ## [5.9.38] - 2026-05-20
 ### Fixed
 - **Файлы не прикреплялись для multi-batch сборок (КРИТИЧНО)** — `popup/popup.js` `applyParentSkuOverride` при старте перезаписывал `parentMap` для всех SKU единственным значением из поля «Родительский SKU». В сценарии v5.9.36 merge (несколько сборок с разными родителями) поле хранит только ПЕРВЫЙ parent, а в `parentMap` уже корректно лежат разные привязки `competitor → parent`. Перезапись разрушала эти привязки, и `pickFilesForItem` искал файлы под неправильным parent SKU → возвращал пустой список → SKU помечался failed «Нет файлов для прикрепления». На BETA-пути 5 таких failed подряд → `betaAutostopLimit` → стоп всего пакета.
