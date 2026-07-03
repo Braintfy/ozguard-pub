@@ -23,7 +23,7 @@
       <span>Доступна новая версия <b id="updateLatestVersion">—</b>.
         <a id="updateDownloadLink" href="#" target="_blank" rel="noopener">Скачать</a>
         <span class="update-banner-sep">·</span>
-        <a id="updateChangelogLink" href="https://codefic.ru/#changelog" target="_blank" rel="noopener">Читать об обновлении</a>
+        <a href="https://codefic.ru/#changelog" target="_blank" rel="noopener">Читать об обновлении</a>
       </span>
     </div>
     <button id="updateBannerClose" class="update-banner-close" title="Скрыть">✕</button>
@@ -40,17 +40,17 @@
 
         <div class="help-section">
           <div class="help-section-title">Что такое OZGuard?</div>
-          <p>OZGuard находит всех конкурентов, которые продают те же товары что и вы на <a href="https://www.ozon.ru" target="_blank" class="link-ozon">OZON</a>. Вы вводите SKU своих товаров — расширение открывает каждый товар, собирает список всех продавцов и показывает их цены. После этого можно одним кликом отправить нарушителей на проверку через жалобы.</p>
+          <p>OZGuard находит всех конкурентов, которые продают те же товары что и вы на <a href="https://www.ozon.ru" target="_blank" class="link-ozon">OZON</a>. Вы вводите SKU своих товаров — расширение по каждому запрашивает данные карточки, собирает список всех продавцов и показывает их цены. После этого можно одним кликом отправить нарушителей на проверку через жалобы.</p>
           <p style="margin-top:6px">Сайт: <a href="https://codefic.ru" target="_blank" class="link-ozon">codefic.ru</a></p>
         </div>
 
         <div class="help-section">
           <div class="help-section-title">🔍 Сканирование</div>
           <div class="help-step"><span class="help-num">1</span><div><b>Введите SKU</b> своих товаров в поле (по одному на строку). SKU — это числовой артикул товара на OZON, его видно в адресной строке карточки товара или в личном кабинете продавца.</div></div>
-          <div class="help-step"><span class="help-num">2</span><div>Выберите <b>режим сканирования</b>: <b>⚡ Быстрый</b> — прямые API-запросы без открытия окна (в 5-10 раз быстрее); <b>🐢 Медленный</b> — открывает окно OZON и имитирует поведение пользователя (медленнее, но безопаснее для сессии). Нажмите <b>«Найти конкурентов»</b>.</div></div>
+          <div class="help-step"><span class="help-num">2</span><div>Нажмите <b>«Найти конкурентов»</b> — сбор идёт прямыми API-запросами в фоне, без открытия окон. Нужна открытая вкладка ozon.ru с авторизацией (если её нет — расширение откроет фоновую само).</div></div>
           <div class="help-step"><span class="help-num">3</span><div>В <b>Результатах</b> вы увидите по каждому товару: название, количество конкурентов, их SKU и цены. Кнопка <b>⎘</b> рядом с вашим SKU копирует его. Ссылка <b>«открыть на OZON»</b> ведёт на карточку. Кнопка <b>⎘</b> рядом с «N конк.» копирует сразу все SKU конкурентов по этому товару.</div></div>
           <div class="help-step"><span class="help-num">4</span><div>Кнопка <b>📎 К доказательствам</b> рядом с каждым вашим SKU переносит его в Настройки → блок «Доказательства для отдельных SKU». Если к SKU уже привязаны файлы — кнопка меняется на <b>✓ Доказательства</b> зелёным. Так удобно за один проход по результатам собрать все доказательства.</div></div>
-          <div class="help-tip">⏸ Пауза и ⏹ Стоп работают прямо во время сбора — даже если popup закрыт, через плавающую панель на странице OZON.</div>
+          <div class="help-tip">⏸ Пауза и ⏹ Стоп работают прямо во время сбора. Скан продолжается в фоне, даже если закрыть popup — откройте его снова, прогресс восстановится.</div>
         </div>
 
         <div class="help-section">
@@ -126,8 +126,9 @@
         <div class="help-section">
           <div class="help-section-title">❓ Частые вопросы</div>
           <ul class="help-list">
-            <li><b>«SKU не совпал — OZON перенаправил»</b> — OZON иногда показывает другой товар при поиске по SKU снятых с продажи товаров. Это нормально — расширение пропускает такие SKU.</li>
-            <li><b>Бот завис?</b> — нажмите ⏹ Стоп. Если popup закрыт — используйте плавающую панель на странице OZON.</li>
+            <li><b>«Товар не найден или не в наличии»</b> — OZON вернул категорию вместо карточки (товар снят с продажи). Это нормально — расширение пропускает такие SKU.</li>
+            <li><b>«OZON API не ответил» по многим SKU?</b> — нажмите <b>«🔌 Проверить OZON API»</b> в Настройках: подскажет причину (нет авторизации, антибот, устаревшая вкладка). Чаще всего помогает обновить страницу ozon.ru (F5) и войти в аккаунт.</li>
+            <li><b>Бот завис?</b> — нажмите ⏹ Стоп и запустите снова.</li>
             <li><b>Не запускаются жалобы?</b> — убедитесь что вкладка seller.ozon.ru открыта в браузере.</li>
             <li><b>Ложный failed у файла?</b> — если бот показал failed, но файл в чате реально есть и Ozon ответил «Скрыли товар» — это было в старых версиях. С v5.9.11 верификация смотрит и на ответ бота, и на факт прикрепления.</li>
             <li><b>Нужна помощь?</b> — <a href="https://codefic.ru" target="_blank" class="link-ozon">codefic.ru</a></li>
@@ -155,12 +156,6 @@
         <button id="btnStart" class="btn btn-primary btn-start">🔍 Найти конкурентов</button>
         <button id="btnPause" class="btn btn-icon btn-secondary" disabled title="Пауза">⏸</button>
         <button id="btnStop" class="btn btn-icon btn-danger" disabled title="Стоп">⏹</button>
-      </div>
-      <div class="scan-mode-row">
-        <div class="scan-mode-toggle">
-          <button id="scanModeFast" class="scan-mode-btn active" data-mode="fast" title="Прямые API-запросы, без открытия окон. Быстрее в 5-10 раз.">⚡ Быстрый</button>
-          <button id="scanModeVisual" class="scan-mode-btn" data-mode="visual" title="Открывает окно OZON и имитирует поведение пользователя. Медленнее, но безопаснее для сессии — не нагружает антибот и не требует очистки кэша.">🐢 Медленный</button>
-        </div>
       </div>
     </div>
 
@@ -234,7 +229,7 @@
     <button id="btnShowSettingsHints" class="btn-show-hints hidden">💡 Показать подсказки</button>
     <div class="settings-group">
       <h2 class="settings-title">Лицензия PRO</h2>
-      <div id="licenseStatusBlock">
+      <div>
         <div class="license-status" id="licenseStatus">
           <span class="license-dot" id="licenseDot"></span>
           <span id="licenseStatusText">FREE-версия</span>
@@ -326,6 +321,14 @@
     </div>
 
     <div class="settings-group">
+      <h2 class="settings-title">Диагностика</h2>
+      <div class="settings-row">
+        <button id="btnTestApi" class="btn btn-small">🔌 Проверить OZON API</button>
+      </div>
+      <div id="testApiResult" style="margin-top:6px;font-size:11px;color:#555;"></div>
+    </div>
+
+    <div class="settings-group">
       <h2 class="settings-title">Жалобы: антибот-паузы</h2>
       <div class="hint-banner hint-info" data-hint-host="cascade">
         <div class="hint-banner-body">
@@ -352,7 +355,7 @@
         </div>
         <button class="hint-close" data-hint="evidence_mode" title="Скрыть">✕</button>
       </div>
-      <div class="hint-banner hint-warning hint-compact" id="evidenceStorageHint">
+      <div class="hint-banner hint-warning hint-compact">
         <div class="hint-banner-body">
           <span class="hint-banner-icon">⚠</span>
           <span>Доказательства сохраняются внутри текущей установки расширения. Если после обновления загрузить новую распакованную папку и Chrome выдаст другой ID расширения, старые файлы будут недоступны и их нужно добавить заново.</span>
@@ -457,7 +460,7 @@
 
     <!-- Файлы -->
     <div class="complaint-files">
-      <div id="evidenceHint" class="hint-banner hint-info hint-compact" data-hint-host="evidence">
+      <div class="hint-banner hint-info hint-compact" data-hint-host="evidence">
         <div class="hint-banner-body">
           <span class="hint-banner-icon">💡</span>
           <span><b>Общий пул доказательств</b> — прикрепится ко всем SKU, для которых нет <i>персональных</i> файлов в Настройках (блок «Доказательства для отдельных SKU»). Если у вашего SKU есть персональные файлы, бот использует <b>именно их</b>, а общий пул игнорирует. Если нет ни тех ни других — жалоба помечается failed.</span>
@@ -510,7 +513,7 @@
         <span class="problem-skus-title">⚠ Проблемные SKU</span>
         <button id="btnProblemSkusToggle" class="btn-icon-toggle" title="Свернуть/развернуть">▼</button>
       </div>
-      <div id="problemSkusBody" class="problem-skus-body">
+      <div class="problem-skus-body">
         <div id="problemEscalatedWrap" class="problem-cat hidden">
           <div class="problem-cat-header">
             <span class="problem-cat-title">🛎 Передано оператору (<span id="problemEscalatedCount">0</span>)</span>

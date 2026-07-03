@@ -306,6 +306,12 @@ textarea:focus, input[type="text"]:focus {
   box-shadow: 0 0 0 2px rgba(0, 91, 255, 0.1);
 }
 
+/* Клавиатурная навигация: видимый фокус только от Tab, не от клика */
+button:focus-visible {
+  outline: 2px solid #005bff;
+  outline-offset: 1px;
+}
+
 /* Контролы сканирования */
 .scan-controls {
   margin-bottom: 10px;
@@ -322,34 +328,6 @@ textarea:focus, input[type="text"]:focus {
   text-align: center;
   flex-shrink: 0;
 }
-.scan-mode-row {
-  display: flex;
-  align-items: center;
-}
-.scan-mode-toggle {
-  display: flex;
-  gap: 0;
-  border: 1px solid #e0e2e8;
-  border-radius: 6px;
-  overflow: hidden;
-}
-.scan-mode-btn {
-  padding: 3px 12px;
-  border: none;
-  background: #f8f9fa;
-  color: #6b7280;
-  font-size: 11px;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.scan-mode-btn:not(:last-child) { border-right: 1px solid #e0e2e8; }
-.scan-mode-btn.active {
-  background: #005bff;
-  color: #fff;
-}
-.scan-mode-btn:hover:not(.active) { background: #e8edf5; }
-
 .btn {
   padding: 7px 12px;
   border: none;
@@ -403,8 +381,14 @@ textarea:focus, input[type="text"]:focus {
   cursor: pointer;
 }
 
-.btn-small:hover {
+.btn-small:hover:not(:disabled) {
   background: #d0d3da;
+}
+
+.btn-small:disabled,
+.btn-danger-sm:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 /* Когда .btn-small комбинируется с .btn-primary — сохраняем синий стиль */
@@ -422,7 +406,7 @@ textarea:focus, input[type="text"]:focus {
   font-size: 10px;
 }
 
-.btn-danger-sm:hover {
+.btn-danger-sm:hover:not(:disabled) {
   background: #fcd2d2;
 }
 
@@ -764,9 +748,9 @@ textarea:focus, input[type="text"]:focus {
 }
 
 .log-line {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  margin-bottom: 2px;
 }
 
 .log-line.error {
@@ -1035,41 +1019,6 @@ textarea:focus, input[type="text"]:focus {
   box-shadow: 0 0 0 2px rgba(0, 91, 255, 0.1);
 }
 
-.api-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-  font-size: 12px;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ccc;
-}
-
-.status-dot.ok {
-  background: #4caf50;
-  box-shadow: 0 0 6px rgba(76, 175, 80, 0.4);
-}
-
-.status-dot.error {
-  background: #d32f2f;
-  box-shadow: 0 0 6px rgba(211, 47, 47, 0.4);
-}
-
-.status-dot.loading {
-  background: #005bff;
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
 #apiTestResult {
   margin-top: 8px;
   padding: 8px;
@@ -1082,52 +1031,6 @@ textarea:focus, input[type="text"]:focus {
   max-height: 100px;
   overflow-y: auto;
   line-height: 1.4;
-}
-
-.diag-box {
-  padding: 8px;
-  background: #f5f6f8;
-  border: 1px solid #e0e2e8;
-  border-radius: 4px;
-  font-size: 10px;
-  font-family: monospace;
-  color: #888;
-  max-height: 100px;
-  overflow-y: auto;
-  line-height: 1.4;
-}
-
-/* Блок инструкций */
-.info-block {
-  background: #eef3ff;
-  border-radius: 6px;
-  padding: 10px 12px !important;
-  border: 1px solid #c8d8ff;
-  margin-bottom: 12px;
-}
-
-.info-text {
-  font-size: 11px;
-  line-height: 1.5;
-  color: #555;
-}
-
-.info-text p {
-  margin-bottom: 6px;
-}
-
-.info-text b {
-  color: #1a1a2e;
-}
-
-.info-text ul {
-  margin: 4px 0 0 16px;
-  padding: 0;
-}
-
-.info-text li {
-  margin-bottom: 2px;
-  color: #666;
 }
 
 /* Пакетный сбор */
@@ -1787,29 +1690,6 @@ textarea:focus, input[type="text"]:focus {
   font-weight: 600;
 }
 
-/* Paywall lock overlay для batch */
-.paywall-locked {
-  position: relative;
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.paywall-locked::after {
-  content: '🔒 PRO';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(245, 158, 11, 0.9);
-  color: #fff;
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  pointer-events: none;
-}
-
 .complaint-start-error {
   background: #fff3cd;
   border: 1px solid #f0ad4e;
@@ -1942,13 +1822,6 @@ textarea:focus, input[type="text"]:focus {
   margin-bottom: 10px;
 }
 
-.inline-label {
-  font-size: 11px;
-  color: #888;
-  min-width: 80px;
-  display: inline-block;
-}
-
 .input-select {
   flex: 1;
   padding: 5px 8px;
@@ -2016,12 +1889,6 @@ textarea:focus, input[type="text"]:focus {
   padding: 0 2px;
 }
 
-.file-lost {
-  font-size: 10px;
-  color: #999;
-  margin-left: 4px;
-}
-
 /* Status card */
 .complaint-status {
   background: #fff;
@@ -2052,55 +1919,6 @@ textarea:focus, input[type="text"]:focus {
   font-size: 11px;
   color: #333;
   line-height: 1.4;
-}
-
-/* Confirm gate */
-.confirm-gate {
-  margin: 8px 0;
-  padding: 10px 12px;
-  background: #fffbea;
-  border: 2px solid #f0b429;
-  border-radius: 6px;
-}
-
-.confirm-gate-header {
-  font-weight: 700;
-  font-size: 13px;
-  color: #7c5e10;
-  margin-bottom: 6px;
-}
-
-.confirm-gate-info {
-  font-size: 12px;
-  color: #444;
-  margin-bottom: 8px;
-  line-height: 1.4;
-}
-
-.confirm-gate-info .gate-sku {
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  font-weight: 600;
-  color: #1a1a2e;
-}
-
-.confirm-gate-info .gate-phase {
-  color: #666;
-  font-size: 11px;
-}
-
-.confirm-gate-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.btn-confirm {
-  background: #2e7d32;
-  color: #fff;
-  font-weight: 700;
-}
-
-.btn-confirm:hover {
-  background: #1b5e20;
 }
 
 /* Queue items */
