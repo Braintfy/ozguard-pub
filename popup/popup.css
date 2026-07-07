@@ -821,6 +821,61 @@ button:focus-visible {
   font-size: 12px;
 }
 
+/* Кастомные диалоги подтверждения (замена браузерных alert/confirm) */
+.ozg-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 26, 46, 0.45);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.ozg-modal-box {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+  width: 100%;
+  max-width: 340px;
+  padding: 16px;
+  animation: ozgModalIn 0.12s ease-out;
+}
+@keyframes ozgModalIn {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.ozg-modal-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+.ozg-modal-message {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #444;
+  white-space: pre-line;
+  word-break: break-word;
+  margin-bottom: 14px;
+}
+.ozg-modal-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.ozg-modal-btn {
+  flex: 0 1 auto;
+  min-width: 84px;
+}
+.ozg-modal-btn.btn-danger {
+  background: #d32f2f;
+  color: #fff;
+}
+.ozg-modal-btn.btn-danger:hover:not(:disabled) {
+  background: #b71c1c;
+}
+
 /* Модальное окно */
 .modal {
   position: fixed;
