@@ -182,7 +182,15 @@
           <button id="btnCopy" class="btn btn-export">📋 Копировать</button>
           <button id="btnCopySku" class="btn btn-export">📋 SKU</button>
           <button id="btnExcel" class="btn btn-export">📥 Excel</button>
-          <button id="btnSendToComplaints" class="btn btn-export btn-pro">📨 В жалобы</button>
+          <button id="btnSendToComplaints" class="btn btn-export btn-pro" title="Заменяет список во вкладке Жалобы">📨 В жалобы</button>
+          <button id="btnAppendToComplaints" class="btn btn-export btn-pro" title="Мультисборка: добавляет SKU к списку жалоб, не очищая его">➕ В жалобы</button>
+        </div>
+        <div class="hint-banner hint-info hint-compact" data-hint-host="multi_batch">
+          <div class="hint-banner-body">
+            <span class="hint-banner-icon">💡</span>
+            <span>«📨 В жалобы» заменяет список во вкладке Жалобы. «➕ В жалобы» — мультисборка: сканируйте артикулы по одному, добавляйте порциями и указывайте родительский SKU для каждой — привязки сохранятся для всего пакета.</span>
+          </div>
+          <button class="hint-close" data-hint="multi_batch" title="Скрыть">✕</button>
         </div>
       </div>
       <div id="resultsContainer"></div>
