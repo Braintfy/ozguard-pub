@@ -238,6 +238,27 @@ header {
 }
 .update-banner-close:hover { opacity: 1; }
 
+/* Баннер «что нового» — зелёный вариант update-banner */
+.whatsnew-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, #ecfdf5, #d1fae5);
+  border-bottom: 1px solid #10b981;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #065f46;
+}
+.whatsnew-banner a {
+  color: #059669;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.whatsnew-banner a:hover { color: #047857; }
+.whatsnew-banner .update-banner-close { color: #047857; }
+
 /* Табы */
 .tabs {
   display: flex;

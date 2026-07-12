@@ -29,6 +29,16 @@
     <button id="updateBannerClose" class="update-banner-close" title="Скрыть">✕</button>
   </div>
 
+  <!-- Баннер «что нового» — показывается один раз после обновления до текущей версии -->
+  <div id="whatsNewBanner" class="whatsnew-banner hidden">
+    <div class="update-banner-body">
+      <span class="update-banner-icon">🎉</span>
+      <span>Обновлено до <b id="whatsNewVersion">—</b> — <span id="whatsNewText"></span><a href="https://codefic.ru/#changelog" target="_blank" rel="noopener">Подробнее</a>.
+        <br><b>После обновления ключ, возможно, придётся ввести заново</b> (Настройки → лицензия). Если пишет «лимит устройств» — напишите в <a href="https://t.me/firadex" target="_blank" rel="noopener">t.me/firadex</a>, освободим или добавим слот.</span>
+    </div>
+    <button id="whatsNewClose" class="update-banner-close" title="Скрыть">✕</button>
+  </div>
+
   <!-- Модальное окно инструкции -->
   <div id="helpModal" class="help-modal hidden">
     <div class="help-modal-content">
