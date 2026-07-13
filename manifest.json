@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "OZGuard",
-  "version": "5.9.52",
+  "version": "5.9.53",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsc5mxrVGE+x+40YM1WpGa/D9biwsnrsrYwAvI3ydplnBYf4gDFVxESeKUvlJfxAa6Zo+ex57h1QPahqbxbYx5x2sYK0vNh8V2aaeyGo2z1MbmTu06hCVcqCzcbD2KjvLCxQ0OHcOzBsARVIw07rLtWcS/ES+0wWBpFPvwMNVpvx4dlqCiHsteHgUWYcPimiUy123y7IKlUbsax+4kxMRtOOPQ88ZkjbUsqhHykknOLD1VOkBB9CGqZfC5K9txKyHWvw3qNwtXdsaDuwAvjm5ftZvupxihGgVTmVywv6KbZYCN7zZmiIvNyeotWZm873Q22p/RmVL9pq1bchK8aIPpwIDAQAB",
   "description": "Поиск конкурентов (других продавцов) на карточках товаров OZON",
   "default_locale": "ru",
