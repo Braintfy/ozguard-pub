@@ -99,7 +99,7 @@
           <div class="help-section-title">⚙️ Настройки</div>
           <ul class="help-list">
             <li><b>Лицензия PRO</b> — нужна только для автоматической подачи жалоб. Весь функционал сбора SKU и пакетного импорта XLSX бесплатен. Купить PRO: <a href="https://codefic.ru/#pricing" target="_blank" class="link-ozon">codefic.ru/#pricing</a></li>
-            <li><b>Исключения при сборе</b> — названия своих магазинов, которые не попадут в результаты. По одному на строку, частичное совпадение. Переключатель CN отдельно исключает только продавцов с явной меткой Китая в реквизитах Ozon; неизвестные данные остаются в выдаче.</li>
+            <li><b>Исключения при сборе</b> — названия своих магазинов, которые не попадут в результаты. По одному на строку, частичное совпадение. Переключатель CN включает строгий режим: в результатах остаются только продавцы с явной меткой <b>CN</b> в реквизитах Ozon; продавцы без подтверждённой метки не собираются.</li>
             <li><b>Задержка</b> — пауза между запросами к OZON (мс). Рекомендация: 2000–3000 при 5–20 SKU, 4000–5000 при 50+ SKU.</li>
             <li><b>Подсказки интерфейса</b> — кнопки «Скрыть все подсказки» / «Показать все подсказки» управляют баннерами во вкладке «Жалобы» (VPN-предупреждение, инструкция).</li>
             <li><b>Жалобы: антибот-паузы</b> — при больших пакетах бот продолжает работу автоматически и делает паузы между обращениями без ручного подтверждения.</li>
@@ -120,7 +120,8 @@
             При 5 ошибках подряд бот сделает паузу и попросит подтверждения — это защита от изменившегося интерфейса Ozon.
           </div></div>
           <div class="help-step"><span class="help-num">4</span><div>Нажмите <b>«📨 Начать»</b>. Бот сам откроет чат поддержки, пройдёт дерево меню выбранного типа, введёт каждый артикул и прикрепит файлы-доказательства (если загружены).</div></div>
-          <div class="help-tip">💡 Режим «Тестовый (dry run)» не выполняет реальных действий. Отдельный переключатель «Тест: паузы при ошибках» работает и в автоматическом режиме: для первых 2–3 SKU включите его, затем при успешной проверке отключите для большого пакета.</div>
+          <div class="help-tip">🧪 <b>Тест</b> — включите перед первым прогоном на 2–3 SKU: при локальной ошибке бот поставит пакет на паузу для проверки. Жалобы при этом реальные. После успешной проверки выключите «Тест» для большого или ночного пакета; критические защиты продолжат работать.</div>
+          <div class="help-tip">📎 Если для SKU настроено несколько доказательств, бот отправляет их по порядку и перед каждым следующим файлом заново проверяет активный чат. Неопределённый черновик, смена треда или шага не разрешают повторную отправку.</div>
           <div class="help-tip">📎 <b>Доказательства — два режима:</b><br>
             <b>Общий пул</b> — файлы из зоны «Доказательства» во вкладке «Жалобы». Прикрепляются ко ВСЕМ жалобам.<br>
             <b>Per-SKU</b> — файлы из блока «Доказательства для отдельных SKU» в Настройках. Привязываются к конкретному вашему SKU и прикрепляются только к нарушителям, которые были найдены по нему. Приоритет выше общего пула.<br>
@@ -297,8 +298,8 @@
       </div>
       <textarea id="excludeSellersInput" rows="3" placeholder="Мой магазин&#10;ООО Рога и Копыта&#10;BrandName"></textarea>
       <label class="checkbox-row scan-country-filter">
-        <input type="checkbox" id="ignoreChinaSellers">
-        <span>Игнорировать продавцов из Китая (метка <span class="country-code-badge">CN</span>)</span>
+        <input type="checkbox" id="onlyChinaSellers">
+        <span>Собирать только продавцов из Китая (метка <span class="country-code-badge">CN</span>)</span>
       </label>
       <div class="settings-row" style="margin-top: 6px;">
         <button id="btnSaveExclusions" class="btn btn-small">Сохранить</button>
@@ -430,7 +431,7 @@
     <div id="instructionHint" class="hint-banner hint-info">
       <div class="hint-banner-body">
         <span class="hint-banner-icon">💡</span>
-        <span>Бот сам откроет <a href="https://seller.ozon.ru/app/messenger/?group=support_v2" target="_blank" class="link-ozon">чат поддержки</a>, введёт артикулы и прикрепит файлы. Выберите режим и нажмите «Начать».</span>
+        <span>Бот сам откроет <a href="https://seller.ozon.ru/app/messenger/?group=support_v2" target="_blank" class="link-ozon">чат поддержки</a>, введёт артикулы и отправит настроенные файлы по порядку. Выберите тип жалобы; для первых 2–3 SKU рекомендуется включить «Тест».</span>
       </div>
       <button class="hint-close" data-hint="instruction" title="Скрыть">✕</button>
     </div>
@@ -453,15 +454,8 @@
     </div>
     <div id="complaintSkuWarning" class="batch-warning hidden"></div>
 
-    <!-- Настройки: два селекта в ряд -->
-    <div class="complaint-settings-grid">
-      <div class="complaint-setting">
-        <label class="complaint-setting-label">Режим</label>
-        <select id="complaintMode" class="input-select">
-          <option value="auto">Автоматический</option>
-          <option value="dry">Тестовый (dry run)</option>
-        </select>
-      </div>
+    <!-- Настройки жалобы -->
+    <div class="complaint-settings-grid complaint-settings-single">
       <div class="complaint-setting">
         <label class="complaint-setting-label">Тип жалобы</label>
         <select id="complaintType" class="input-select" title="Тип жалобы — выбор навигационного пути в чате поддержки Ozon">
@@ -473,12 +467,17 @@
     </div>
 
     <div class="complaint-safety-option">
-      <label class="checkbox-row complaint-safety-title">
-        <input type="checkbox" id="complaintSafetyPausesEnabled" aria-describedby="complaintSafetyPausesHint">
-        <span><b>Тест: паузы при ошибках</b> <span class="complaint-safety-badge">не dry run</span></span>
-      </label>
-      <div id="complaintSafetyPausesHint" class="complaint-safety-note">
-        Сначала рекомендуется прогнать 2–3 SKU с включённым тестом. Это отдельная настройка: реальные действия по-прежнему определяет режим выше. Если выключено, пакет пропускает локальные ошибки и продолжает; критические защиты сохраняются.
+      <div class="complaint-safety-header">
+        <label class="checkbox-row complaint-safety-title">
+          <input type="checkbox" id="complaintSafetyPausesEnabled" aria-describedby="complaintSafetyPausesHint">
+          <span><b>Тест</b></span>
+        </label>
+        <details class="complaint-safety-help">
+          <summary title="Как работает тест" aria-label="Показать подсказку о тесте">?</summary>
+          <div id="complaintSafetyPausesHint" class="complaint-safety-note">
+            Сначала прогоните 2–3 SKU с включённым тестом. Жалобы отправляются реально, но при локальной ошибке бот остановится для проверки. Если тест выключен, такой SKU пропускается и пакет продолжается; неизвестные отправки, смена чата, циклы и другие критические защиты всегда ставят паузу.
+          </div>
+        </details>
       </div>
     </div>
 

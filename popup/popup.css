@@ -1883,10 +1883,12 @@ button:focus-visible {
 /* Жалобы (Support Automation) */
 .complaint-settings-grid {
   display: grid;
-  /* Тип жалобы шире — длинные опции «Использование моего контента (BETA)» теперь влезают */
   grid-template-columns: minmax(0, 0.45fr) minmax(0, 0.55fr);
   gap: 6px;
   margin-bottom: 8px;
+}
+.complaint-settings-grid.complaint-settings-single {
+  grid-template-columns: minmax(0, 1fr);
 }
 /* Select растягивается на доступную ширину контейнера, не создаёт overflow */
 .complaint-settings-grid .complaint-setting,
@@ -1910,18 +1912,49 @@ button:focus-visible {
 .complaint-safety-title {
   color: #7a4a00;
 }
-.complaint-safety-badge {
-  display: inline-block;
-  margin-left: 3px;
-  padding: 1px 4px;
-  border-radius: 3px;
-  background: #f7dfaa;
+.complaint-safety-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.complaint-safety-help {
+  position: relative;
+  margin-left: auto;
+}
+.complaint-safety-help summary {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #d7a942;
+  border-radius: 50%;
   color: #7a4a00;
-  font-size: 9px;
+  background: #fff;
+  font-size: 11px;
   font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.complaint-safety-help summary::-webkit-details-marker {
+  display: none;
+}
+.complaint-safety-help summary:focus-visible {
+  outline: 2px solid #f0b73c;
+  outline-offset: 2px;
 }
 .complaint-safety-note {
-  margin-top: 5px;
+  position: absolute;
+  z-index: 20;
+  top: 25px;
+  right: 0;
+  width: 280px;
+  max-width: calc(100vw - 52px);
+  padding: 8px 9px;
+  border: 1px solid #e8bd5f;
+  border-radius: 6px;
+  background: #fffaf0;
+  box-shadow: 0 5px 16px rgba(80, 55, 10, 0.18);
   color: #7a5a20;
   font-size: 10px;
   line-height: 1.4;
