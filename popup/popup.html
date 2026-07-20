@@ -57,7 +57,7 @@
         <div class="help-section">
           <div class="help-section-title">🔍 Сканирование</div>
           <div class="help-step"><span class="help-num">1</span><div><b>Введите SKU</b> своих товаров в поле (по одному на строку). SKU — это числовой артикул товара на OZON, его видно в адресной строке карточки товара или в личном кабинете продавца.</div></div>
-          <div class="help-step"><span class="help-num">2</span><div>Нажмите <b>«Найти конкурентов»</b> — сбор идёт прямыми API-запросами в фоне, без открытия окон. Нужна открытая вкладка ozon.ru с авторизацией (если её нет — расширение откроет фоновую само).</div></div>
+          <div class="help-step"><span class="help-num">2</span><div>При необходимости включите <b>«Собирать только продавцов из Китая (CN)»</b>, затем нажмите <b>«Найти конкурентов»</b>. В строгом CN-режиме продавцы без подтверждённой метки страны не попадут в результаты. Сбор идёт прямыми API-запросами в фоне.</div></div>
           <div class="help-step"><span class="help-num">3</span><div>В <b>Результатах</b> вы увидите по каждому товару: название, количество конкурентов, их SKU и цены. Кнопка <b>⎘</b> рядом с вашим SKU копирует его. Ссылка <b>«открыть на OZON»</b> ведёт на карточку. Кнопка <b>⎘</b> рядом с «N конк.» копирует сразу все SKU конкурентов по этому товару.</div></div>
           <div class="help-step"><span class="help-num">4</span><div>Кнопка <b>📎 К доказательствам</b> рядом с каждым вашим SKU переносит его в Настройки → блок «Доказательства для отдельных SKU». Если к SKU уже привязаны файлы — кнопка меняется на <b>✓ Доказательства</b> зелёным. Так удобно за один проход по результатам собрать все доказательства.</div></div>
           <div class="help-tip">⏸ Пауза и ⏹ Стоп работают прямо во время сбора. Скан продолжается в фоне, даже если закрыть popup — откройте его снова, прогресс восстановится.</div>
@@ -99,11 +99,11 @@
           <div class="help-section-title">⚙️ Настройки</div>
           <ul class="help-list">
             <li><b>Лицензия PRO</b> — нужна только для автоматической подачи жалоб. Весь функционал сбора SKU и пакетного импорта XLSX бесплатен. Купить PRO: <a href="https://codefic.ru/#pricing" target="_blank" class="link-ozon">codefic.ru/#pricing</a></li>
-            <li><b>Исключения при сборе</b> — названия своих магазинов, которые не попадут в результаты. По одному на строку, частичное совпадение. Переключатель CN включает строгий режим: в результатах остаются только продавцы с явной меткой <b>CN</b> в реквизитах Ozon; продавцы без подтверждённой метки не собираются.</li>
+            <li><b>Исключения при сборе</b> — названия своих магазинов, которые не попадут в результаты. По одному на строку, частичное совпадение.</li>
             <li><b>Задержка</b> — пауза между запросами к OZON (мс). Рекомендация: 2000–3000 при 5–20 SKU, 4000–5000 при 50+ SKU.</li>
             <li><b>Подсказки интерфейса</b> — кнопки «Скрыть все подсказки» / «Показать все подсказки» управляют баннерами во вкладке «Жалобы» (VPN-предупреждение, инструкция).</li>
-            <li><b>Жалобы: антибот-паузы</b> — при больших пакетах бот продолжает работу автоматически и делает паузы между обращениями без ручного подтверждения.</li>
-            <li><b>Жалобы: доказательства для отдельных SKU</b> — добавьте свой SKU и файлы (до 45 MB каждый: видео, сертификаты, PDF). Бот при подаче жалобы на конкурента узнаёт из какого вашего SKU он был найден и прикрепит именно эти файлы. Если у вас несколько своих SKU указали на одного конкурента — файлы объединяются. Если для SKU нет привязанных файлов — используется <i>общий пул</i> из вкладки «Жалобы». Если и общего нет — SKU помечается failed.</li>
+            <li><b>Жалобы: мультидоказательства</b> — общий набор файлов для SKU без персональных доказательств. В режиме «Отправлять несколько» весь подходящий набор прикрепляется одним сообщением.</li>
+            <li><b>Жалобы: доказательства для отдельных SKU</b> — добавьте свой SKU и файлы (до 45 MB каждый: видео, сертификаты, PDF). Персональный набор имеет приоритет над общим и в мульти-режиме также отправляется одним сообщением.</li>
           </ul>
         </div>
 
@@ -119,9 +119,9 @@
             </ul>
             При 5 ошибках подряд бот сделает паузу и попросит подтверждения — это защита от изменившегося интерфейса Ozon.
           </div></div>
-          <div class="help-step"><span class="help-num">4</span><div>Нажмите <b>«📨 Начать»</b>. Бот сам откроет чат поддержки, пройдёт дерево меню выбранного типа, введёт каждый артикул и прикрепит файлы-доказательства (если загружены).</div></div>
+          <div class="help-step"><span class="help-num">4</span><div>При необходимости включите <b>«Отправлять несколько»</b>, затем нажмите <b>«📨 Начать»</b>. Бот сам откроет чат поддержки, введёт артикулы и прикрепит выбранные доказательства.</div></div>
           <div class="help-tip">🧪 <b>Тест</b> — включите перед первым прогоном на 2–3 SKU: при локальной ошибке бот поставит пакет на паузу для проверки. Жалобы при этом реальные. После успешной проверки выключите «Тест» для большого или ночного пакета; критические защиты продолжат работать.</div>
-          <div class="help-tip">📎 Если для SKU настроено несколько доказательств, бот отправляет их по порядку и перед каждым следующим файлом заново проверяет активный чат. Неопределённый черновик, смена треда или шага не разрешают повторную отправку.</div>
+          <div class="help-tip">📎 При выключенном мульти-режиме доказательства отправляются по одному. При включённом бот сначала собирает весь подходящий набор в одном черновике и нажимает отправку один раз. Неопределённый черновик или смена чата всегда останавливают отправку.</div>
           <div class="help-tip">📎 <b>Доказательства — два режима:</b><br>
             <b>Общий пул</b> — файлы из зоны «Доказательства» во вкладке «Жалобы». Прикрепляются ко ВСЕМ жалобам.<br>
             <b>Per-SKU</b> — файлы из блока «Доказательства для отдельных SKU» в Настройках. Привязываются к конкретному вашему SKU и прикрепляются только к нарушителям, которые были найдены по нему. Приоритет выше общего пула.<br>
@@ -138,7 +138,7 @@
           <div class="help-section-title">❓ Частые вопросы</div>
           <ul class="help-list">
             <li><b>«Товар не найден или не в наличии»</b> — OZON вернул категорию вместо карточки (товар снят с продажи). Это нормально — расширение пропускает такие SKU.</li>
-            <li><b>«OZON API не ответил» по многим SKU?</b> — нажмите <b>«🔌 Проверить OZON API»</b> в Настройках: подскажет причину (нет авторизации, антибот, устаревшая вкладка). Чаще всего помогает обновить страницу ozon.ru (F5) и войти в аккаунт.</li>
+            <li><b>«OZON API не ответил» по многим SKU?</b> — обновите страницу ozon.ru (F5), убедитесь, что вы вошли в аккаунт, и повторите сканирование. При антибот-ограничении подождите 10–15 минут.</li>
             <li><b>Бот завис?</b> — нажмите ⏹ Стоп и запустите снова.</li>
             <li><b>Не запускаются жалобы?</b> — убедитесь что вкладка seller.ozon.ru открыта в браузере.</li>
             <li><b>Ложный failed у файла?</b> — если бот показал failed, но файл в чате реально есть и Ozon ответил «Скрыли товар» — это было в старых версиях. С v5.9.11 верификация смотрит и на ответ бота, и на факт прикрепления.</li>
@@ -161,6 +161,14 @@
   <main id="tabScan" class="tab-content active">
     <label for="skuInput">SKU (по одному на строку):</label>
     <textarea id="skuInput" rows="4" placeholder="1234567890&#10;9876543210&#10;5555555555"></textarea>
+
+    <label class="checkbox-row scan-country-filter scan-country-filter-main">
+      <input type="checkbox" id="onlyChinaSellers">
+      <span>
+        <b>Собирать только продавцов из Китая (метка <span class="country-code-badge">CN</span>)</b>
+        <span class="scan-country-filter-note">Продавцы без подтверждённой метки CN не попадут в результаты.</span>
+      </span>
+    </label>
 
     <div class="scan-controls">
       <div class="scan-controls-top">
@@ -297,10 +305,6 @@
         <button class="hint-close" data-hint="exclusions" title="Скрыть">✕</button>
       </div>
       <textarea id="excludeSellersInput" rows="3" placeholder="Мой магазин&#10;ООО Рога и Копыта&#10;BrandName"></textarea>
-      <label class="checkbox-row scan-country-filter">
-        <input type="checkbox" id="onlyChinaSellers">
-        <span>Собирать только продавцов из Китая (метка <span class="country-code-badge">CN</span>)</span>
-      </label>
       <div class="settings-row" style="margin-top: 6px;">
         <button id="btnSaveExclusions" class="btn btn-small">Сохранить</button>
         <span id="exclusionsSavedHint" class="saved-hint hidden">Сохранено</span>
@@ -343,30 +347,23 @@
       </div>
     </div>
 
-    <div class="settings-group">
-      <h2 class="settings-title">Диагностика</h2>
-      <div class="settings-row">
-        <button id="btnTestApi" class="btn btn-small">🔌 Проверить OZON API</button>
-      </div>
-      <div id="testApiResult" style="margin-top:6px;font-size:11px;color:#555;"></div>
-    </div>
-
-    <div class="settings-group">
-      <h2 class="settings-title">Жалобы: антибот-паузы</h2>
-      <div class="hint-banner hint-info" data-hint-host="cascade">
+    <div class="settings-group" id="multiEvidenceSettingsSection">
+      <h2 class="settings-title">Жалобы: мультидоказательства</h2>
+      <div class="hint-banner hint-info hint-compact" data-hint-host="multi_evidence">
         <div class="hint-banner-body">
-          <span class="hint-banner-icon">💡</span>
-          <span>Бот больше не останавливается после заданного числа новых обращений и не ждёт кнопку «Продолжить». Для больших пакетов он продолжает работу автоматически, пишет диагностические предупреждения и сохраняет антибот-паузы.</span>
+          <span class="hint-banner-icon">📎</span>
+          <span>Бот берёт отсюда общий набор доказательств. В режиме «Отправлять несколько» все подходящие файлы прикрепляются одним сообщением. Если для родительского SKU настроен персональный набор ниже, используется только он.</span>
         </div>
-        <button class="hint-close" data-hint="cascade" title="Скрыть">✕</button>
+        <button class="hint-close" data-hint="multi_evidence" title="Скрыть">✕</button>
       </div>
-      <div class="hint-banner hint-info hint-compact" data-hint-host="cascade_consec">
-        <div class="hint-banner-body">
-          <span class="hint-banner-icon">⏱</span>
-          <span>Если много чатов подряд передаются оператору, OZGuard сделает увеличенную паузу и продолжит следующий SKU. Ручной гейт лимита отключён.</span>
+      <div class="multi-evidence-settings-actions">
+        <div>
+          <div class="multi-evidence-settings-title">Общий набор</div>
+          <div id="settingsComplaintEvidenceSummary" class="multi-evidence-summary">Файлы не добавлены</div>
         </div>
-        <button class="hint-close" data-hint="cascade_consec" title="Скрыть">✕</button>
+        <button id="btnAddCommonEvidenceSettings" class="btn btn-small">＋ Добавить файлы</button>
       </div>
+      <div id="settingsComplaintFileList" class="file-list hidden"></div>
     </div>
 
     <div class="settings-group" id="evidenceSection">
@@ -431,7 +428,7 @@
     <div id="instructionHint" class="hint-banner hint-info">
       <div class="hint-banner-body">
         <span class="hint-banner-icon">💡</span>
-        <span>Бот сам откроет <a href="https://seller.ozon.ru/app/messenger/?group=support_v2" target="_blank" class="link-ozon">чат поддержки</a>, введёт артикулы и отправит настроенные файлы по порядку. Выберите тип жалобы; для первых 2–3 SKU рекомендуется включить «Тест».</span>
+        <span>Бот сам откроет <a href="https://seller.ozon.ru/app/messenger/?group=support_v2" target="_blank" class="link-ozon">чат поддержки</a>, введёт артикулы и отправит настроенные доказательства выбранным способом. Для первых 2–3 SKU рекомендуется включить «Тест».</span>
       </div>
       <button class="hint-close" data-hint="instruction" title="Скрыть">✕</button>
     </div>
@@ -441,12 +438,14 @@
     <!-- Ввод артикулов -->
     <label for="complaintSkuInput">Артикулы (по одному на строку):</label>
     <textarea id="complaintSkuInput" rows="3" placeholder="1234567890&#10;9876543210"></textarea>
-    <label class="complaint-parent-label" for="complaintParentSkuInput">Родительский SKU</label>
-    <div class="complaint-parent-input-wrap">
-      <input id="complaintParentSkuInput" class="complaint-parent-input" type="text" inputmode="numeric" placeholder="Ваш SKU — бот отправит его перед SKU нарушителя">
-      <button id="btnCopyComplaintParentSku" class="complaint-parent-copy" title="Скопировать">📋</button>
-    </div>
-    <div class="complaint-parent-hint">Если список SKU вставлен вручную, укажите ваш товар — бот отправит его перед SKU нарушителя.</div>
+    <section class="complaint-parent-card" aria-labelledby="complaintParentSkuLabel">
+      <label id="complaintParentSkuLabel" class="complaint-parent-label" for="complaintParentSkuInput">Родительский SKU</label>
+      <div class="complaint-parent-input-wrap">
+        <input id="complaintParentSkuInput" class="complaint-parent-input" type="text" inputmode="numeric" aria-describedby="complaintParentSkuHint" placeholder="Ваш SKU — бот отправит его перед SKU нарушителя">
+        <button id="btnCopyComplaintParentSku" class="complaint-parent-copy" title="Скопировать">📋</button>
+      </div>
+      <p id="complaintParentSkuHint" class="complaint-parent-hint">Если список SKU вставлен вручную, укажите ваш товар — бот отправит его перед SKU нарушителя.</p>
+    </section>
     <div class="complaint-import-row">
       <button id="btnImportCsv" class="btn btn-small">📥 Импорт из Excel</button>
       <span id="importCsvHint" class="saved-hint hidden"></span>
@@ -489,6 +488,21 @@
       </div>
     </div>
 
+    <div class="complaint-safety-option complaint-batch-option">
+      <div class="complaint-safety-header">
+        <label class="checkbox-row complaint-safety-title">
+          <input type="checkbox" id="complaintEvidenceBatchEnabled" aria-describedby="complaintEvidenceBatchHint">
+          <span><b>Отправлять несколько</b></span>
+        </label>
+        <details class="complaint-safety-help">
+          <summary title="Как работает отправка нескольких файлов" aria-label="Показать подсказку о мультидоказательствах">?</summary>
+          <div id="complaintEvidenceBatchHint" class="complaint-safety-note">
+            Бот добавит все подходящие доказательства в один черновик и нажмёт отправку один раз. Персональный набор родительского SKU имеет приоритет над общим. Если режим выключен, файлы отправляются по одному проверенным способом.
+          </div>
+        </details>
+      </div>
+    </div>
+
     <!-- Файлы -->
     <div class="complaint-files">
       <div class="hint-banner hint-info hint-compact" data-hint-host="evidence">
@@ -503,6 +517,10 @@
         <input type="file" id="complaintFileInput" multiple accept="image/*,video/*,.pdf,.doc,.docx">
       </div>
       <div id="complaintFileList" class="file-list hidden"></div>
+      <div class="complaint-evidence-summary-row">
+        <span id="complaintEvidenceSummary" class="multi-evidence-summary">Общий набор не добавлен</span>
+        <button id="btnAddComplaintEvidence" class="btn btn-small btn-evidence-plus hidden" title="Добавить ещё доказательства">＋</button>
+      </div>
       <div class="settings-row" style="margin-top:6px; justify-content:flex-end;">
         <button id="btnGoToEvidenceSettings" class="btn-link-settings" title="Открыть расширенные настройки доказательств">⚙ В настройки доказательств →</button>
       </div>

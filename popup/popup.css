@@ -1095,20 +1095,6 @@ button:focus-visible {
   box-shadow: 0 0 0 2px rgba(0, 91, 255, 0.1);
 }
 
-#apiTestResult {
-  margin-top: 8px;
-  padding: 8px;
-  background: #f5f6f8;
-  border: 1px solid #e0e2e8;
-  border-radius: 4px;
-  font-size: 10px;
-  font-family: monospace;
-  color: #888;
-  max-height: 100px;
-  overflow-y: auto;
-  line-height: 1.4;
-}
-
 /* Пакетный сбор */
 .batch-section {
   margin-top: 10px;
@@ -1584,6 +1570,29 @@ button:focus-visible {
   border-radius: 6px;
 }
 
+.scan-country-filter-main {
+  margin: 8px 0;
+}
+
+.scan-country-filter-note {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.history-mode-badge {
+  display: inline-block;
+  margin-left: 5px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: #eef3ff;
+  color: #005bff;
+  font-size: 9px;
+  font-weight: 600;
+}
+
 .country-code-badge {
   display: inline-block;
   margin-left: 3px;
@@ -1813,10 +1822,17 @@ button:focus-visible {
   margin-bottom: 6px;
 }
 
+.complaint-parent-card {
+  margin: 8px 0 6px;
+  padding: 8px 9px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+}
+
 .complaint-parent-label {
   display: block;
-  margin-top: 8px;
-  margin-bottom: 3px;
+  margin: 0 0 4px;
   font-size: 10px;
   font-weight: 600;
   color: #888;
@@ -1873,8 +1889,7 @@ button:focus-visible {
   cursor: not-allowed;
 }
 .complaint-parent-hint {
-  margin-top: 4px;
-  margin-bottom: 6px;
+  margin: 5px 0 0;
   font-size: 10.5px;
   line-height: 1.3;
   color: #999;
@@ -1908,6 +1923,22 @@ button:focus-visible {
   background: #fff8e8;
   border: 1px solid #f3c96b;
   border-radius: 6px;
+}
+.complaint-batch-option {
+  background: #eef6ff;
+  border-color: #b9d5ff;
+}
+.complaint-batch-option .complaint-safety-title,
+.complaint-batch-option .complaint-safety-help summary {
+  color: #174ea6;
+}
+.complaint-batch-option .complaint-safety-help summary {
+  border-color: #8db9f7;
+}
+.complaint-batch-option .complaint-safety-note {
+  border-color: #a9c8f5;
+  background: #f5f9ff;
+  color: #244c82;
 }
 .complaint-safety-title {
   color: #7a4a00;
@@ -2014,6 +2045,12 @@ button:focus-visible {
   background: #f5f8ff;
 }
 
+.file-drop-zone.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .file-drop-text {
   font-size: 11px;
   color: #888;
@@ -2025,6 +2062,38 @@ button:focus-visible {
 
 .file-list {
   margin-top: 4px;
+}
+
+.multi-evidence-settings-actions,
+.complaint-evidence-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.multi-evidence-settings-title {
+  color: #334155;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.multi-evidence-summary {
+  color: #64748b;
+  font-size: 10.5px;
+  line-height: 1.35;
+}
+
+.complaint-evidence-summary-row {
+  min-height: 28px;
+  margin-top: 4px;
+}
+
+.btn-evidence-plus {
+  flex: 0 0 auto;
+  min-width: 32px;
+  padding-inline: 8px;
+  font-size: 15px;
 }
 
 .file-item {
